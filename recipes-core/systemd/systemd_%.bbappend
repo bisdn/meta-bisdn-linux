@@ -1,6 +1,6 @@
 # use systemd to manage networks
 # See http://www.freedesktop.org/software/systemd/man/systemd.network.html
-PACKAGECONFIG_append = " networkd resolved"
+PACKAGECONFIG_append = " coredump networkd resolved"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
 
