@@ -1,6 +1,8 @@
 # Copyright (C) 2017 Tobias Jungel <tobias.jungel@bisdn.de>
 # Released under the MIT license (see COPYING.MIT for the terms)
 
+IMAGE_FEATURES += " package-management"
+
 IMAGE_INSTALL = "packagegroup-core-boot \
     packagegroup-base-extended \
     ${BISDN_SWITCH_IMAGE_EXTRA_INSTALL} \
