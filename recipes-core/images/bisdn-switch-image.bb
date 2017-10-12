@@ -38,3 +38,10 @@ LICENSE = "MIT"
 
 inherit core-image
 
+IMAGE_FSTYPES += " tar.xz"
+
+do_install_motd_issue_date() {
+			   echo "image built on ${DATE}" >> ${IMAGE_ROOTFS}${sysconfdir}/motd		    
+}
+
+ROOTFS_POSTPROCESS_COMMAND += " do_install_motd_issue_date ;"
