@@ -1,6 +1,8 @@
 # Copyright (C) 2017 Tobias Jungel <tobias.jungel@bisdn.de>
 # Released under the MIT license (see COPYING.MIT for the terms)
 
+IMAGE_FEATURES += " package-management"
+
 IMAGE_INSTALL = "packagegroup-core-boot \
     packagegroup-base-extended \
     ${BISDN_SWITCH_IMAGE_EXTRA_INSTALL} \
@@ -36,3 +38,10 @@ LICENSE = "MIT"
 
 inherit core-image
 
+IMAGE_FSTYPES += " tar.xz"
+
+do_install_motd_issue_date() {
+			   echo "image built on ${DATE}" >> ${IMAGE_ROOTFS}${sysconfdir}/motd		    
+}
+
+ROOTFS_POSTPROCESS_COMMAND += " do_install_motd_issue_date ;"
