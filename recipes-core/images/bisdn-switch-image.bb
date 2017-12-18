@@ -20,6 +20,11 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL = "\
     kernel-module-linux-user-bde \
     kernel-modules \
     less \
+    lmsensors-fancontrol \
+    lmsensors-pwmconfig \
+    lmsensors-sensors \
+    lmsensors-sensorsconfconvert \
+    lmsensors-sensorsdetect \
     ofagent \
     ofdpa \
     parted \
