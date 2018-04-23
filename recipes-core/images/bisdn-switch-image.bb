@@ -16,6 +16,7 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL = "\
     e2fsprogs-tune2fs \
     grub \
     iproute2 \
+    iproute2-ss \
     kernel-module-linux-kernel-bde \
     kernel-module-linux-user-bde \
     kernel-modules \
@@ -46,7 +47,7 @@ inherit core-image
 IMAGE_FSTYPES += " tar.xz"
 
 do_install_motd_issue_date() {
-			   echo "image built on ${DATE}" >> ${IMAGE_ROOTFS}${sysconfdir}/motd		    
+			   echo "image built on ${DATE}" >> ${IMAGE_ROOTFS}${sysconfdir}/motd
 }
 
 ROOTFS_POSTPROCESS_COMMAND += " do_install_motd_issue_date ;"
