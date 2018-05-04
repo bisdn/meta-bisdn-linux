@@ -30,6 +30,7 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL = "\
     lmsensors-sensorsdetect \
     ofagent \
     ofdpa \
+    ofdpa-grpc \
     parted \
     util-linux \
     util-linux-blkid \
