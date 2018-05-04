@@ -31,19 +31,18 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL = "\
     ofagent \
     ofdpa \
     ofdpa-grpc \
+    python \
+    python-modules \
+    python-msgpack \
     parted \
+    tcpdump \
     util-linux \
     util-linux-blkid \
     "
 
-#MACHINE_ESSENTIAL_EXTRA_RRECOMMENDS += "python"
-#MACHINE_ESSENTIAL_EXTRA_RRECOMMENDS += "python-modules"
-#MACHINE_ESSENTIAL_EXTRA_RRECOMMENDS += "python-msgpack"
-
 IMAGE_LINGUAS = " "
 
 LICENSE = "MIT"
-
 
 inherit core-image
 
