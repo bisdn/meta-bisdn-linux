@@ -10,11 +10,13 @@ IMAGE_INSTALL = "packagegroup-core-boot \
 
 
 BISDN_SWITCH_IMAGE_EXTRA_INSTALL = "\
+    baseboxd \
     bash \
     dropbear \
     e2fsprogs-resize2fs \
     e2fsprogs-tune2fs \
     grub \
+    i2c-tools \
     iproute2 \
     iproute2-ss \
     kernel-module-linux-kernel-bde \
