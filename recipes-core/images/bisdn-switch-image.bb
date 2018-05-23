@@ -32,10 +32,11 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL = "\
     ofdpa \
     ofdpa-grpc \
     onl \
+    parted \
     python \
     python-modules \
     python-msgpack \
-    parted \
+    python2-ofdpa \
     tcpdump \
     util-linux \
     util-linux-blkid \
