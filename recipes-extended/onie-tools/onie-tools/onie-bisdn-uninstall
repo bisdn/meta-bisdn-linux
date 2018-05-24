@@ -1,0 +1,29 @@
+#!/bin/bash
+
+set -e
+
+NEED_CONFIRM=true
+
+while getopts "y" o; do
+  case "${o}" in
+    y) # yes to all answers
+      NEED_CONFIRM=false
+    ;;
+  esac
+done
+
+while [ "${NEED_CONFIRM}" = true ] ; do
+  read -p "Uninstall BISDN-Linux? [y/n] " yn
+  case $yn in
+    [Yy]* ) break;;
+    [Nn]* ) exit 0;;
+    * ) echo "Please answer y or n.";;
+  esac
+done
+
+MNT_DIR="/mnt/onie-boot"
+mountpoint -q ${MNT_DIR} || mount ${MNT_DIR}
+${MNT_DIR}/onie/tools/bin/onie-boot-mode -q -o uninstall
+grub-reboot ONIE
+
+systemctl reboot

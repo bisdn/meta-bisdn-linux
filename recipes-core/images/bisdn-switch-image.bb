@@ -31,6 +31,7 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL = "\
     ofagent \
     ofdpa \
     ofdpa-grpc \
+    onie-tools \
     onl \
     parted \
     python \
