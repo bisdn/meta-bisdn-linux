@@ -5,7 +5,7 @@ DESCRIPTION = "BISDN-Linux ONIE toools"
 HOMEPAGE = "https://www.bisdn.de/"
 LICENSE = "CLOSED"
 SECTION = "base"
-DEPENDS = "bash"
+RDEPENDS_onie-tools = "bash"
 
 SRC_URI = " \
   file://onie-bisdn-uninstall \
