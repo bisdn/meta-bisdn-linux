@@ -37,7 +37,6 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL = "\
     python \
     python-modules \
     python-msgpack \
-    python-ryu \
     python2-ofdpa \
     tcpdump \
     util-linux \
