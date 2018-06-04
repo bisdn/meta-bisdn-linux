@@ -24,4 +24,4 @@ do_install_append() {
    install -m 0644 ${WORKDIR}/20-network-io.conf ${D}${sysconfdir}/sysctl.d/
 }
 
-USERADD_PARAM_${PN} = "--system --home /dev/null systemd-journal-gateway"
+USERADD_PARAM_${PN} += "--system --home /dev/null systemd-journal-gateway"
