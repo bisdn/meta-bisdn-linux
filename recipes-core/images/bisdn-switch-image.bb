@@ -34,6 +34,7 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL = "\
     onie-tools \
     onl \
     parted \
+    procps \
     python \
     python-modules \
     python-msgpack \
