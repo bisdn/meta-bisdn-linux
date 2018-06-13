@@ -14,12 +14,22 @@ LICENSE = "GPL-2.0 & LGPL-2.1"
 LIC_FILES_CHKSUM = "file://COPYING;md5=b234ee4d69f5fce4486a80fdaf4a4263 \
                     file://COPYING-LGPLv2.1;md5=4fbd65380cdd255951079008b364516c"
 
-DEPENDS = "readline ncurses perl-native c-ares"
+DEPENDS = " \
+           bison-native \
+           c-ares \
+           flex-native \
+           frr-native \
+           json-c \
+           ncurses \
+           perl-native \
+           readline \
+           "
+
 DEPENDS += "${@bb.utils.contains('DISTRO_FEATURES', 'snmp', 'net-snmp', '', d)}"
 SNMP_CONF="${@bb.utils.contains('DISTRO_FEATURES', 'snmp', '--enable-snmp', '', d)}"
 
 # the "ip" command from busybox is not sufficient (flush by protocol flushes all routes)
-RDEPENDS_${PN} += "iproute2"
+RDEPENDS_${PN}-class-target += "iproute2"
 
 SRC_URI = "git://github.com/FRRouting/frr.git;protocol=https \
            file://frr.init \
@@ -35,14 +45,14 @@ SRC_URI = "git://github.com/FRRouting/frr.git;protocol=https \
            file://ripd.service \
            file://ripngd.service \
            file://zebra.service \
-          "
+         "
 S = "${WORKDIR}/git"
 
 PACKAGECONFIG ??= "${@bb.utils.filter('DISTRO_FEATURES', 'pam', d)}"
 PACKAGECONFIG[cap] = "--enable-capabilities,--disable-capabilities,libcap"
 PACKAGECONFIG[pam] = "--with-libpam, --without-libpam, libpam"
 
-inherit autotools update-rc.d useradd systemd pkgconfig
+inherit autotools update-rc.d useradd systemd pkgconfig python3native
 
 SYSTEMD_PACKAGES = "${PN} ${PN}-bgpd ${PN}-isisd ${PN}-ospf6d ${PN}-ospfd ${PN}-ripd ${PN}-ripngd"
 SYSTEMD_SERVICE_${PN}-bgpd = "bgpd.service"
@@ -53,23 +63,27 @@ SYSTEMD_SERVICE_${PN}-ripd = "ripd.service"
 SYSTEMD_SERVICE_${PN}-ripngd = "ripngd.service"
 SYSTEMD_SERVICE_${PN} = "zebra.service"
 
-EXTRA_OECONF = "--sysconfdir=${sysconfdir}/frr \
-                --localstatedir=${localstatedir}/run/frr \
-                --enable-exampledir=${docdir}/frr/examples/ \
-                --enable-vtysh \
-                --enable-isisd \
-                ${@bb.utils.contains('DISTRO_FEATURES', 'sysvinit', '--enable-watchfrr', '--disable-watchfrr', d)} \
-                --enable-ospfclient=yes \
-                --enable-multipath=64 \
-                --enable-user=frr \
-                --enable-group=frr \
-                --enable-vty-group=frrvty \
-                --enable-configfile-mask=0640 \
-                --enable-logfile-mask=0640 \
-                --enable-rtadv \
-                --enable-linux24-tcp-md5 \
-                ap_cv_cc_pie=no \
-                ${SNMP_CONF}"
+# /configure" "--host=$build" "--build=$build" "--enable-clippy-only" "--disable-nhrpd" "--disable-vtysh
+EXTRA_OECONF_class-native = '--disable-babeld --disable-bgp-announce --disable-bgp-vnc --disable-bgpd --disable-doc --disable-eigrpd --disable-isisd --disable-ldpd --disable-nhrpd --disable-ospf6d --disable-ospfapi --disable-ospfclient --disable-ospfd --disable-pbrd --disable-pimd --disable-ripd --disable-ripngd --disable-silent-rules --disable-vtysh --disable-watchfrr --disable-zebra --disable-zeromq --enable-build-clippy=yes --enable-clippy-only'
+
+EXTRA_OECONF_class-target = "\
+  --sysconfdir=${sysconfdir}/frr \
+  --localstatedir=${localstatedir}/run/frr \
+  --enable-exampledir=${docdir}/frr/examples/ \
+  --enable-vtysh \
+  --enable-isisd \
+  ${@bb.utils.contains('DISTRO_FEATURES', 'sysvinit', '--enable-watchfrr', '--disable-watchfrr', d)} \
+  --enable-ospfclient=yes \
+  --enable-multipath=64 \
+  --enable-user=frr \
+  --enable-group=frr \
+  --enable-vty-group=frrvty \
+  --enable-configfile-mask=0640 \
+  --enable-logfile-mask=0640 \
+  --enable-rtadv \
+  --enable-linux24-tcp-md5 \
+  ap_cv_cc_pie=no \
+  ${SNMP_CONF}"
 
 CACHED_CONFIGUREVARS += "ac_cv_path_PERL='/usr/bin/env perl'"
 
@@ -152,11 +166,11 @@ pkg_postinst_${PN} () {
 }
 
 # Split into a main package and separate per-protocol packages
-PACKAGE_BEFORE_PN = "${PN}-ospfd ${PN}-ospf6d ${PN}-bgpd \
+PACKAGE_BEFORE_PN-class-target = "${PN}-ospfd ${PN}-ospf6d ${PN}-bgpd \
                      ${PN}-ripd ${PN}-ripngd ${PN}-isisd \
                      ${PN}-ospfclient ${@bb.utils.contains('DISTRO_FEATURES', 'sysvinit', '${PN}-watchfrr', '', d)}"
 
-RDEPENDS_${PN} += "${PN}-bgpd ${PN}-isisd ${PN}-ospf6d ${PN}-ospfd ${PN}-ripd ${PN}-ripngd"
+RDEPENDS_${PN}-class-target += "${PN}-bgpd ${PN}-isisd ${PN}-ospf6d ${PN}-ospfd ${PN}-ripd ${PN}-ripngd"
 
 FILES_${PN}-ospfd       = "${sbindir}/ospfd ${libdir}/libospf.so.*"
 FILES_${PN}-ospf6d      = "${sbindir}/ospf6d"
@@ -232,3 +246,5 @@ pkg_prerm_${PN}-ripngd () {
 pkg_prerm_${PN}-isisd () {
     ${sysconfdir}/init.d/frr stop isisd
 }
+
+BBCLASSEXTEND = "native nativesdk"
