@@ -12,6 +12,7 @@ IMAGE_INSTALL = "packagegroup-core-boot \
 BISDN_SWITCH_IMAGE_EXTRA_INSTALL = "\
     baseboxd \
     bash \
+    coreutils \
     dropbear \
     e2fsprogs-resize2fs \
     e2fsprogs-tune2fs \
