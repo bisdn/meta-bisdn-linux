@@ -18,18 +18,27 @@ DEPENDS = " \
            bison-native \
            c-ares \
            flex-native \
-           frr-native \
            json-c \
            ncurses \
            perl-native \
            readline \
-           "
+	   clippy-native \
+	   "
+
+do_compile_prepend_class-target () { 
+       export PYTHONHOME=${RECIPE_SYSROOT_NATIVE}/usr			
+       install -m 0755 -d ${WORKDIR}/build/tests/isisd		
+}     
 
 DEPENDS += "${@bb.utils.contains('DISTRO_FEATURES', 'snmp', 'net-snmp', '', d)}"
 SNMP_CONF="${@bb.utils.contains('DISTRO_FEATURES', 'snmp', '--enable-snmp', '', d)}"
 
 # the "ip" command from busybox is not sufficient (flush by protocol flushes all routes)
-RDEPENDS_${PN}-class-target += "iproute2"
+RDEPENDS_${PN}_class-target += " \
+			    iproute2 \
+			    python \
+			    bash \
+			    "
 
 SRC_URI = "git://github.com/FRRouting/frr.git;protocol=https \
            file://frr.init \
@@ -46,6 +55,7 @@ SRC_URI = "git://github.com/FRRouting/frr.git;protocol=https \
            file://ripngd.service \
            file://zebra.service \
          "
+	 
 S = "${WORKDIR}/git"
 
 PACKAGECONFIG ??= "${@bb.utils.filter('DISTRO_FEATURES', 'pam', d)}"
@@ -63,9 +73,6 @@ SYSTEMD_SERVICE_${PN}-ripd = "ripd.service"
 SYSTEMD_SERVICE_${PN}-ripngd = "ripngd.service"
 SYSTEMD_SERVICE_${PN} = "zebra.service"
 
-# /configure" "--host=$build" "--build=$build" "--enable-clippy-only" "--disable-nhrpd" "--disable-vtysh
-EXTRA_OECONF_class-native = '--disable-babeld --disable-bgp-announce --disable-bgp-vnc --disable-bgpd --disable-doc --disable-eigrpd --disable-isisd --disable-ldpd --disable-nhrpd --disable-ospf6d --disable-ospfapi --disable-ospfclient --disable-ospfd --disable-pbrd --disable-pimd --disable-ripd --disable-ripngd --disable-silent-rules --disable-vtysh --disable-watchfrr --disable-zebra --disable-zeromq --enable-build-clippy=yes --enable-clippy-only'
-
 EXTRA_OECONF_class-target = "\
   --sysconfdir=${sysconfdir}/frr \
   --localstatedir=${localstatedir}/run/frr \
@@ -82,10 +89,22 @@ EXTRA_OECONF_class-target = "\
   --enable-logfile-mask=0640 \
   --enable-rtadv \
   --enable-linux24-tcp-md5 \
+  --enable-cumulus \
+  --enable-datacenter \
+  --enable-irdp \
+  --disable-doc \
   ap_cv_cc_pie=no \
-  ${SNMP_CONF}"
+  ${SNMP_CONF} \
+  CLIPPY_ROOT=${RECIPE_SYSROOT_NATIVE} \
+  "
+
+#  HOSTTOOLS=recipe-sysroot-native
 
 CACHED_CONFIGUREVARS += "ac_cv_path_PERL='/usr/bin/env perl'"
+
+#do_configure_prepend_class-target() {
+#    export HOSTTOOLS="${RECIPE_SYSROOT_NATIVE}/"
+#}	   
 
 do_install () {
     # Install init script and default settings
@@ -166,11 +185,11 @@ pkg_postinst_${PN} () {
 }
 
 # Split into a main package and separate per-protocol packages
-PACKAGE_BEFORE_PN-class-target = "${PN}-ospfd ${PN}-ospf6d ${PN}-bgpd \
+PACKAGE_BEFORE_PN_class-target = "${PN}-ospfd ${PN}-ospf6d ${PN}-bgpd \
                      ${PN}-ripd ${PN}-ripngd ${PN}-isisd \
                      ${PN}-ospfclient ${@bb.utils.contains('DISTRO_FEATURES', 'sysvinit', '${PN}-watchfrr', '', d)}"
 
-RDEPENDS_${PN}-class-target += "${PN}-bgpd ${PN}-isisd ${PN}-ospf6d ${PN}-ospfd ${PN}-ripd ${PN}-ripngd"
+RDEPENDS_${PN}_class-target += "${PN}-bgpd ${PN}-isisd ${PN}-ospf6d ${PN}-ospfd ${PN}-ripd ${PN}-ripngd"
 
 FILES_${PN}-ospfd       = "${sbindir}/ospfd ${libdir}/libospf.so.*"
 FILES_${PN}-ospf6d      = "${sbindir}/ospf6d"
