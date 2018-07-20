@@ -81,6 +81,8 @@ EXTRA_OECONF_class-target = "\
   --enable-isisd \
   ${@bb.utils.contains('DISTRO_FEATURES', 'sysvinit', '--enable-watchfrr', '--disable-watchfrr', d)} \
   --enable-ospfclient=yes \
+  --enable-ospfd \
+  --enable-bgpd \	
   --enable-multipath=64 \
   --enable-user=frr \
   --enable-group=frr \
@@ -98,17 +100,11 @@ EXTRA_OECONF_class-target = "\
   CLIPPY_ROOT=${RECIPE_SYSROOT_NATIVE} \
   "
 
-#  HOSTTOOLS=recipe-sysroot-native
-
 CACHED_CONFIGUREVARS += "ac_cv_path_PERL='/usr/bin/env perl'"
-
-#do_configure_prepend_class-target() {
-#    export HOSTTOOLS="${RECIPE_SYSROOT_NATIVE}/"
-#}	   
 
 do_install () {
     # Install init script and default settings
-    install -m 0755 -d ${D}${sysconfdir}/default ${D}${sysconfdir}/init.d \
+    # install -m 0755 -d ${D}${sysconfdir}/default ${D}${sysconfdir}/init.d \
     ${D}${sysconfdir}/frr ${D}${sysconfdir}/default/volatiles
     install -m 0644 ${WORKDIR}/frr.default ${D}${sysconfdir}/default/frr
     install -m 0644 ${WORKDIR}/watchfrr.default ${D}${sysconfdir}/default/watchfrr
@@ -176,7 +172,7 @@ do_install () {
 
 DEPENDS_append = " ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'systemd-systemctl-native', '', d)}"
 pkg_postinst_${PN} () {
-    if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd sysvinit', 'true', 'false', d)}; then
+	if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd sysvinit', 'true', 'false', d)}; then
         if [ -n "$D" ]; then
             OPTS="--root=$D"
         fi
