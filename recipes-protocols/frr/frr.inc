@@ -104,7 +104,7 @@ CACHED_CONFIGUREVARS += "ac_cv_path_PERL='/usr/bin/env perl'"
 
 do_install () {
     # Install init script and default settings
-    # install -m 0755 -d ${D}${sysconfdir}/default ${D}${sysconfdir}/init.d \
+    install -m 0755 -d ${D}${sysconfdir}/default ${D}${sysconfdir}/init.d \
     ${D}${sysconfdir}/frr ${D}${sysconfdir}/default/volatiles
     install -m 0644 ${WORKDIR}/frr.default ${D}${sysconfdir}/default/frr
     install -m 0644 ${WORKDIR}/watchfrr.default ${D}${sysconfdir}/default/watchfrr
