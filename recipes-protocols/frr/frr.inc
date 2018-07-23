@@ -54,6 +54,8 @@ SRC_URI = "git://github.com/FRRouting/frr.git;protocol=https \
            file://ripd.service \
            file://ripngd.service \
            file://zebra.service \
+	   file://daemons \
+	   file://frr.service \
          "
 	 
 S = "${WORKDIR}/git"
@@ -104,13 +106,13 @@ CACHED_CONFIGUREVARS += "ac_cv_path_PERL='/usr/bin/env perl'"
 
 do_install () {
     # Install init script and default settings
-    install -m 0755 -d ${D}${sysconfdir}/default ${D}${sysconfdir}/init.d \
-    ${D}${sysconfdir}/frr ${D}${sysconfdir}/default/volatiles
+    install -m 0755 -d ${D}${sysconfdir}/default ${D}${sysconfdir}/init.d \ #################################
+    ${D}${sysconfdir}/frr ${D}${sysconfdir}/default/volatiles ####################################
     install -m 0644 ${WORKDIR}/frr.default ${D}${sysconfdir}/default/frr
     install -m 0644 ${WORKDIR}/watchfrr.default ${D}${sysconfdir}/default/watchfrr
-    install -m 0755 ${WORKDIR}/frr.init ${D}${sysconfdir}/init.d/frr
-    install -m 0755 ${WORKDIR}/watchfrr.init ${D}${sysconfdir}/init.d/watchfrr
-    install -m 0644 ${WORKDIR}/volatiles.03_frr  ${D}${sysconfdir}/default/volatiles/volatiles.03_frr
+    install -m 0755 ${WORKDIR}/frr.init ${D}${sysconfdir}/init.d/frr #################################
+    install -m 0755 ${WORKDIR}/watchfrr.init ${D}${sysconfdir}/init.d/watchfrr #################################
+    install -m 0644 ${WORKDIR}/volatiles.03_frr  ${D}${sysconfdir}/default/volatiles/volatiles.03_frr #########################
 
     # Install sample configurations for the daemons
     for f in bgpd vtysh isisd ospfd ripngd zebra ripd ospf6d; do
@@ -132,14 +134,14 @@ do_install () {
             localstatedir=${localstatedir}/run/frr
 
     # Fix hardcoded paths
-    sed -i 's!/usr/sbin/!${sbindir}/!g' ${D}${sysconfdir}/init.d/*
-    sed -i 's!/usr/bin/!${bindir}/!g' ${D}${sysconfdir}/init.d/frr
-    sed -i 's!/etc/!${sysconfdir}/!g' ${D}${sysconfdir}/init.d/* ${D}${sysconfdir}/default/watchfrr
-    sed -i 's!/var/!${localstatedir}/!g' ${D}${sysconfdir}/init.d/* ${D}${sysconfdir}/default/volatiles/volatiles.03_frr
-    sed -i 's!^PATH=.*!PATH=${base_sbindir}:${sbindir}:${base_bindir}:${bindir}!' ${D}${sysconfdir}/init.d/*
+    sed -i 's!/usr/sbin/!${sbindir}/!g' ${D}${sysconfdir}/init.d/* ####################################
+    sed -i 's!/usr/bin/!${bindir}/!g' ${D}${sysconfdir}/init.d/frr ####################################
+    sed -i 's!/etc/!${sysconfdir}/!g' ${D}${sysconfdir}/init.d/* ${D}${sysconfdir}/default/watchfrr ##############################
+    sed -i 's!/var/!${localstatedir}/!g' ${D}${sysconfdir}/init.d/* ${D}${sysconfdir}/default/volatiles/volatiles.03_frr ################
+    sed -i 's!^PATH=.*!PATH=${base_sbindir}:${sbindir}:${base_bindir}:${bindir}!' ${D}${sysconfdir}/init.d/* #########################
 
     # For PAM
-    for feature in ${DISTRO_FEATURES}; do
+    for feature in ${DISTRO_FEATURES}; do 
         if [ "$feature" = "pam" ]; then
             install -D -m 644 ${WORKDIR}/frr.pam ${D}/${sysconfdir}/pam.d/frr
             break
@@ -147,7 +149,7 @@ do_install () {
     done
 
     if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'true', 'false', d)}; then
-        install -d ${D}${sysconfdir}/tmpfiles.d
+        install -d ${D}${sysconfdir}/tmpfiles.d 
         echo "d /var/run/frr 0755 frr frr -" \
         > ${D}${sysconfdir}/tmpfiles.d/${BPN}.conf
     fi
@@ -159,7 +161,7 @@ do_install () {
     fi
 
     install -d ${D}${systemd_unitdir}/system
-    for i in bgpd isisd ospf6d ospfd ripd ripngd zebra; do
+    for i in bgpd frr isisd ospf6d ospfd ripd ripngd zebra; do
         install -m 0644 ${WORKDIR}/$i.service ${D}${systemd_unitdir}/system
     done
     sed -e 's,@BASE_SBINDIR@,${base_sbindir},g' \
@@ -235,31 +237,31 @@ pkg_postinst_${PN} () {
 
 # Stop apps before uninstall
 pkg_prerm_${PN} () {
-    ${sysconfdir}/init.d/frr stop
+    systemctl stop frr
 }
 
 pkg_prerm_${PN}-ospfd () {
-    ${sysconfdir}/init.d/frr stop ospfd
+    systemctl stop ospfd
 }
 
 pkg_prerm_${PN}-ospf6d () {
-    ${sysconfdir}/init.d/frr stop ospf6d
+    systemctl stop ospf6d	
 }
 
 pkg_prerm_${PN}-bgpd () {
-    ${sysconfdir}/init.d/frr stop bgpd
+    systemctl  stop bgpd
 }
 
 pkg_prerm_${PN}-ripd () {
-    ${sysconfdir}/init.d/frr stop ripd
+    systemctl  stop ripd
 }
 
 pkg_prerm_${PN}-ripngd () {
-    ${sysconfdir}/init.d/frr stop ripngd
+   systemctl  stop ripngd
 }
 
 pkg_prerm_${PN}-isisd () {
-    ${sysconfdir}/init.d/frr stop isisd
+    systemctl stop isisd
 }
 
 BBCLASSEXTEND = "native nativesdk"

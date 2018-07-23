@@ -1,0 +1,22 @@
+[Unit]
+Description=FRRouting
+After=networking.service
+OnFailure=heartbeat-failed@%n.service
+
+[Service]
+Nice=-5
+EnvironmentFile=/etc/default/frr
+Type=forking
+NotifyAccess=all
+StartLimitInterval=3m
+StartLimitBurst=3
+TimeoutSec=2m
+WatchdogSec=60s
+RestartSec=5
+Restart=on-abnormal
+LimitNOFILE=1024
+ExecStart=/usr/sbin/frr start
+ExecStop=/usr/sbin/frr stop
+ExecReload=/usr/sbin/frr-reload
+[Install]
+WantedBy=network-online.target
