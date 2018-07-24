@@ -82,7 +82,6 @@ EXTRA_OECONF_class-target = "\
   --enable-exampledir=${docdir}/frr/examples/ \
   --enable-vtysh \
   --enable-isisd \
-  ${@bb.utils.contains('DISTRO_FEATURES', 'sysvinit', '--enable-watchfrr', '--disable-watchfrr', d)} \
   --enable-ospfclient=yes \
   --enable-ospfd \
   --enable-bgpd \	
@@ -98,10 +97,17 @@ EXTRA_OECONF_class-target = "\
   --enable-datacenter \
   --enable-irdp \
   --disable-doc \
+  --enable-watchfrr \
   ap_cv_cc_pie=no \
   ${SNMP_CONF} \
   CLIPPY_ROOT=${RECIPE_SYSROOT_NATIVE} \
   "
+
+#  --enable-systemd=yes 
+
+#  
+#  ${@bb.utils.contains('DISTRO_FEATURES', 'sysvinit', '--enable-watchfrr', '--disable-watchfrr', d)} 
+
 
 CACHED_CONFIGUREVARS += "ac_cv_path_PERL='/usr/bin/env perl'"
 
@@ -159,10 +165,10 @@ do_install () {
     fi
 
     # Remove sysinit script if sysvinit is not in DISTRO_FEATURES
-    if ${@bb.utils.contains('DISTRO_FEATURES', 'sysvinit', 'false', 'true', d)}; then
-        rm -rf ${D}${sysconfdir}/init.d/
-        rm -f ${D}${sysconfdir}/default/watchfrr
-    fi
+    #if ${@bb.utils.contains('DISTRO_FEATURES', 'sysvinit', 'false', 'true', d)}; then
+    #    rm -rf ${D}${sysconfdir}/init.d/
+    #    rm -f ${D}${sysconfdir}/default/watchfrr
+    #fi
 
     install -d ${D}${systemd_unitdir}/system
     for i in bgpd frr isisd ospf6d ospfd ripd ripngd zebra; do
