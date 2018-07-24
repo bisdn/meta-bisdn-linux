@@ -123,6 +123,9 @@ do_install () {
     for f in bgpd vtysh isisd ospfd ripngd zebra ripd ospf6d; do
         touch ${D}${sysconfdir}/frr/$f.conf
     done
+
+    install -m 0640 ${WORKDIR}/daemons ${D}${sysconfdir}/frr/daemons
+     
     chown frr:frrvty ${D}${sysconfdir}/frr
     chown frr:frr ${D}${sysconfdir}/frr/*.conf
     chmod 750 ${D}${sysconfdir}/frr
