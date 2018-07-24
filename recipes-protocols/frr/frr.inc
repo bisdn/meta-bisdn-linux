@@ -67,13 +67,14 @@ PACKAGECONFIG[pam] = "--with-libpam, --without-libpam, libpam"
 inherit autotools update-rc.d useradd systemd pkgconfig python3native
 
 SYSTEMD_PACKAGES = "${PN} ${PN}-bgpd ${PN}-isisd ${PN}-ospf6d ${PN}-ospfd ${PN}-ripd ${PN}-ripngd"
+
 SYSTEMD_SERVICE_${PN}-bgpd = "bgpd.service"
 SYSTEMD_SERVICE_${PN}-isisd = "isisd.service"
 SYSTEMD_SERVICE_${PN}-ospf6d = "ospf6d.service"
 SYSTEMD_SERVICE_${PN}-ospfd = "ospfd.service"
 SYSTEMD_SERVICE_${PN}-ripd = "ripd.service"
 SYSTEMD_SERVICE_${PN}-ripngd = "ripngd.service"
-SYSTEMD_SERVICE_${PN} = "zebra.service"
+SYSTEMD_SERVICE_${PN} = "zebra.service frr.service"
 
 EXTRA_OECONF_class-target = "\
   --sysconfdir=${sysconfdir}/frr \
@@ -106,13 +107,13 @@ CACHED_CONFIGUREVARS += "ac_cv_path_PERL='/usr/bin/env perl'"
 
 do_install () {
     # Install init script and default settings
-    install -m 0755 -d ${D}${sysconfdir}/default ${D}${sysconfdir}/init.d \ #################################
-    ${D}${sysconfdir}/frr ${D}${sysconfdir}/default/volatiles ####################################
+    install -m 0755 -d ${D}${sysconfdir}/default ${D}${sysconfdir}/init.d \ 
+    ${D}${sysconfdir}/frr ${D}${sysconfdir}/default/volatiles 
     install -m 0644 ${WORKDIR}/frr.default ${D}${sysconfdir}/default/frr
     install -m 0644 ${WORKDIR}/watchfrr.default ${D}${sysconfdir}/default/watchfrr
-    install -m 0755 ${WORKDIR}/frr.init ${D}${sysconfdir}/init.d/frr #################################
-    install -m 0755 ${WORKDIR}/watchfrr.init ${D}${sysconfdir}/init.d/watchfrr #################################
-    install -m 0644 ${WORKDIR}/volatiles.03_frr  ${D}${sysconfdir}/default/volatiles/volatiles.03_frr #########################
+    install -m 0755 ${WORKDIR}/frr.init ${D}${sysconfdir}/init.d/frr 
+    install -m 0755 ${WORKDIR}/watchfrr.init ${D}${sysconfdir}/init.d/watchfrr 
+    install -m 0644 ${WORKDIR}/volatiles.03_frr  ${D}${sysconfdir}/default/volatiles/volatiles.03_frr 
 
     # Install sample configurations for the daemons
     for f in bgpd vtysh isisd ospfd ripngd zebra ripd ospf6d; do
@@ -134,11 +135,11 @@ do_install () {
             localstatedir=${localstatedir}/run/frr
 
     # Fix hardcoded paths
-    sed -i 's!/usr/sbin/!${sbindir}/!g' ${D}${sysconfdir}/init.d/* ####################################
-    sed -i 's!/usr/bin/!${bindir}/!g' ${D}${sysconfdir}/init.d/frr ####################################
-    sed -i 's!/etc/!${sysconfdir}/!g' ${D}${sysconfdir}/init.d/* ${D}${sysconfdir}/default/watchfrr ##############################
-    sed -i 's!/var/!${localstatedir}/!g' ${D}${sysconfdir}/init.d/* ${D}${sysconfdir}/default/volatiles/volatiles.03_frr ################
-    sed -i 's!^PATH=.*!PATH=${base_sbindir}:${sbindir}:${base_bindir}:${bindir}!' ${D}${sysconfdir}/init.d/* #########################
+    sed -i 's!/usr/sbin/!${sbindir}/!g' ${D}${sysconfdir}/init.d/* 
+    sed -i 's!/usr/bin/!${bindir}/!g' ${D}${sysconfdir}/init.d/frr 
+    sed -i 's!/etc/!${sysconfdir}/!g' ${D}${sysconfdir}/init.d/* ${D}${sysconfdir}/default/watchfrr 
+    sed -i 's!/var/!${localstatedir}/!g' ${D}${sysconfdir}/init.d/* ${D}${sysconfdir}/default/volatiles/volatiles.03_frr 
+    sed -i 's!^PATH=.*!PATH=${base_sbindir}:${sbindir}:${base_bindir}:${bindir}!' ${D}${sysconfdir}/init.d/* 
 
     # For PAM
     for feature in ${DISTRO_FEATURES}; do 
@@ -188,6 +189,7 @@ PACKAGE_BEFORE_PN_class-target = "${PN}-ospfd ${PN}-ospf6d ${PN}-bgpd \
                      ${PN}-ospfclient ${@bb.utils.contains('DISTRO_FEATURES', 'sysvinit', '${PN}-watchfrr', '', d)}"
 
 RDEPENDS_${PN}_class-target += "${PN}-bgpd ${PN}-isisd ${PN}-ospf6d ${PN}-ospfd ${PN}-ripd ${PN}-ripngd"
+
 
 FILES_${PN}-ospfd       = "${sbindir}/ospfd ${libdir}/libospf.so.*"
 FILES_${PN}-ospf6d      = "${sbindir}/ospf6d"
