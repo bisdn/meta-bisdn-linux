@@ -55,6 +55,7 @@ SRC_URI = "git://github.com/FRRouting/frr.git;protocol=https \
            file://ripngd.service \
            file://zebra.service \
 	   file://daemons \
+	   file://daemons.conf \
 	   file://frr.service \
          "
 	 
@@ -131,7 +132,7 @@ do_install () {
         touch ${D}${sysconfdir}/frr/$f.conf
     done
 
-    install -m 0640 ${WORKDIR}/daemons ${D}${sysconfdir}/frr/daemons
+    install -m 0640 ${WORKDIR}/daemons* ${D}${sysconfdir}/frr/
      
     chown frr:frrvty ${D}${sysconfdir}/frr
     chown frr:frr ${D}${sysconfdir}/frr/*.conf
@@ -168,10 +169,10 @@ do_install () {
     fi
 
     # Remove sysinit script if sysvinit is not in DISTRO_FEATURES
-    #if ${@bb.utils.contains('DISTRO_FEATURES', 'sysvinit', 'false', 'true', d)}; then
-    #    rm -rf ${D}${sysconfdir}/init.d/
-    #    rm -f ${D}${sysconfdir}/default/watchfrr
-    #fi
+    if ${@bb.utils.contains('DISTRO_FEATURES', 'sysvinit', 'false', 'true', d)}; then
+        rm -rf ${D}${sysconfdir}/init.d/
+        rm -f ${D}${sysconfdir}/default/watchfrr
+    fi
 
     install -d ${D}${systemd_unitdir}/system
     for i in bgpd frr isisd ospf6d ospfd ripd ripngd zebra; do
@@ -186,7 +187,7 @@ do_install () {
 }
 
 DEPENDS_append = " ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'systemd-systemctl-native', '', d)}"
-pkg_postinst_${PN} () {
+pkg_postinst_${PN}_append () {
 	if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd sysvinit', 'true', 'false', d)}; then
         if [ -n "$D" ]; then
             OPTS="--root=$D"
@@ -247,7 +248,7 @@ USERADD_PARAM_${PN} = "--system --home ${localstatedir}/run/frr/ -M -g frr -G fr
 
 pkg_postinst_${PN} () {
     if [ -z "$D" ] && [ -e /etc/init.d/populate-volatile.sh ] ; then
-        ${sysconfdir}/init.d/populate-volatile.sh update
+           ${sysconfdir}/init.d/populate-volatile.sh update
     fi
 }
 
