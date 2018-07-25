@@ -77,6 +77,7 @@ SYSTEMD_SERVICE_${PN}-ripngd = "ripngd.service"
 SYSTEMD_SERVICE_${PN} = "zebra.service frr.service"
 
 EXTRA_OECONF_class-target = "\
+  --sbindir=${libdir}/frr \
   --sysconfdir=${sysconfdir}/frr \
   --localstatedir=${localstatedir}/run/frr \
   --enable-exampledir=${docdir}/frr/examples/ \
@@ -139,9 +140,11 @@ do_install () {
 
     # Install frr
     oe_runmake install DESTDIR=${D} prefix=${prefix} \
-            sbindir=${sbindir} \
+    	    sbindir=${libdir}/frr \
             sysconfdir=${sysconfdir}/frr \
             localstatedir=${localstatedir}/run/frr
+
+   #         sbindir=${sbindir} 
 
     # Fix hardcoded paths
     sed -i 's!/usr/sbin/!${sbindir}/!g' ${D}${sysconfdir}/init.d/* 
