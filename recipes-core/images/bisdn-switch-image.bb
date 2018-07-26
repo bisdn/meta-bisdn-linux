@@ -15,7 +15,7 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL = "\
     dropbear \
     e2fsprogs-resize2fs \
     e2fsprogs-tune2fs \
-    frr \
+    file \
     grub \
     i2c-tools \
     iproute2 \

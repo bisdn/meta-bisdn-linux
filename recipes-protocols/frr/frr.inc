@@ -47,13 +47,6 @@ SRC_URI = "git://github.com/FRRouting/frr.git;protocol=https \
            file://watchfrr.default \
            file://volatiles.03_frr \
            file://frr.pam \
-           file://bgpd.service \
-           file://isisd.service \
-           file://ospf6d.service \
-           file://ospfd.service \
-           file://ripd.service \
-           file://ripngd.service \
-           file://zebra.service \
 	   file://daemons \
 	   file://daemons.conf \
 	   file://frr.service \
@@ -67,15 +60,16 @@ PACKAGECONFIG[pam] = "--with-libpam, --without-libpam, libpam"
 
 inherit autotools update-rc.d useradd systemd pkgconfig python3native
 
-SYSTEMD_PACKAGES = "${PN} ${PN}-bgpd ${PN}-isisd ${PN}-ospf6d ${PN}-ospfd ${PN}-ripd ${PN}-ripngd"
+SYSTEMD_PACKAGES = "${PN}" 
+# ${PN}-bgpd ${PN}-isisd ${PN}-ospf6d ${PN}-ospfd ${PN}-ripd ${PN}-ripngd
 
-SYSTEMD_SERVICE_${PN}-bgpd = "bgpd.service"
-SYSTEMD_SERVICE_${PN}-isisd = "isisd.service"
-SYSTEMD_SERVICE_${PN}-ospf6d = "ospf6d.service"
-SYSTEMD_SERVICE_${PN}-ospfd = "ospfd.service"
-SYSTEMD_SERVICE_${PN}-ripd = "ripd.service"
-SYSTEMD_SERVICE_${PN}-ripngd = "ripngd.service"
-SYSTEMD_SERVICE_${PN} = "zebra.service frr.service"
+#SYSTEMD_SERVICE_${PN}-bgpd = "bgpd.service"
+#SYSTEMD_SERVICE_${PN}-isisd = "isisd.service"
+#SYSTEMD_SERVICE_${PN}-ospf6d = "ospf6d.service"
+#SYSTEMD_SERVICE_${PN}-ospfd = "ospfd.service"
+#SYSTEMD_SERVICE_${PN}-ripd = "ripd.service"
+#SYSTEMD_SERVICE_${PN}-ripngd = "ripngd.service"
+SYSTEMD_SERVICE_${PN} = "frr.service"
 
 EXTRA_OECONF_class-target = "\
   --sbindir=${libdir}/frr \
@@ -145,8 +139,6 @@ do_install () {
             sysconfdir=${sysconfdir}/frr \
             localstatedir=${localstatedir}/run/frr
 
-   #         sbindir=${sbindir} 
-
     # Fix hardcoded paths
     sed -i 's!/usr/sbin/!${sbindir}/!g' ${D}${sysconfdir}/init.d/* 
     sed -i 's!/usr/bin/!${bindir}/!g' ${D}${sysconfdir}/init.d/frr 
@@ -171,19 +163,11 @@ do_install () {
     # Remove sysinit script if sysvinit is not in DISTRO_FEATURES
     if ${@bb.utils.contains('DISTRO_FEATURES', 'sysvinit', 'false', 'true', d)}; then
         rm -rf ${D}${sysconfdir}/init.d/
-        rm -f ${D}${sysconfdir}/default/watchfrr
+        # rm -f ${D}${sysconfdir}/default/watchfrr
     fi
 
     install -d ${D}${systemd_unitdir}/system
-    for i in bgpd frr isisd ospf6d ospfd ripd ripngd zebra; do
-        install -m 0644 ${WORKDIR}/$i.service ${D}${systemd_unitdir}/system
-    done
-    sed -e 's,@BASE_SBINDIR@,${base_sbindir},g' \
-        -e 's,@SYSCONFDIR@,${sysconfdir},g' \
-        -e 's,@SBINDIR@,${sbindir},g' \
-        -e 's,@base_bindir@,${base_bindir},g' \
-        -e 's,@localstatedir@,${localstatedir},g' \
-        -i ${D}${systemd_unitdir}/system/*.service
+    install -m 0644 ${WORKDIR}/frr.service ${D}${systemd_unitdir}/system
 }
 
 DEPENDS_append = " ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'systemd-systemctl-native', '', d)}"

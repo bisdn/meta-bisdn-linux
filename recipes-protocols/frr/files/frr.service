@@ -15,8 +15,8 @@ WatchdogSec=60s
 RestartSec=5
 Restart=on-abnormal
 LimitNOFILE=1024
-ExecStart=/usr/sbin/frr start
-ExecStop=/usr/sbin/frr stop
-ExecReload=/usr/sbin/frr-reload
+ExecStart=/usr/lib/frr/frr start
+ExecStop=/usr/lib/frr/frr stop
+ExecReload=/usr/lib/frr/frr-reload
 [Install]
 WantedBy=network-online.target
