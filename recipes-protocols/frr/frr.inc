@@ -181,22 +181,22 @@ pkg_postinst_${PN}_append () {
 }
 
 # Split into a main package and separate per-protocol packages
-PACKAGE_BEFORE_PN_class-target = "${PN}-ospfd ${PN}-ospf6d ${PN}-bgpd \
-                     ${PN}-ripd ${PN}-ripngd ${PN}-isisd \
-                     ${PN}-ospfclient ${PN}-watchfrr \
-		     "
+#PACKAGE_BEFORE_${PN}_class-target = "${PN}-ospfd ${PN}-ospf6d ${PN}-bgpd 
+#                     ${PN}-ripd ${PN}-ripngd ${PN}-isisd 
+#                     ${PN}-ospfclient ${PN}-watchfrr 
+#		     "
 
-RDEPENDS_${PN}_class-target += "${PN}-bgpd ${PN}-isisd ${PN}-ospf6d ${PN}-ospfd ${PN}-ripd ${PN}-ripngd ${PN}-watchfrr"
+#RDEPENDS_${PN}_class-target += "${PN}-bgpd ${PN}-isisd ${PN}-ospf6d ${PN}-ospfd ${PN}-ripd ${PN}-ripngd ${PN}-watchfrr"
 
 
-FILES_${PN}-ospfd       = "${sbindir}/ospfd ${libdir}/libospf.so.*"
-FILES_${PN}-ospf6d      = "${sbindir}/ospf6d"
-FILES_${PN}-bgpd        = "${sbindir}/bgpd"
-FILES_${PN}-ripd        = "${sbindir}/ripd"
-FILES_${PN}-ripngd      = "${sbindir}/ripngd"
-FILES_${PN}-isisd       = "${sbindir}/isisd"
-FILES_${PN}-ospfclient  = "${sbindir}/ospfclient ${libdir}/libospfapiclient.so.*"
-FILES_${PN}-watchfrr    = "${sbindir}/watchfrr ${sysconfdir}/default/watchfrr"
+#FILES_${PN}-ospfd       = "${sbindir}/ospfd ${libdir}/libospf.so.*"
+#FILES_${PN}-ospf6d      = "${sbindir}/ospf6d"
+#FILES_${PN}-bgpd        = "${sbindir}/bgpd"
+#FILES_${PN}-ripd        = "${sbindir}/ripd"
+#FILES_${PN}-ripngd      = "${sbindir}/ripngd"
+#FILES_${PN}-isisd       = "${sbindir}/isisd"
+#FILES_${PN}-ospfclient  = "${sbindir}/ospfclient ${libdir}/libospfapiclient.so.*"
+#FILES_${PN}-watchfrr    = "${sbindir}/watchfrr ${sysconfdir}/default/watchfrr"
 
 # ${sysconfdir}/init.d/watchfrr
 
