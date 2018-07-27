@@ -43,6 +43,7 @@ SRC_URI = "git://github.com/FRRouting/frr.git;protocol=https \
            file://frr.default \
            file://frr.pam \
 	   file://daemons \
+	   file://daemons.conf \	
 	   file://frr.service \
 	  "
 
@@ -102,7 +103,7 @@ do_install () {
         touch ${D}${sysconfdir}/frr/$f.conf
     done
 
-    install -m 0640 ${WORKDIR}/daemons ${D}${sysconfdir}/frr/daemons
+    install -m 0640 ${WORKDIR}/daemons* ${D}${sysconfdir}/frr/
      
     chown frr:frrvty ${D}${sysconfdir}/frr
     chown frr:frr ${D}${sysconfdir}/frr/*.conf
