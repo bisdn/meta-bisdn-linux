@@ -1,4 +1,4 @@
-# Copyright (C) 2017 Tobias Jungel <tobias.jungel@bisdn.de>
+# Copyright (C) 2017 Tobias Jungel <tobias.jungel@bisdn.de> and Henrike Wissing <henrike.wissing@bisdn.de>
 # Released under the MIT license (see COPYING.MIT for the terms)
 
 IMAGE_INSTALL = "packagegroup-core-boot \

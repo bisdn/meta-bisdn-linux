@@ -1,4 +1,4 @@
-# Copyright (C) 2017 Tobias Jungel <tobias.jungel@bisdn.de>
+# Copyright (C) 2018 Tobias Jungel <tobias.jungel@bisdn.de> and Henrike Wissing <henrike.wissing@bisdn.de>
 # Released under the MIT license (see COPYING.MIT for the terms)
 
 IMAGE_FEATURES += " package-management"
@@ -16,6 +16,7 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL = "\
     dropbear \
     e2fsprogs-resize2fs \
     e2fsprogs-tune2fs \
+    file \
     grub \
     i2c-tools \
     iproute2 \
