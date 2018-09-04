@@ -2,24 +2,37 @@
 
 set -e
 
+USAGE="$(basename "$0") -- this will uninstall BISDN-Linux. Options:
+[-h] shows this message.
+[-y] will uninstall without asking confirm.
+"
+
+
 NEED_CONFIRM=true
 
-while getopts "y" o; do
-  case "${o}" in
+
+while getopts "hy" o; do
+  case $o in
+    h)
+      echo "$USAGE";
+      exit 0;;
     y) # yes to all answers
       NEED_CONFIRM=false
     ;;
+    * ) echo "Operation aborted.";
+        exit 0;;
   esac
 done
 
-while [ "${NEED_CONFIRM}" = true ] ; do
-  read -p "Uninstall BISDN-Linux? [y/n] " yn
+if [ "${NEED_CONFIRM}" = true ]
+then
+  read -p "Uninstall BISDN-Linux? [y/N] " yn
   case $yn in
     [Yy]* ) break;;
-    [Nn]* ) exit 0;;
-    * ) echo "Please answer y or n.";;
+    * ) echo "Operation aborted.";
+        exit 0;;
   esac
-done
+fi
 
 MNT_DIR="/mnt/onie-boot"
 mountpoint -q ${MNT_DIR} || mount ${MNT_DIR}
