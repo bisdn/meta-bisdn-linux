@@ -21,13 +21,12 @@ DEPENDS = " \
            ncurses \
            perl-native \
            readline \
-	   clippy-native \
 	   "
 
-do_compile_prepend_class-target () { 
-       export PYTHONHOME=${RECIPE_SYSROOT_NATIVE}/usr			
-       install -m 0755 -d ${WORKDIR}/build/tests/isisd		
-}     
+do_compile_prepend_class-target () {
+       export PYTHONHOME=${RECIPE_SYSROOT_NATIVE}/usr
+       install -m 0755 -d ${WORKDIR}/build/tests/isisd
+}
 
 DEPENDS += "${@bb.utils.contains('DISTRO_FEATURES', 'snmp', 'net-snmp', '', d)}"
 SNMP_CONF="${@bb.utils.contains('DISTRO_FEATURES', 'snmp', '--enable-snmp', '', d)}"
@@ -38,12 +37,13 @@ RDEPENDS_${PN}_class-target += " \
 			    python \
 			    bash \
 			    "
-			    
-SRC_URI = "git://github.com/FRRouting/frr.git;protocol=https \
+
+GIT_BRANCH ?= "master"
+SRC_URI = "git://github.com/FRRouting/frr.git;protocol=https;branch=${GIT_BRANCH} \
            file://frr.default \
            file://frr.pam \
 	   file://daemons \
-	   file://daemons.conf \	
+	   file://daemons.conf \
 	   file://frr.service \
 	  "
 
@@ -55,14 +55,14 @@ PACKAGECONFIG[pam] = "--with-libpam, --without-libpam, libpam"
 
 inherit autotools useradd systemd pkgconfig python3native
 
-SYSTEMD_PACKAGES = "${PN}" 
+SYSTEMD_PACKAGES = "${PN}"
 SYSTEMD_SERVICE_${PN} = "frr.service"
 
 EXTRA_OECONF_class-target = "\
   --localstatedir=${localstatedir}/run/frr \
   --sbindir=${libdir}/frr \
   --sysconfdir=${sysconfdir}/frr \
-  --enable-bgpd \	
+  --enable-bgpd \
   --enable-configfile-mask=0640 \
   --enable-cumulus \
   --enable-datacenter \
@@ -72,7 +72,7 @@ EXTRA_OECONF_class-target = "\
   --enable-irdp \
   --enable-linux24-tcp-md5 \
   --enable-logfile-mask=0640 \
-  --enable-multipath=64 \  
+  --enable-multipath=64 \
   --enable-ospfclient=yes \
   --enable-ospfd \
   --enable-rtadv \
@@ -85,13 +85,13 @@ EXTRA_OECONF_class-target = "\
   ${SNMP_CONF} \
   CLIPPY_ROOT=${RECIPE_SYSROOT_NATIVE} \
   "
-#  --enable-systemd=yes 
+#  --enable-systemd=yes
 
 CACHED_CONFIGUREVARS += "ac_cv_path_PERL='/usr/bin/env perl'"
 
 do_install () {
     # Install init script and default settings
-    install -m 0755 -d ${D}${sysconfdir}/default ${D}${sysconfdir}/frr 
+    install -m 0755 -d ${D}${sysconfdir}/default ${D}${sysconfdir}/frr
     install -m 0644 ${WORKDIR}/frr.default ${D}${sysconfdir}/default/frr
 
     # Install sample configurations for the daemons
@@ -104,7 +104,7 @@ do_install () {
     done
 
     install -m 0640 ${WORKDIR}/daemons* ${D}${sysconfdir}/frr/
-     
+
     chown frr:frrvty ${D}${sysconfdir}/frr
     chown frr:frr ${D}${sysconfdir}/frr/*.conf
     chmod 750 ${D}${sysconfdir}/frr
@@ -117,7 +117,7 @@ do_install () {
             localstatedir=${localstatedir}/run/frr
 
     # For PAM
-    for feature in ${DISTRO_FEATURES}; do 
+    for feature in ${DISTRO_FEATURES}; do
         if [ "$feature" = "pam" ]; then
             install -D -m 644 ${WORKDIR}/frr.pam ${D}/${sysconfdir}/pam.d/frr
             break
@@ -125,7 +125,7 @@ do_install () {
     done
 
     if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'true', 'false', d)}; then
-        install -d ${D}${sysconfdir}/tmpfiles.d 
+        install -d ${D}${sysconfdir}/tmpfiles.d
         echo "d /var/run/frr 0755 frr frr -" \
         > ${D}${sysconfdir}/tmpfiles.d/${BPN}.conf
     fi
@@ -176,7 +176,7 @@ pkg_prerm_${PN}-ospfd () {
 }
 
 pkg_prerm_${PN}-ospf6d () {
-    systemctl stop ospf6d	
+    systemctl stop ospf6d
 }
 
 pkg_prerm_${PN}-bgpd () {
@@ -194,5 +194,3 @@ pkg_prerm_${PN}-ripngd () {
 pkg_prerm_${PN}-isisd () {
     systemctl stop isisd
 }
-
-BBCLASSEXTEND = "native nativesdk"
