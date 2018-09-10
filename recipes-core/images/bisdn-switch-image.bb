@@ -17,6 +17,7 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL = "\
     e2fsprogs-resize2fs \
     e2fsprogs-tune2fs \
     file \
+    frr \
     grub \
     i2c-tools \
     iproute2 \
