@@ -6,15 +6,18 @@ HOMEPAGE = "https://github.com/bisdn/basebox"
 LICENSE = "MPLv2"
 LIC_FILES_CHKSUM = "file://COPYING;md5=815ca599c9df247a0c7f619bab123dad"
 
-DEPENDS = "gflags glog grpc grpc-native libnl protobuf protobuf-native rofl-common rofl-ofdpa"
+DEPENDS = "openssl gflags glog grpc grpc-native libnl protobuf protobuf-native rofl-common rofl-ofdpa"
 
-SRC_URI = "git://github.com/bisdn/basebox.git \
+SRC_URI = "gitsm://github.com/bisdn/basebox.git \
            file://grpc-configure.patch"
-SRCREV = "e42e3eca99658556db2d4c3dd7ea0dee82347084"
+SRCREV = "3afc013c8572c6c2883bae47f9b07a6eb0ffeec2"
 
 S = "${WORKDIR}/git"
 
 inherit autotools pkgconfig systemd
+
+TARGET_LDFLAGS_append = " -lssl"
+TARGET_LDFLAGS_append = " -lcrypto"
 
 # install service
 do_install_append() {
