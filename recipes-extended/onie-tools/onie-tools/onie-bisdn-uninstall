@@ -28,7 +28,7 @@ if [ "${NEED_CONFIRM}" = true ]
 then
   read -p "Uninstall BISDN-Linux? [y/N] " yn
   case $yn in
-    [Yy]* ) break;;
+    [Yy]* ) ;;
     * ) echo "Operation aborted.";
         exit 0;;
   esac
