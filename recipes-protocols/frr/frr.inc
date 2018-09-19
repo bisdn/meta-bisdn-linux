@@ -49,9 +49,13 @@ SRC_URI = "git://github.com/FRRouting/frr.git;protocol=https;branch=${GIT_BRANCH
 
 S = "${WORKDIR}/git"
 
-PACKAGECONFIG ??= "${@bb.utils.filter('DISTRO_FEATURES', 'pam', d)}"
+PACKAGECONFIG ??= " \
+    ${@bb.utils.filter('DISTRO_FEATURES', 'pam', d)} \
+    ${@bb.utils.filter('DISTRO_FEATURES', 'systemd', d)} \
+    "
 PACKAGECONFIG[cap] = "--enable-capabilities,--disable-capabilities,libcap"
 PACKAGECONFIG[pam] = "--with-libpam, --without-libpam, libpam"
+PACKAGECONFIG[systemd] = "--enable-systemd,--disable-systemd,systemd"
 
 inherit autotools useradd systemd pkgconfig python3native
 
@@ -85,7 +89,6 @@ EXTRA_OECONF_class-target = "\
   ${SNMP_CONF} \
   CLIPPY_ROOT=${RECIPE_SYSROOT_NATIVE} \
   "
-#  --enable-systemd=yes
 
 CACHED_CONFIGUREVARS += "ac_cv_path_PERL='/usr/bin/env perl'"
 
