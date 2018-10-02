@@ -9,18 +9,19 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=4fbd65380cdd255951079008b364516c"
 
 DEPENDS = "flex-native bison-native"
 
-SRC_URI = "https://github.com/thom311/${BPN}/releases/download/${BPN}${@d.getVar('PV').replace('.','_')}/${BP}.tar.gz \
-           file://fix-pc-file.patch \
-           file://0001-PATCH-fix-libnl-3.4.0-musl-compile-problem.patch \
-           file://0001-squashed-all-commits-of-all-neigh.patch \
-"
+##https://github.com/thom311/${BPN}/releases/download/${BPN}${@d.getVar('PV').replace('.','_')}/${BP}.tar.gz
 
-UPSTREAM_CHECK_URI = "https://github.com/thom311/${BPN}/releases"
+SRC_URI = "git://github.com/thom311/${BPN}.git;protocol=https"
+# this is actually master:
+SRCREV = "9e34b5db36a32bad8869ea7b10506e1c800f9f5f"
 
-SRC_URI[md5sum] = "8f71910c03db363b41e2ea62057a4311"
-SRC_URI[sha256sum] = "b7287637ae71c6db6f89e1422c995f0407ff2fe50cecd61a312b6a9b0921f5bf"
+S = "${WORKDIR}/git"
 
 inherit autotools pkgconfig
+
+do_configure_prepend() {
+  mkdir -p ${S}/doc/m4
+}
 
 FILES_${PN} = "${libdir}/libnl-3.so.* \
                ${libdir}/libnl.so.* \
