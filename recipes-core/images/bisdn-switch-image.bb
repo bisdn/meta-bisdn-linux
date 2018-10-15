@@ -25,8 +25,11 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL += "\
     python \
     python-modules \
     python-msgpack \
+    python-redis \
+    python-requests \
     python-ryu \
     python2-ofdpa \
+    radvd \
     tcpdump \
     "
 
