@@ -7,6 +7,7 @@ IMAGE_FEATURES += " package-management"
 
 BISDN_SWITCH_IMAGE_EXTRA_INSTALL += "\
     baseboxd \
+    baseboxd-tools \
     file \
     frr \
     iproute2-ss \
