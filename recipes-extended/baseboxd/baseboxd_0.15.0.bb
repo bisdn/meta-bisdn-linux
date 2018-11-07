@@ -35,3 +35,5 @@ do_install_append() {
 }
 
 FILES_${PN} += "/lib/systemd/system/baseboxd.service"
+# Enable baseboxd service (SYSTEMD_AUTO_ENABLE default is enable)
+SYSTEMD_SERVICE_${PN} = "baseboxd.service"
