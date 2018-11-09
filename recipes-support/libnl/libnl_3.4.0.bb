@@ -11,9 +11,12 @@ DEPENDS = "flex-native bison-native"
 
 ##https://github.com/thom311/${BPN}/releases/download/${BPN}${@d.getVar('PV').replace('.','_')}/${BP}.tar.gz
 
-SRC_URI = "git://github.com/thom311/${BPN}.git;protocol=https"
+SRC_URI = " \
+    git://github.com/thom311/${BPN}.git;protocol=https \
+    file://route_link_expose_IFLA_INFO_SLAVE_KIND.patch \
+"
 # this is actually master:
-SRCREV = "9e34b5db36a32bad8869ea7b10506e1c800f9f5f"
+SRCREV = "08160f0555f988db1ec3de65fa188a9d48ebff9d"
 
 S = "${WORKDIR}/git"
 
