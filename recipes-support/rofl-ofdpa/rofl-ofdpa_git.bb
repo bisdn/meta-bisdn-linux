@@ -2,4 +2,5 @@
 # Released under the MIT license (see COPYING.MIT for the terms)
 
 require rofl-ofdpa.inc
-SRCREV = "7d1744a2d60eebcdeef48e6a0d430c7368764720"
+SRCREV = "${AUTOREV}"
+DEFAULT_PREFERENCE = "-1"
