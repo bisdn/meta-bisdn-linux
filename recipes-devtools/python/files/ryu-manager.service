@@ -1,0 +1,14 @@
+[Unit]
+Description=ryu-manager
+After=network.target
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/ryu-manager $APPLICATION
+EnvironmentFile=-/etc/default/ryu-manager
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
