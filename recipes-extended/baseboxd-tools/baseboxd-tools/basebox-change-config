@@ -1,0 +1,119 @@
+#!/bin/bash
+# Copyright (C) 2018 Daniel Fritzsche, Rubens Figueiredo of BISDN GmbH
+
+# Bash script for setting up the OpenFlow endpoint for the baseboxd/ryu
+# controllers, by configuring the ofagent configuration file.
+
+# The default location for the ofagent file is/etc/default/ofagent, but
+# this location can be overwriten by using the OFAGENT_FILE environment
+# variable.
+
+set -o errexit -o pipefail -o noclobber -o nounset -o allexport
+
+function remote_controller() {
+  _controller_ip=$1
+  _controller_port=$2
+  echo "Configuring remote baseboxd with $_controller_ip and port $_controller_port"
+
+  # Changing the ofagent config
+  sed -i 's/OPTIONS=.*/OPTIONS="-t '$_controller_ip':'$_controller_port' -m"/' $OFAGENT_FILE
+
+  remote_services
+}
+
+function local_controller() {
+  _controller_ip=127.0.0.1
+  _controller_port=6653
+  _ryu_application=$2
+
+  if [[ ! $1 = baseboxd && ! $1 = ryu-manager ]]; then
+   echo 'Profile not found'; exit 1;
+  fi
+
+  echo "Configuring local controller with $_controller_ip and port $_controller_port, and profile $1"
+
+  # Changing the ofagent config
+  sed -i 's/OPTIONS=.*/OPTIONS="-t '$_controller_ip':'$_controller_port' -m"/' $OFAGENT_FILE
+
+  if [[ $1 = ryu-manager && ! -z "$_ryu_application" ]]; then
+    sed -i 's/APPLICATION=.*/APPLICATION="'$_ryu_application'"/' $RYU_FILE
+  fi
+
+  local_services $1
+}
+
+function remote_services() {
+  # Restarting services
+  systemctl restart ${SERVICES[@]}
+
+  # Managing controllers
+  systemctl stop ${CONTROLLERS[@]}
+  systemctl disable ${CONTROLLERS[@]}
+}
+
+function local_services() {
+  profile=$1
+
+  # Restarting services
+  systemctl restart ${SERVICES[@]}
+
+  # Managing controllers
+  systemctl stop ${CONTROLLERS[@]}
+  systemctl disable ${CONTROLLERS[@]}
+
+  systemctl enable $profile
+  systemctl start $profile
+}
+
+function view_config() {
+  echo "Displaying current ofagent config on file $OFAGENT_FILE"
+  cat $OFAGENT_FILE
+
+  echo "Displaying current services status"
+  systemctl status ${SERVICES[@]}
+
+  echo "Displaying current controllers status"
+  systemctl status ${CONTROLLERS[@]}
+}
+
+function print_help() {
+  echo -e "baseboxd configuration script\nenter the desired configuration where you want the script to point to"
+  echo -e "execution:
+    -r, --remote : $0 -r <remote controller IP address> <remote controller port>
+    -l, --local : $0 -l { baseboxd | ryu-manager APPLICATION-FILE }
+    -v, --view : view the ofagent config
+    -h, --help : print this message"
+}
+
+# Services list
+SERVICES=('ofdpa' 'ofagent' 'ofdpa-grpc') 
+CONTROLLERS=('baseboxd' 'ryu-manager') 
+
+# Variables for configuration
+RYU_FILE=${RYU_FILE:-/etc/default/ryu-manager}
+
+OFAGENT_FILE=${OFAGENT_FILE:-/etc/default/ofagent}
+
+# Handling command line arguments
+_cli_arguments=$1
+case $_cli_arguments in
+    -r|--remote)
+      if [[ $# == 3 ]];
+        then remote_controller $2 $3; exit 0;
+        else echo "Unsufficient parameters passed: $_cli_arguments";
+          print_help;
+          exit 1;
+      fi; shift; shift;;
+    -l|--local)
+      if [[ $# -ge 2 ]];
+        then local_controller $2 ${3:-""}; exit 0;
+        else
+          echo "Unsufficient parameters passed: $_cli_arguments";
+          echo "Provide the desired controller: baseboxd or ryu-manager"
+          print_help;
+          exit 1;
+      fi; shift; shift;;
+    -v|--view) view_config; exit 0;;
+    -h|--help) print_help; exit 0;;
+      *) echo "Unknown parameter passed: $1"; print_help; exit 1;;
+esac; shift; 
