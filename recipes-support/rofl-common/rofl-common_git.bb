@@ -4,3 +4,4 @@
 require rofl-common.inc
 SRCREV = "${AUTOREV}"
 DEFAULT_PREFERENCE = "-1"
+PV = "git+${SRCPV}"

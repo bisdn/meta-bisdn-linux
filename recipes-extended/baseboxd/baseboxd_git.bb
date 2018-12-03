@@ -10,6 +10,8 @@ TARGET_LDFLAGS_append = " -Wl,--no-as-needed"
 SRCREV = "${AUTOREV}"
 DEFAULT_PREFERENCE = "-1"
 
+PV = "git+${SRCPV}"
+
 # install service and sysconfig
 do_install_append() {
    # add directories
