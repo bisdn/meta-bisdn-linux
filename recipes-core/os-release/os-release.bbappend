@@ -3,6 +3,8 @@ OS_RELEASE_FIELDS += " BUILD_ID"
 do_compile[nostamp] = "1"
 do_install[nostamp] = "1"
 
+do_compile_remove[vardeps] += " BUILD_ID"
+
 ## BUILD_ID[vardepsexclude] = "DATETIME"
 
 ## os-release.bb in meta/recipes-core assigns the
