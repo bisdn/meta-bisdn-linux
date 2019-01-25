@@ -38,11 +38,3 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL += "\
 IMAGE_LINGUAS = " "
 
 LICENSE = "MIT"
-
-do_install_motd_issue_date() {
-			   echo "image built on ${DATE}" >> ${IMAGE_ROOTFS}${sysconfdir}/motd
-}
-
-do_install_motd_issue_date[nostamp] = "1"
-
-ROOTFS_POSTPROCESS_COMMAND += " do_install_motd_issue_date ;"
