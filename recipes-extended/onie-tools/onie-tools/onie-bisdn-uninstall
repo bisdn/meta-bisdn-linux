@@ -2,14 +2,15 @@
 
 set -e
 
-USAGE="$(basename "$0") -- this will uninstall BISDN-Linux. Options:
-[-h] shows this message.
-[-y] will uninstall without asking confirm.
+USAGE="Uninstall BISDN-Linux
+usage: $(basename "$0") [OPTIONS]
+
+[OPTIONS]
+-h show this message
+-y automatically answer yes to all questions (use with caution, since all configuration files are going to be deleted)
 "
 
-
 NEED_CONFIRM=true
-
 
 while getopts "hy" o; do
   case $o in
@@ -26,7 +27,7 @@ done
 
 if [ "${NEED_CONFIRM}" = true ]
 then
-  read -p "Uninstall BISDN-Linux? [y/N] " yn
+  read -p "Uninstalling BISDN-Linux! Please confirm deletion of all files: [y/N] " yn
   case $yn in
     [Yy]* ) ;;
     * ) echo "Operation aborted.";
