@@ -1,7 +1,7 @@
 # Copyright (C) 2018 Tobias Jungel <tobias.jungel@bisdn.de>
 # Released under the MIT license (see COPYING.MIT for the terms)
 
-DESCRIPTION = "BISDN-Linux ONIE toools"
+DESCRIPTION = "BISDN Linux ONIE tools"
 HOMEPAGE = "https://www.bisdn.de/"
 LICENSE = "CLOSED"
 SECTION = "base"

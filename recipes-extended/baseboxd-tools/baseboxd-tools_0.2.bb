@@ -1,7 +1,7 @@
 # Copyright (C) 2018 Pierluigi Greto <pierluigi.greto@bisdn.de>
 # Released under the MIT license (see COPYING.MIT for the terms)
 
-DESCRIPTION = "BISDN-Linux baseboxd tools"
+DESCRIPTION = "BISDN Linux baseboxd tools"
 HOMEPAGE = "https://www.bisdn.de/"
 LICENSE = "CLOSED"
 SECTION = "base"

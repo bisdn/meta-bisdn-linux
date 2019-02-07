@@ -1,0 +1,32 @@
+.\" Manpage for basebox-change-config.
+.\" Contact pierluigi.greto@bisdn.de to correct errors or typos.
+.TH man 8 "30 January 2019" "1.0" "basebox-change-config man page"
+.SH NAME
+basebox-change-config \- baseboxd configuration script
+.SH SYNOPSIS
+.B basebox-change-config
+[\fI\,OPTION\/\fR]
+.SH DESCRIPTION
+.PP
+baseboxd configuration script, it can be used to change basebox's configuration:
+      - local controller: using baseboxd or a ryu application
+      - remote controller
+.TP
+\fB\-r <remote controller IP address> <remote controller port>\fR , \fB\--remote <remote controller IP address> <remote controller port>\fR
+number of entries to display. If not specified or set to 0, all entries are displayed
+.TP
+\fB\-l { baseboxd | ryu-manager APPLICATION-FILE }\fR, \fB\--local { baseboxd | ryu-manager APPLICATION-FILE }\fR
+counter (class or color) table to list. If not specified, both tables are displayed
+.TP
+\fB\-h\fR, \fB\--help\fR
+display help and exit
+.TP
+\fB\--usage\fR
+give a short usage message
+.TP
+\fB\-v\fR, \fB\--view\fR
+view the current ofagent config
+.SH BUGS
+No known bugs.
+.SH AUTHOR
+Man page originally written by Pierluigi Greto <pierluigi.greto@bisdn.de>.
