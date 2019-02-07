@@ -21,7 +21,7 @@ DEPENDS = " \
            ncurses \
            perl-native \
            readline \
-	   "
+           "
 
 do_compile_prepend_class-target () {
        export PYTHONHOME=${RECIPE_SYSROOT_NATIVE}/usr
@@ -33,19 +33,19 @@ SNMP_CONF="${@bb.utils.contains('DISTRO_FEATURES', 'snmp', '--enable-snmp', '', 
 
 # the "ip" command from busybox is not sufficient (flush by protocol flushes all routes)
 RDEPENDS_${PN}_class-target += " \
-			    iproute2 \
-			    python \
-			    bash \
-			    "
+                            bash \
+                            iproute2 \
+                            python \
+                            "
 
 GIT_BRANCH ?= "master"
 SRC_URI = "git://github.com/FRRouting/frr.git;protocol=https;branch=${GIT_BRANCH} \
            file://frr.default \
            file://frr.pam \
-	   file://daemons \
-	   file://daemons.conf \
-	   file://frr.service \
-	  "
+           file://daemons \
+           file://daemons.conf \
+           file://frr.service \
+          "
 
 S = "${WORKDIR}/git"
 
@@ -115,7 +115,7 @@ do_install () {
 
     # Install frr
     oe_runmake install DESTDIR=${D} prefix=${prefix} \
-    	    sbindir=${libdir}/frr \
+            sbindir=${libdir}/frr \
             sysconfdir=${sysconfdir}/frr \
             localstatedir=${localstatedir}/run/frr
 
@@ -139,7 +139,7 @@ do_install () {
 
 DEPENDS_append = " ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'systemd-systemctl-native', '', d)}"
 pkg_postinst_${PN}_append () {
-	if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd sysvinit', 'true', 'false', d)}; then
+        if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd sysvinit', 'true', 'false', d)}; then
         if [ -n "$D" ]; then
             OPTS="--root=$D"
         fi
