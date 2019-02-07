@@ -2,7 +2,7 @@
 
 set -e
 
-USAGE="Uninstall BISDN-Linux
+USAGE="Uninstall BISDN Linux
 usage: $(basename "$0") [OPTIONS]
 
 [OPTIONS]
@@ -27,7 +27,7 @@ done
 
 if [ "${NEED_CONFIRM}" = true ]
 then
-  read -p "Uninstalling BISDN-Linux! Please confirm deletion of all files: [y/N] " yn
+  read -p "Uninstalling BISDN Linux! Please confirm deletion of all files: [y/N] " yn
   case $yn in
     [Yy]* ) ;;
     * ) echo "Operation aborted.";

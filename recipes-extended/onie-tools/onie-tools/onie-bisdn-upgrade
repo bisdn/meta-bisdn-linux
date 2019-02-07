@@ -5,7 +5,7 @@
 
 set -e
 
-USAGE="Upgrade BISDN-Linux
+USAGE="Upgrade BISDN Linux
 usage: $(basename "$0") [OPTIONS] [IMAGEURL [IPCONFIG]]
 
 [OPTIONS]
@@ -60,7 +60,7 @@ case $# in
 esac;
 
 if [ "${NEED_CONFIRM}" = true ]; then
-  read -p "Upgrading BISDN-Linux to Install-source: ${INSTALL_FILE} using Client-IP-cfg: ${IP}! Please confirm system reboot: [y/N] " yn
+  read -p "Upgrading BISDN Linux to install-source: ${INSTALL_FILE} using Client-IP-cfg: ${IP}! Please confirm system reboot: [y/N] " yn
   case $yn in
     [Yy]* ) ;;
     * ) echo "Operation aborted.";

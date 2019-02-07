@@ -1,0 +1,33 @@
+.\" Manpage for onie-bisdn-upgrade.
+.\" Contact pierluigi.greto@bisdn.de to correct errors or typos.
+.TH man 8 "30 January 2019" "1.0" "onie-bisdn-upgrade man page"
+.SH NAME
+onie-bisdn-upgrade \- will upgrade BISDN Linux
+.SH SYNOPSIS
+.B onie-bisdn-upgrade
+[\fI\,OPTION\/\fR] [\fI\,IMAGEURL\/\fR [\fI\,IPCONFIG\/\fR]]
+.SH DESCRIPTION
+.PP
+onie-bisdn-upgrade will upgrade BISDN Linux.
+.TP
+[\fI\,IMAGEURL\/\fR]
+URL of an installable BISDN Linux image
+(example: onie-bisdn-upgrade http://repo.bisdn.de/ftp/pub/onie/onie-bisdn-agema-ag7648.bin)
+.TP
+[\fI\,IPCONFIG\/\fR]
+IP address (IP) and gateway (GW) of an interface in case no DHCP is used; format: <IP>::<GW> (example: 10.250.7.177::10.250.7.1).
+
+If 'current' is specified, the script takes the IP/GW of the first 'enp' interface that is configured (example: onie-bisdn-upgrade http://repo.bisdn.de/ftp/pub/onie/onie-bisdn-agema-ag7648.bin current).
+.TP
+\fB\-y\fR
+automatically answer yes to all questions (use with caution, system is going to reboot and configuration files might get lost)
+.TP
+\fB\-h\fR
+display help and exit
+.TP
+.SH SEE ALSO
+onie-bisdn-uninstall(1)
+.SH BUGS
+No known bugs.
+.SH AUTHOR
+Man page originally written by Pierluigi Greto <pierluigi.greto@bisdn.de>.
