@@ -1,10 +1,10 @@
 require frr.inc
 
 GIT_BRANCH = "stable/5.0"
-SRCREV = "85f25d8214cb35cebda6338ac5118459129449b3"
+SRCREV = "9e0b3541bd3bbec7453980a7873a6ef7737fbafa"
 
-PV = "5.0.1"
-PR = "r5"
+PV = "5.0.2"
+PR = "r1"
 
 SRC_URI += " \
 	file://configure.ac-clippy-native.patch \
