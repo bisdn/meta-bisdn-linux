@@ -11,6 +11,7 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL += "\
     file \
     frr \
     iproute2-ss \
+    iptables \
     kernel-module-linux-kernel-bde \
     kernel-module-linux-user-bde \
     less \
