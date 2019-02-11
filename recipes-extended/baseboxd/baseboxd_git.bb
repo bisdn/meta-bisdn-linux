@@ -11,6 +11,9 @@ SRCREV = "${AUTOREV}"
 PV = "git+${SRCPV}"
 DEFAULT_PREFERENCE = "-1"
 
+# may happen for git hashes
+INSANE_SKIP_${PN} += "version-going-backwards"
+
 
 # install service and sysconfig
 do_install_append() {
