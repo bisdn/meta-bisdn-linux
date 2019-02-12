@@ -45,15 +45,15 @@ case $# in
       echo "Unsufficient parameters passed!";
       echo "$USAGE"; exit 1;;
     1)
-      INSTALL_FILE=$1; IP="DHCP";;
+      INSTALL_FILE=$1; IP="dhcp";;
     2)
       INSTALL_FILE=$1;
       if [[ $2 == "current" ]]; then
         IP_ADDR=$(ip -4 a | sed -n '/enp/'p | sed -n '/inet/'p | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | sed -n 1p);
         GW=$(ip -4 a | sed -n '/enp/'p | sed -n '/inet/'p | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | sed -n 2p);
-        IP="$IP_ADDR::$GW:255.255.255.0::eth0:none";
+        IP="$IP_ADDR::$GW:255.255.255.0:::eth0:none";
         else
-        IP="$2:255.255.255.0::eth0:none";
+        IP="$2:255.255.255.0:::eth0:none";
       fi;;
     *)
       echo "Too many parameters passed"; exit 1;;
@@ -73,7 +73,7 @@ mountpoint -q ${MNT_DIR} || mount ${MNT_DIR}
 ${MNT_DIR}/onie/tools/bin/onie-boot-mode -q -o install
 grub-reboot ONIE
 
-if [ -n "${IP}" ]; then
+if [[ -n "${IP}" && "$IP" != "dhcp" ]]; then
   sed -i "/boot_reason=install/ s|$| ip=${IP} install_url=${INSTALL_FILE}|" ${MNT_DIR}/grub/grub.cfg
 else
   sed -i "/boot_reason=install/ s|$| install_url=${INSTALL_FILE}|" ${MNT_DIR}/grub/grub.cfg
