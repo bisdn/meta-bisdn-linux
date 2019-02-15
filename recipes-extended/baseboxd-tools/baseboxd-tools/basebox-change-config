@@ -2,11 +2,8 @@
 # Copyright (C) 2018 Daniel Fritzsche, Rubens Figueiredo of BISDN GmbH
 
 # Bash script for setting up the OpenFlow endpoint for the baseboxd/ryu
-# controllers, by configuring the ofagent configuration file.
-
-# The default location for the ofagent file is/etc/default/ofagent, but
-# this location can be overwriten by using the OFAGENT_FILE environment
-# variable.
+# controllers, by configuring the ofagent and baseboxd/Ryu (only in case of
+# local controller) configuration files.
 
 set -o errexit -o pipefail -o noclobber -o nounset -o allexport
 
@@ -16,7 +13,7 @@ function remote_controller() {
   echo "Configuring remote baseboxd with $_controller_ip and port $_controller_port"
 
   # Changing the ofagent config
-  sed -i 's/OPTIONS=.*/OPTIONS="-t '$_controller_ip':'$_controller_port' -m"/' $OFAGENT_FILE
+  sed -i 's/^OPTIONS=.*/OPTIONS="-t '$_controller_ip':'$_controller_port' -m"/' $OFAGENT_FILE
 
   remote_services
 }
@@ -33,10 +30,13 @@ function local_controller() {
   echo "Configuring local controller with $_controller_ip and port $_controller_port, and profile $1"
 
   # Changing the ofagent config
-  sed -i 's/OPTIONS=.*/OPTIONS="-t '$_controller_ip':'$_controller_port' -m"/' $OFAGENT_FILE
+  sed -i 's/^OPTIONS=.*/OPTIONS="-t '$_controller_ip':'$_controller_port' -m"/' $OFAGENT_FILE
+
+  # Changing the baseboxd config
+  sed -i 's/^FLAGS_port=.*/FLAGS_port='$_controller_port'/' $BASEBOXD_FILE
 
   if [[ $1 = ryu-manager && ! -z "$_ryu_application" ]]; then
-    sed -i 's/APPLICATION=.*/APPLICATION="'$_ryu_application'"/' $RYU_FILE
+    sed -i 's/^APPLICATION=.*/APPLICATION="'$_ryu_application'"/' $RYU_FILE
   fi
 
   local_services $1
@@ -90,9 +90,9 @@ SERVICES=('ofdpa' 'ofagent' 'ofdpa-grpc')
 CONTROLLERS=('baseboxd' 'ryu-manager') 
 
 # Variables for configuration
-RYU_FILE=${RYU_FILE:-/etc/default/ryu-manager}
-
-OFAGENT_FILE=${OFAGENT_FILE:-/etc/default/ofagent}
+RYU_FILE=/etc/default/ryu-manager
+OFAGENT_FILE=/etc/default/ofagent
+BASEBOXD_FILE=/etc/default/baseboxd
 
 # Handling command line arguments
 _cli_arguments=$1
