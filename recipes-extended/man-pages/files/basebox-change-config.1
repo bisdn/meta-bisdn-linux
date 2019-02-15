@@ -13,10 +13,10 @@ baseboxd configuration script, it can be used to change basebox's configuration:
       - remote controller
 .TP
 \fB\-r <remote controller IP address> <remote controller port>\fR , \fB\--remote <remote controller IP address> <remote controller port>\fR
-number of entries to display. If not specified or set to 0, all entries are displayed
+set the remote controller: takes as arguments the ip address and the port of the remote controller
 .TP
 \fB\-l { baseboxd | ryu-manager APPLICATION-FILE }\fR, \fB\--local { baseboxd | ryu-manager APPLICATION-FILE }\fR
-counter (class or color) table to list. If not specified, both tables are displayed
+set the local controller, supported local controller are \fBbasebox\fR and \fBryu-manager\fR: in the case of \fBryu-manager\fR, the absolute path to the python application file needs to be specified
 .TP
 \fB\-h\fR, \fB\--help\fR
 display help and exit
