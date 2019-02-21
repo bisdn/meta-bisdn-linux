@@ -15,9 +15,9 @@ URL of an installable BISDN Linux image
 (example: onie-bisdn-upgrade http://repo.bisdn.de/ftp/pub/onie/onie-bisdn-agema-ag7648.bin)
 .TP
 [\fI\,IPCONFIG\/\fR]
-IP address (IP) and gateway (GW) of an interface in case no DHCP is used; format: <IP>::<GW> (example: 10.250.7.177::10.250.7.1).
+IP address (IP), gateway (GW) and netmask (NETMASK) of an interface, must be omitted when DHCP is available! format: <IP>::<GW>:<NETMASK> (example: 10.250.7.177::10.250.7.1:255.255.255.0).
 
-If 'current' is specified, the script takes the IP/GW of the first 'enp' interface that is configured (example: onie-bisdn-upgrade http://repo.bisdn.de/ftp/pub/onie/onie-bisdn-agema-ag7648.bin current).
+If 'current' is specified, the script takes the current IP/GW/NETMASK of the 'enp0s20f0' interface (example: onie-bisdn-upgrade http://repo.bisdn.de/ftp/pub/onie/onie-bisdn-agema-ag7648.bin current).
 .TP
 \fB\-y\fR
 automatically answer yes to all questions (use with caution, system is going to reboot and configuration files might get lost)
