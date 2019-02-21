@@ -10,8 +10,10 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL += "\
     baseboxd-tools \
     file \
     frr \
+    ipcalc \
     iproute2-ss \
     iptables \
+    jq \
     kernel-module-linux-kernel-bde \
     kernel-module-linux-user-bde \
     less \
