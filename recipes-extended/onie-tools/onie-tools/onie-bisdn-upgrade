@@ -26,14 +26,13 @@ NEED_CONFIRM=true
 
 while getopts "hy" o; do
   case $o in
-    h)
-      echo "$USAGE";
-      exit 0;;
+    h) echo "$USAGE";
+       exit 0;;
     y) # yes to all answers
-      NEED_CONFIRM=false
-    ;;
-    * ) echo "Operation aborted.";
-        exit 0;;
+       NEED_CONFIRM=false;;
+    *) echo "Unknown parameter passed, printing help";
+       echo "$USAGE";
+       exit 1;;
   esac
 done
 
