@@ -1,0 +1,13 @@
+diff --git a/configure.ac b/configure.ac
+index 1f352902..f5d9e9e3 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -56,7 +56,8 @@ m4_include([config/openssl.m4])
+ PKG_CHECK_MODULES([GLOG], libglog >= 0.3.3,
+   [ CPPFLAGS="$CPPFLAGS $GLOG_CFLAGS"
+         LIBS="$LIBS $GLOG_LIBS $GFLAGS_LIBS" ],
+-  [ AC_MSG_ERROR([minimum version of glog is 0.3.3]) ])
++  [ AC_HAVE_LIBRARY([glog],[],[AC_MSG_ERROR(
++                [Please install google-glog library])]) ])
+
+ AC_SEARCH_LIBS([pthread_rwlock_wrlock], [pthread], [], [AC_MSG_ERROR([lib pthread not found])])
