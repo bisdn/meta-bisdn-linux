@@ -21,7 +21,7 @@ DEPENDS = " \
            ncurses \
            perl-native \
            readline \
-           "
+       "
 
 do_compile_prepend_class-target () {
        export PYTHONHOME=${RECIPE_SYSROOT_NATIVE}/usr
@@ -33,29 +33,65 @@ SNMP_CONF="${@bb.utils.contains('DISTRO_FEATURES', 'snmp', '--enable-snmp', '', 
 
 # the "ip" command from busybox is not sufficient (flush by protocol flushes all routes)
 RDEPENDS_${PN}_class-target += " \
-                            bash \
-                            iproute2 \
-                            python \
-                            "
+			    iproute2 \
+			    python \
+			    bash \
+			    "
 
 GIT_BRANCH ?= "master"
 SRC_URI = "git://github.com/FRRouting/frr.git;protocol=https;branch=${GIT_BRANCH} \
-           file://frr.default \
            file://frr.pam \
-           file://daemons \
-           file://daemons.conf \
            file://frr.service \
-          "
+           "
 
 S = "${WORKDIR}/git"
+
+FRR_DAEMONS ?= "zebra staticd bgpd ospfd ospf6d ripd ripngd isisd pimd ldpd nhrpd eigrpd babeld sharpd pbrd bfdd"
+FRR_EXTRA_CONF ?= "cumulus datacenter"
 
 PACKAGECONFIG ??= " \
     ${@bb.utils.filter('DISTRO_FEATURES', 'pam', d)} \
     ${@bb.utils.filter('DISTRO_FEATURES', 'systemd', d)} \
+    ${@bb.utils.filter('FRR_DAEMONS', 'zebra', d)} \
+    ${@bb.utils.filter('FRR_DAEMONS', 'staticd', d)} \
+    ${@bb.utils.filter('FRR_DAEMONS', 'bgpd', d)} \
+    ${@bb.utils.filter('FRR_DAEMONS', 'ospfd', d)} \
+    ${@bb.utils.filter('FRR_DAEMONS', 'ospf6d', d)} \
+    ${@bb.utils.filter('FRR_DAEMONS', 'ripd', d)} \
+    ${@bb.utils.filter('FRR_DAEMONS', 'ripngd', d)} \
+    ${@bb.utils.filter('FRR_DAEMONS', 'isisd', d)} \
+    ${@bb.utils.filter('FRR_DAEMONS', 'pimd', d)} \
+    ${@bb.utils.filter('FRR_DAEMONS', 'ldpd', d)} \
+    ${@bb.utils.filter('FRR_DAEMONS', 'nhrpd', d)} \
+    ${@bb.utils.filter('FRR_DAEMONS', 'eigrpd', d)} \
+    ${@bb.utils.filter('FRR_DAEMONS', 'babeld', d)} \
+    ${@bb.utils.filter('FRR_DAEMONS', 'sharpd', d)} \
+    ${@bb.utils.filter('FRR_DAEMONS', 'pbrd', d)} \
+    ${@bb.utils.filter('FRR_DAEMONS', 'bfdd', d)} \
+    ${@bb.utils.filter('FRR_EXTRA_CONF', 'cumulus', d)} \
+    ${@bb.utils.filter('FRR_EXTRA_CONF', 'datacenter', d)} \
     "
 PACKAGECONFIG[cap] = "--enable-capabilities,--disable-capabilities,libcap"
 PACKAGECONFIG[pam] = "--with-libpam, --without-libpam, libpam"
 PACKAGECONFIG[systemd] = "--enable-systemd,--disable-systemd,systemd"
+PACKAGECONFIG[zebra] = "--enable-zebra,--disable-zebra,"
+PACKAGECONFIG[staticd] = "--enable-staticd,--disable-staticd,"
+PACKAGECONFIG[bgpd] = "--enable-bgpd,--disable-bgpd,"
+PACKAGECONFIG[ospfd] = "--enable-ospfd,--disable-ospfd,"
+PACKAGECONFIG[ospf6d] = "--enable-ospf6d,--disable-ospf6d,"
+PACKAGECONFIG[ripd] = "--enable-ripd,--disable-ripd,"
+PACKAGECONFIG[ripngd] = "--enable-ripngd,--disable-ripngd,"
+PACKAGECONFIG[isisd] = "--enable-isisd,--disable-isisd,"
+PACKAGECONFIG[pimd] = "--enable-pimd,--disable-pimd,"
+PACKAGECONFIG[ldpd] = "--enable-ldpd,--disable-ldpd,"
+PACKAGECONFIG[nhrpd] = "--enable-nhrpd,--disable-nhrpd,"
+PACKAGECONFIG[eigrpd] = "--enable-eigrpd,--disable-eigrpd,"
+PACKAGECONFIG[babeld] = "--enable-babeld,--disable-babeld,"
+PACKAGECONFIG[sharpd] = "--enable-sharpd,--disable-sharpd,"
+PACKAGECONFIG[pbrd] = "--enable-pbrd,--disable-pbrd,"
+PACKAGECONFIG[bfdd] = "--enable-bfdd,--disable-bfdd,"
+PACKAGECONFIG[cumulus] = "--enable-cumulus,--disable-cumulus,"
+PACKAGECONFIG[datacenter] = "--enable-datacenter,--disable-datacenter,"
 
 inherit autotools useradd systemd pkgconfig python3native
 
@@ -66,47 +102,34 @@ EXTRA_OECONF_class-target = "\
   --localstatedir=${localstatedir}/run/frr \
   --sbindir=${libdir}/frr \
   --sysconfdir=${sysconfdir}/frr \
-  --enable-bgpd \
   --enable-configfile-mask=0640 \
-  --enable-cumulus \
-  --enable-datacenter \
   --enable-exampledir=${docdir}/frr/examples/ \
   --enable-group=frr \
-  --enable-isisd \
-  --enable-irdp \
-  --enable-linux24-tcp-md5 \
   --enable-logfile-mask=0640 \
   --enable-multipath=64 \
-  --enable-ospfclient=yes \
-  --enable-ospfd \
-  --enable-rtadv \
   --enable-user=frr \
   --enable-vty-group=frrvty \
   --enable-vtysh \
-  --enable-watchfrr \
   --disable-doc \
   ap_cv_cc_pie=no \
   ${SNMP_CONF} \
-  CLIPPY_ROOT=${RECIPE_SYSROOT_NATIVE} \
+  CLIPPY_ROOT=${RECIPE_SYSROOT_NATIVE}/ \
   "
 
 CACHED_CONFIGUREVARS += "ac_cv_path_PERL='/usr/bin/env perl'"
 
 do_install () {
-    # Install init script and default settings
+    # Install configurations for the daemons
     install -m 0755 -d ${D}${sysconfdir}/default ${D}${sysconfdir}/frr
-    install -m 0644 ${WORKDIR}/frr.default ${D}${sysconfdir}/default/frr
-
-    # Install sample configurations for the daemons
-    for f in bgpd vtysh isisd ospfd ripngd zebra ripd ospf6d; do
-        install -m 0640 ${S}/$f/$f.conf.sample ${D}${sysconfdir}/frr/$f.conf.sample
-    done
-
-    for f in bgpd vtysh isisd ospfd ripngd zebra ripd ospf6d; do
+    for f in vtysh ${FRR_DAEMONS}; do
+        if [ -f ${S}/$f/$f.conf.sample ]; then
+            install -m 0640 ${S}/$f/$f.conf.sample ${D}${sysconfdir}/frr/$f.conf.sample
+        fi
         touch ${D}${sysconfdir}/frr/$f.conf
     done
 
-    install -m 0640 ${WORKDIR}/daemons* ${D}${sysconfdir}/frr/
+    install -m 0640 ${S}/tools/etc/frr/daemons* ${D}${sysconfdir}/frr/
+    sed -i '/_options/s/-A/--daemon -A/g' ${D}${sysconfdir}/frr/daemons
 
     chown frr:frrvty ${D}${sysconfdir}/frr
     chown frr:frr ${D}${sysconfdir}/frr/*.conf
@@ -139,7 +162,7 @@ do_install () {
 
 DEPENDS_append = " ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'systemd-systemctl-native', '', d)}"
 pkg_postinst_${PN}_append () {
-        if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd sysvinit', 'true', 'false', d)}; then
+    if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'false', 'true', d)}; then
         if [ -n "$D" ]; then
             OPTS="--root=$D"
         fi
@@ -148,16 +171,22 @@ pkg_postinst_${PN}_append () {
 }
 
 # Indicate that the default files are configuration files
-CONFFILES_${PN} = "${sysconfdir}/default/frr \
-                   ${sysconfdir}/frr/bgpd.conf \
-                   ${sysconfdir}/frr/vtysh.conf \
-                   ${sysconfdir}/frr/isisd.conf \
-                   ${sysconfdir}/frr/ospfd.conf \
-                   ${sysconfdir}/frr/ripngd.conf \
-                   ${sysconfdir}/frr/zebra.conf \
-                   ${sysconfdir}/frr/ripd.conf \
-                   ${sysconfdir}/frr/ospf6d.conf \
-                  "
+CONFFILES_${PN} = "${sysconfdir}/frr/vtysh.conf ${sysconfdir}/frr/frr.conf"
+CONFFILES_${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'staticd', '${sysconfdir}/frr/staticd.conf', '', d)}"
+CONFFILES_${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'bgpd', '${sysconfdir}/frr/bgpd.conf', '', d)}"
+CONFFILES_${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'ospfd', '${sysconfdir}/frr/ospfd.conf', '', d)}"
+CONFFILES_${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'ospf6d', '${sysconfdir}/frr/ospf6d.conf', '', d)}"
+CONFFILES_${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'ripd', '${sysconfdir}/frr/ripd.conf', '', d)}"
+CONFFILES_${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'ripngd', '${sysconfdir}/frr/ripngd.conf', '', d)}"
+CONFFILES_${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'isisd', '${sysconfdir}/frr/isisd.conf', '', d)}"
+CONFFILES_${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'pimd', '${sysconfdir}/frr/pimd.conf', '', d)}"
+CONFFILES_${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'ldpd', '${sysconfdir}/frr/ldpd.conf', '', d)}"
+CONFFILES_${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'nhrpd', '${sysconfdir}/frr/nhrpd.conf', '', d)}"
+CONFFILES_${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'eigrpd', '${sysconfdir}/frr/eigrpd.conf', '', d)}"
+CONFFILES_${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'babeld', '${sysconfdir}/frr/babeld.conf', '', d)}"
+CONFFILES_${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'sharpd', '${sysconfdir}/frr/sharpd.conf', '', d)}"
+CONFFILES_${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'pbrd', '${sysconfdir}/frr/pbrd.conf', '', d)}"
+CONFFILES_${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'bfdd', '${sysconfdir}/frr/bfdd.conf', '', d)}"
 CONFFILES_${PN}-watchfrr = "${sysconfdir}/default/watchfrr"
 
 # Stop the names being rewritten due to the internal shared libraries
@@ -172,28 +201,4 @@ USERADD_PARAM_${PN} = "--system --home ${localstatedir}/run/frr/ -M -g frr -G fr
 # Stop apps before uninstall
 pkg_prerm_${PN} () {
     systemctl stop frr
-}
-
-pkg_prerm_${PN}-ospfd () {
-    systemctl stop ospfd
-}
-
-pkg_prerm_${PN}-ospf6d () {
-    systemctl stop ospf6d
-}
-
-pkg_prerm_${PN}-bgpd () {
-    systemctl stop bgpd
-}
-
-pkg_prerm_${PN}-ripd () {
-    systemctl  stop ripd
-}
-
-pkg_prerm_${PN}-ripngd () {
-   systemctl stop ripngd
-}
-
-pkg_prerm_${PN}-isisd () {
-    systemctl stop isisd
 }

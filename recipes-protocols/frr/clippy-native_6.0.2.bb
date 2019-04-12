@@ -1,9 +1,8 @@
 require frr.inc
 
-GIT_BRANCH = "stable/5.0"
-SRCREV = "9e0b3541bd3bbec7453980a7873a6ef7737fbafa"
+GIT_BRANCH = "stable/6.0"
+SRCREV = "1bdbe6ef03e18f99fb31e3d959d2c42eabcf1574"
 
-PV = "5.0.2"
 PR = "r1"
 
 SRC_URI += " \
