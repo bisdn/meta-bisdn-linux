@@ -1,7 +1,7 @@
 # Copyright (C) 2018 Tobias Jungel <tobias.jungel@bisdn.de> and Henrike Wissing <henrike.wissing@bisdn.de>
 # Released under the MIT license (see COPYING.MIT for the terms)
 
-require bisdn-minimal-image.bb
+require minimal.bb
 
 IMAGE_FEATURES += " package-management"
 
