@@ -9,6 +9,6 @@ SRC_URI_remove = ""
 SRC_URI_prepend = ""
 
 SRC_URI += " \
-  0001-networkd-fix-link-up.patch \
-  0002-networkd-do-not-send-ipv6.patch \
+  file://0001-networkd-fix-link-up.patch \
+  file://0002-networkd-do-not-send-ipv6.patch \
 "
