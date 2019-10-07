@@ -1,0 +1,98 @@
+#!/bin/su root
+# Copyright (C) 2019 Rubens Figueiredo of BISDN GmbH
+
+# Bash script intended to gather important information regarding Switch status
+# and logs for support purposes
+
+set -o errexit -o pipefail -o noclobber -o nounset -o allexport
+
+function print_help() {
+  echo -e "basebox support script\nBackup internal switch status, and creates a tarball for support"
+  echo -e "execution:
+    -h, --help : print this message"
+}
+
+# Handling command line arguments
+if [ ! $# -eq 0 ]
+then
+  _cli_arguments=$1
+  case $_cli_arguments in
+      -h|--help) print_help; exit 0;;
+        *) echo "Unknown parameter passed: $1"; print_help; exit 1;;
+  esac; shift;
+fi
+
+TMPDIR=$(mktemp -d)
+declare -a PACKAGES=(
+  ofdpa
+  ofdpa-grpc
+  ofagent
+  baseboxd
+  frr
+) 
+
+echo "Retrieving package data"
+{
+  for pkg in ${PACKAGES[@]}; 
+  do 
+    echo "Retrieving package data for $pkg"
+    opkg info $pkg
+  done
+} >> ${TMPDIR}/package_data
+[ "$?" == "0" ] && echo "ok" || ( echo "failed" && exit 1 )
+
+echo "Retrieving logs"
+journalctl -b > ${TMPDIR}/journal.log
+[ "$?" == "0" ] && echo "ok" || ( echo "failed" && exit 1 )
+
+echo "Retrieving network state"
+# echo "global IP: $(curl -sL ip.bisdn.de || echo 'not reachable')" > ${TMPDIR}/network_state
+{
+  echo "sysctl net.ipv4.ip_forward"
+  echo "##########################"
+  sysctl net.ipv4.ip_forward
+  echo ""
+  echo "sysctl net.ipv6.conf.all.forwarding"
+  echo "###################################"
+  sysctl net.ipv6.conf.all.forwarding
+  echo ""
+  echo "ip a"
+  echo "###"
+  ip a
+  echo ""
+  echo "bridge vlan"
+  echo "###########"
+  bridge -c vlan
+  echo ""
+  echo "bridge fdb"
+  echo "##########"
+  bridge fdb
+} >> ${TMPDIR}/network_state
+[ "$?" == "0" ] && echo "ok" || ( echo "failed" && exit 1 )
+
+echo "Retrieving client tools information"
+{
+  echo "Group table"
+  /usr/sbin/client_grouptable_dump
+  echo ""
+  echo "Group table"
+  /usr/sbin/client_flowtable_dump
+} >> ${TMPDIR}/client_tools
+[ "$?" == "0" ] && echo "ok" || ( echo "failed" && exit 1 )
+
+echo "onlpdump -S"
+{
+  echo "onlpdump -S"
+  onlpdump -S
+} >> ${TMPDIR}/port_list
+[ "$?" == "0" ] && echo "ok" || ( echo "failed" && exit 1 )
+
+echo "Create tarball"
+FILE="~/support-data_$(date "+%Y%m%d-%H%M%S")-SWITCH.tar.xz"
+eval tar -cJf ${FILE} -C ${TMPDIR} . /etc/systemd/network /etc/sysconfig/network-scripts/ifcfg-* /etc/keepalived 2> /dev/null
+[ "$?" == "0" ] && echo "ok" || ( echo "failed" && exit 1 )
+
+echo "Tarball created: ${FILE}"
+echo "Please send the tarball to support@basebox.freshdesk.com"
+
+rm -rf ${TMPDIR}

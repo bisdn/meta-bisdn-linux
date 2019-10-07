@@ -9,7 +9,7 @@ RDEPENDS_baseboxd-tools = "bash"
 
 SRC_URI = " \
   file://basebox-change-config \
-  file://bisdn-support \
+  file://basebox-support \
 "
 
 
