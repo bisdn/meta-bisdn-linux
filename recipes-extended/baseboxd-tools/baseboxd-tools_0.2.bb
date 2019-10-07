@@ -5,7 +5,7 @@ DESCRIPTION = "BISDN Linux baseboxd tools"
 HOMEPAGE = "https://www.bisdn.de/"
 LICENSE = "CLOSED"
 SECTION = "base"
-RDEPENDS_baseboxd-tools = "bash util-linux"
+RDEPENDS_baseboxd-tools = "bash"
 
 SRC_URI = " \
   file://basebox-change-config \

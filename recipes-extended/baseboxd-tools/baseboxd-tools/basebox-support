@@ -1,4 +1,4 @@
-#!/bin/su root
+#!/bin/bash
 # Copyright (C) 2019 Rubens Figueiredo of BISDN GmbH
 
 # Bash script intended to gather important information regarding Switch status
