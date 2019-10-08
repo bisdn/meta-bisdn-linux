@@ -6,6 +6,11 @@
 
 set -o errexit -o pipefail -o noclobber -o nounset -o allexport
 
+if [[ $EUID -ne 0 ]]; then
+   echo "Please run this program as root\nExiting" 1>&2
+   exit 1
+fi
+
 function print_help() {
   echo -e "basebox support script\nBackup internal switch status, and creates a tarball for support"
   echo -e "execution:
