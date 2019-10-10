@@ -7,6 +7,11 @@
 
 set -o errexit -o pipefail -o noclobber -o nounset -o allexport
 
+if [[ $EUID -ne 0 ]]; then
+   echo -e "Please run this program as root\nExiting" 1>&2
+   exit 1
+fi
+
 function remote_controller() {
   _controller_ip=$1
   _controller_port=$2
@@ -95,6 +100,12 @@ OFAGENT_FILE=/etc/default/ofagent
 BASEBOXD_FILE=/etc/default/baseboxd
 
 # Handling command line arguments
+if [ $# -eq 0 ]
+then
+    echo "No arguments supplied";
+    print_help;
+    exit 0;
+fi
 _cli_arguments=$1
 case $_cli_arguments in
     -r|--remote)

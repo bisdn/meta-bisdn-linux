@@ -9,6 +9,7 @@ RDEPENDS_baseboxd-tools = "bash"
 
 SRC_URI = " \
   file://basebox-change-config \
+  file://basebox-support \
 "
 
 
@@ -17,6 +18,7 @@ S = "${WORKDIR}"
 do_install () {
   install -m 0755 -d ${D}${bindir}
   install -m 0755 basebox-change-config ${D}${bindir}
+  install -m 0755 basebox-support ${D}${bindir}
 }
 
 FILES_${PN} = "/"
