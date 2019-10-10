@@ -8,7 +8,7 @@
 set -o errexit -o pipefail -o noclobber -o nounset -o allexport
 
 if [[ $EUID -ne 0 ]]; then
-   echo "Please run this program as root\nExiting" 1>&2
+   echo -e "Please run this program as root\nExiting" 1>&2
    exit 1
 fi
 
@@ -104,6 +104,7 @@ if [ $# -eq 0 ]
 then
     echo "No arguments supplied";
     print_help;
+    exit 0;
 fi
 _cli_arguments=$1
 case $_cli_arguments in
