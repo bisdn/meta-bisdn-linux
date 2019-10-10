@@ -7,7 +7,7 @@
 set -o errexit -o pipefail -o noclobber -o nounset -o allexport
 
 if [[ $EUID -ne 0 ]]; then
-   echo "Please run this program as root\nExiting" 1>&2
+   echo -e "Please run this program as root\nExiting" 1>&2
    exit 1
 fi
 
@@ -93,7 +93,7 @@ echo "onlpdump -S"
 [ "$?" == "0" ] && echo "ok" || ( echo "failed" && exit 1 )
 
 echo "Create tarball"
-FILE="~/support-data_$(date "+%Y%m%d-%H%M%S")-SWITCH.tar.xz"
+FILE="/home/basebox/support-data_$(date "+%Y%m%d-%H%M%S")-SWITCH.tar.xz"
 ( tar czf ${FILE} ${TMPDIR} /etc/systemd/network /etc/frr 2>&1) > /dev/null
 [ "$?" == "0" ] && echo "ok" || ( echo "failed" && exit 1 )
 
