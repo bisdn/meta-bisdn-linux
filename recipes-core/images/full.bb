@@ -35,6 +35,8 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL += "\
     python-requests \
     python-ryu \
     python2-ofdpa \
+    python3 \
+    python3-pip \
     radvd \
     tcpdump \
     "
