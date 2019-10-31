@@ -1,13 +1,10 @@
-# Copyright (C) 2018 Tobias Jungel <tobias.jungel@bisdn.de>
-# Released under the MIT license (see COPYING.MIT for the terms)
-
 require baseboxd.inc
 inherit meson
 
 TARGET_LDFLAGS_remove = "-Wl,--as-needed"
 TARGET_LDFLAGS_append = " -Wl,--no-as-needed"
 
-SRCREV = "56f1b128b07bcdd7485dad55dd52009b1ab92958"
+SRCREV = "2ff304721867028f2e737128e1f045063df0397b"
 
 # install service and sysconfig
 do_install_append() {
