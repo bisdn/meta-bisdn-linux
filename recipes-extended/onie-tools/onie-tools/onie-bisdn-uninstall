@@ -34,9 +34,14 @@ then
   esac
 fi
 
-MNT_DIR="/mnt/onie-boot"
-mountpoint -q ${MNT_DIR} || mount ${MNT_DIR}
-${MNT_DIR}/onie/tools/bin/onie-boot-mode -q -o uninstall
-grub-reboot ONIE
+if [ -f /etc/fw_env.config ]
+then
+  fw_setenv onie_boot_reason uninstall
+else
+  MNT_DIR="/mnt/onie-boot"
+  mountpoint -q ${MNT_DIR} || mount ${MNT_DIR}
+  ${MNT_DIR}/onie/tools/bin/onie-boot-mode -q -o uninstall
+  grub-reboot ONIE
+fi
 
 systemctl reboot

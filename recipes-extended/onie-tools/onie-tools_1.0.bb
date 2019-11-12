@@ -5,7 +5,7 @@ DESCRIPTION = "BISDN Linux ONIE tools"
 HOMEPAGE = "https://www.bisdn.de/"
 LICENSE = "CLOSED"
 SECTION = "base"
-RDEPENDS_onie-tools = "bash"
+RDEPENDS_onie-tools = "bash ${@oe.utils.conditional('BISDN_ARCH', 'u-boot-arch', ' u-boot-fw-utils', '', d)}"
 
 SRC_URI = " \
   file://onie-bisdn-uninstall \
