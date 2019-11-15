@@ -80,8 +80,11 @@ echo "Retrieving client tools information"
   echo "Group table"
   /usr/sbin/client_grouptable_dump
   echo ""
-  echo "Group table"
+  echo "Flow table"
   /usr/sbin/client_flowtable_dump
+  echo ""
+  echo "Client Ports"
+  /usr/sbin/client_drivshell ports
 } >> ${TMPDIR}/client_tools
 [ "$?" == "0" ] && echo "ok" || ( echo "failed" && exit 1 )
 
