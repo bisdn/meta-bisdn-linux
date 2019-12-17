@@ -76,8 +76,8 @@ ${MNT_DIR}/onie/tools/bin/onie-boot-mode -q -o install
 grub-reboot ONIE
 
 if [[ -n "${IP}" && "${IP}" != "dhcp" ]]; then
-  sed -i "/boot_reason=install/ s|$| ip=${IP} install_url=${INSTALL_FILE}|" ${MNT_DIR}/grub/grub.cfg
+  sed -i "/export ONIE_EXTRA_CMDLINE_LINUX/ i ONIE_EXTRA_CMDLINE_LINUX=\""\${ONIE_EXTRA_CMDLINE_LINUX}" ip=${IP} install_url=${INSTALL_FILE}\" " ${MNT_DIR}/grub/grub.cfg
 else
-  sed -i "/boot_reason=install/ s|$| install_url=${INSTALL_FILE}|" ${MNT_DIR}/grub/grub.cfg
+  sed -i "/export ONIE_EXTRA_CMDLINE_LINUX/ i ONIE_EXTRA_CMDLINE_LINUX=\""\${ONIE_EXTRA_CMDLINE_LINUX}" install_url=${INSTALL_FILE}\" " ${MNT_DIR}/grub/grub.cfg
 fi;
 systemctl reboot
