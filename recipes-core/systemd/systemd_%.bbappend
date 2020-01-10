@@ -5,8 +5,8 @@ PACKAGECONFIG_append = " coredump networkd resolved"
 FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
 
 SRC_URI += " \
-    file://enp.network \
-    file://port.network \
+    file://99-enp.network \
+    file://99-port.network \
     file://20-network-io.conf \
 "
 
