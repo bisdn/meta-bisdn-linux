@@ -16,6 +16,7 @@ SRC_URI += " \
   file://client_tunnel_dump.1 \
   file://onie-bisdn-uninstall.1 \
   file://onie-bisdn-upgrade.1 \
+  file://onie-bisdn-rescue.1 \
 "
 
 do_install_append() {
