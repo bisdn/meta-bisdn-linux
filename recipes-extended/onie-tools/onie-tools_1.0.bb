@@ -10,6 +10,7 @@ RDEPENDS_onie-tools = "bash"
 SRC_URI = " \
   file://onie-bisdn-uninstall \
   file://onie-bisdn-upgrade \
+  file://onie-bisdn-rescue \
 "
 
 
@@ -19,6 +20,7 @@ do_install () {
   install -m 0755 -d ${D}${bindir}
   install -m 0755 onie-bisdn-uninstall ${D}${bindir}
   install -m 0755 onie-bisdn-upgrade ${D}${bindir}
+  install -m 0755 onie-bisdn-rescue ${D}${bindir}
 }
 
 FILES_${PN} = "/"

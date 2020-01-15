@@ -1,0 +1,50 @@
+#!/bin/bash
+
+# Copyright (C) 2019 Daniel Fritzsche of BISDN GmbH
+# Bash script to boot into ONIE: rescue.
+
+set -e
+
+USAGE="Boot into ONIE rescue mode
+usage: $(basename "$0") [OPTIONS]
+
+[OPTIONS]
+-h show this message
+-y automatically answer yes to all questions (use with caution, since all configuration files are going to be deleted)
+"
+
+NEED_CONFIRM=true
+
+while getopts "hy" o; do
+  case $o in
+    h) echo "$USAGE";
+       exit 0;;
+    y) # yes to all answers
+       NEED_CONFIRM=false;;
+    *) echo "Unknown parameter passed, printing help";
+       echo "$USAGE";
+       exit 1;;
+  esac
+done
+
+if [ "${NEED_CONFIRM}" = true ]
+then
+  read -p "Booting into ONIE rescue mode? [y/N] " yn
+  case $yn in
+    [Yy]* ) ;;
+    * ) echo "Operation aborted.";
+        exit 0;;
+  esac
+fi
+
+if [ -f /etc/fw_env.config ]
+then
+  fw_setenv onie_boot_reason rescue
+else
+  MNT_DIR="/mnt/onie-boot"
+  mountpoint -q ${MNT_DIR} || mount ${MNT_DIR}
+  ${MNT_DIR}/onie/tools/bin/onie-boot-mode -q -o rescue
+  grub-reboot ONIE
+fi
+
+systemctl reboot
