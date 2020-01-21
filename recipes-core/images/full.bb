@@ -23,6 +23,7 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL += "\
     lmsensors-sensors \
     lmsensors-sensorsconfconvert \
     lmsensors-sensorsdetect \
+    man-db \
     man-pages \
     ofagent \
     ofdpa \
