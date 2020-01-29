@@ -70,14 +70,24 @@ if [ "${NEED_CONFIRM}" = true ]; then
   esac
 fi
 
-MNT_DIR="/mnt/onie-boot"
-mountpoint -q ${MNT_DIR} || mount ${MNT_DIR}
-${MNT_DIR}/onie/tools/bin/onie-boot-mode -q -o install
-grub-reboot ONIE
-
-if [[ -n "${IP}" && "${IP}" != "dhcp" ]]; then
-  sed -i "/export ONIE_EXTRA_CMDLINE_LINUX/ i ONIE_EXTRA_CMDLINE_LINUX=\""\${ONIE_EXTRA_CMDLINE_LINUX}" ip=${IP} install_url=${INSTALL_FILE}\" " ${MNT_DIR}/grub/grub.cfg
+if [ -f /etc/fw_env.config ]; then
+  if [[ -n "${IP}" && "${IP}" != "dhcp" ]]; then
+    boot_reason="install ip=${IP} install_url=${INSTALL_FILE}"
+  else
+    boot_reason="install install_url=${INSTALL_FILE}"
+  fi
+  fw_setenv onie_boot_reason "$boot_reason"
 else
-  sed -i "/export ONIE_EXTRA_CMDLINE_LINUX/ i ONIE_EXTRA_CMDLINE_LINUX=\""\${ONIE_EXTRA_CMDLINE_LINUX}" install_url=${INSTALL_FILE}\" " ${MNT_DIR}/grub/grub.cfg
-fi;
+  MNT_DIR="/mnt/onie-boot"
+  mountpoint -q ${MNT_DIR} || mount ${MNT_DIR}
+  ${MNT_DIR}/onie/tools/bin/onie-boot-mode -q -o install
+  grub-reboot ONIE
+
+  if [[ -n "${IP}" && "${IP}" != "dhcp" ]]; then
+    sed -i "/export ONIE_EXTRA_CMDLINE_LINUX/ i ONIE_EXTRA_CMDLINE_LINUX=\""\${ONIE_EXTRA_CMDLINE_LINUX}" ip=${IP} install_url=${INSTALL_FILE}\" " ${MNT_DIR}/grub/grub.cfg
+  else
+    sed -i "/export ONIE_EXTRA_CMDLINE_LINUX/ i ONIE_EXTRA_CMDLINE_LINUX=\""\${ONIE_EXTRA_CMDLINE_LINUX}" install_url=${INSTALL_FILE}\" " ${MNT_DIR}/grub/grub.cfg
+  fi;
+fi
+
 systemctl reboot
