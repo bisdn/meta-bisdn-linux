@@ -1,0 +1,10 @@
+diff --git a/cmake/gflags.cmake b/cmake/gflags.cmake
+index 01e0a75b60..0673553551 100644
+--- a/cmake/gflags.cmake
++++ b/cmake/gflags.cmake
+@@ -33,4 +33,5 @@ elseif("${gRPC_GFLAGS_PROVIDER}" STREQUAL "package")
+     set(_gRPC_GFLAGS_INCLUDE_DIR ${GFLAGS_INCLUDE_DIR})
+   endif()
+   set(_gRPC_FIND_GFLAGS "if(NOT gflags_FOUND)\n  find_package(gflags CONFIG)\nendif()")
++  set(_gRPC_GFLAGS_LIBRARIES gflags)
+ endif()
