@@ -7,8 +7,8 @@ IMAGE_INSTALL = "packagegroup-core-boot \
     ${CORE_IMAGE_EXTRA_INSTALL}"
 
 BISDN_SWITCH_IMAGE_EXTRA_INSTALL = "\
-    bash \
     basebox-user \
+    bash \
     dropbear \
     e2fsprogs-resize2fs \
     e2fsprogs-tune2fs \
@@ -21,6 +21,7 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL = "\
     onie-tools \
     onl \
     parted \
+    strace \
     util-linux \
     util-linux-blkid \
     "
