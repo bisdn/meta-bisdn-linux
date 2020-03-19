@@ -9,7 +9,6 @@ IMAGE_INSTALL = "packagegroup-core-boot \
 BISDN_SWITCH_IMAGE_EXTRA_INSTALL = "\
     basebox-user \
     bash \
-    dropbear \
     e2fsprogs-resize2fs \
     e2fsprogs-tune2fs \
     grub \
@@ -25,6 +24,8 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL = "\
     util-linux \
     util-linux-blkid \
     "
+
+IMAGE_FEATURES += "ssh-server-openssh"
 
 IMAGE_LINGUAS = " "
 
