@@ -33,4 +33,4 @@ LICENSE = "MIT"
 
 inherit core-image
 
-IMAGE_FSTYPES += " tar.xz"
+IMAGE_FSTYPES = "tar.xz"
