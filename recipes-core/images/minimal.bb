@@ -31,6 +31,8 @@ IMAGE_LINGUAS = " "
 
 LICENSE = "MIT"
 
+COPY_LIC_MANIFEST = "1"
+
 inherit core-image
 
 IMAGE_FSTYPES += " tar.xz"
