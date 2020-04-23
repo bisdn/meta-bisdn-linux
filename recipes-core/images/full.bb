@@ -9,6 +9,7 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL += "\
     baseboxd \
     baseboxd-tools \
     curl \
+    ethtool \
     file \
     frr \
     ipcalc \
