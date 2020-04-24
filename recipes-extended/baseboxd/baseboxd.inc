@@ -17,6 +17,7 @@ DEPENDS = "\
     protobuf-native \
     rofl-common \
     rofl-ofdpa \
+    systemd \
 "
 
 SRC_URI = "gitsm://github.com/bisdn/basebox.git"
