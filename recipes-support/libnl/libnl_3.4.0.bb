@@ -14,6 +14,7 @@ DEPENDS = "flex-native bison-native"
 SRC_URI = " \
     git://github.com/thom311/${BPN}.git;protocol=https \
     file://route_link_expose_IFLA_INFO_SLAVE_KIND.patch \
+    file://support-bridge-multicast-database.patch \
 "
 # this is actually master:
 SRCREV = "08160f0555f988db1ec3de65fa188a9d48ebff9d"

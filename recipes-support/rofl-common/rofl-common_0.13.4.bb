@@ -1,5 +1,5 @@
 # Copyright (C) 2018 Tobias Jungel <tobias.jungel@bisdn.de>
 # Released under the MIT license (see COPYING.MIT for the terms)
 
-require rofl-ofdpa.inc
-SRCREV = "5e28ec4a604b8066c9061ecee348df4860fc627d"
+require rofl-common.inc
+SRCREV = "2a4ea705af2bb0cc27f558e9e6fbd67573727208"
