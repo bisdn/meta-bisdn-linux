@@ -8,6 +8,7 @@ IMAGE_FEATURES += " package-management"
 BISDN_SWITCH_IMAGE_EXTRA_INSTALL += "\
     baseboxd \
     baseboxd-tools \
+    bridge-utils  \
     curl \
     ethtool \
     file \
