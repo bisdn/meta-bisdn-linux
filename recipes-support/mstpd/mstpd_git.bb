@@ -22,6 +22,7 @@ EXTRA_OECONF = "--sbindir=/sbin"
 FILES_${PN} += "${systemd_system_unitdir}/mstpd.service"
 
 SYSTEMD_SERVICE_${PN} = "mstpd.service"
+SYSTEMD_AUTO_ENABLE_${PN} = "disable"
 
 do_install_append() {
    install -d ${D}${systemd_unitdir}/system
