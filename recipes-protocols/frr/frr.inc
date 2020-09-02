@@ -158,6 +158,10 @@ do_install () {
 
     install -d ${D}${systemd_unitdir}/system
     install -m 0644 ${WORKDIR}/frr.service ${D}${systemd_unitdir}/system
+
+    # create default log directory for frr
+    install -m 0755 -d ${D}/var/log/frr
+    chown frr:frr ${D}/var/log/frr
 }
 
 DEPENDS_append = " ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'systemd-systemctl-native', '', d)}"
