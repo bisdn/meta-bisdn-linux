@@ -1,0 +1,11 @@
+# DO NOT EDIT, any changes will be discarded on upgrade
+/home/basebox/.ssh/
+/etc/passwd
+/etc/shadow
+/etc/group
+/etc/sudoers.d
+/etc/systemd/network/
+/etc/ofdpa-grpc.conf
+-/etc/opkg/base-feeds.conf
+-/etc/opkg/arch.conf
+-/etc/opkg/opkg.conf
