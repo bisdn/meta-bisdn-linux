@@ -16,6 +16,10 @@ SRC_URI = " \
     git://github.com/thom311/${BPN}.git;protocol=https \
     file://route_link_expose_IFLA_INFO_SLAVE_KIND.patch \
     file://support-bridge-multicast-database.patch \
+    file://0001-Add-CTA_LABELS-and-CTA_LABELS_MASK-to-ctattr_type-ac.patch \
+    file://0001-Sync-linux-headers-to-4.19.66.patch \
+    file://0001-route-link-expose-IFLA_EVENT.patch \
+    file://0002-link-bonding-parse-and-expose-bonding-options.patch \
 "
 # this is actually master:
 SRCREV = "08160f0555f988db1ec3de65fa188a9d48ebff9d"
