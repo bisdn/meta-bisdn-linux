@@ -3,7 +3,7 @@ HOMEPAGE = "http://www.infradead.org/~tgr/libnl/"
 SECTION = "libs/network"
 
 PE = "1"
-PR = "r1"
+PR = "r2"
 
 LICENSE = "LGPLv2.1"
 LIC_FILES_CHKSUM = "file://COPYING;md5=4fbd65380cdd255951079008b364516c"
@@ -16,6 +16,18 @@ SRC_URI = " \
     git://github.com/thom311/${BPN}.git;protocol=https \
     file://route_link_expose_IFLA_INFO_SLAVE_KIND.patch \
     file://support-bridge-multicast-database.patch \
+    file://0001-Add-CTA_LABELS-and-CTA_LABELS_MASK-to-ctattr_type-ac.patch \
+    file://0001-Sync-linux-headers-to-4.19.66.patch \
+    file://0001-route-link-expose-IFLA_EVENT.patch \
+    file://0002-link-bonding-parse-and-expose-bonding-options.patch \
+    file://0001-WIP-add-info-slave-data-support.patch \
+    file://0002-link-bonding-expose-state-on-enslaved-interfaces.patch \
+    file://0001-route-link-print-slave-line.patch \
+    file://0002-bonding-dump-slave-line.patch \
+    file://0001-route-link-add-missing-compare-for-slave-info.patch \
+    file://0002-route-link-bonding-add-missing-io_compare.patch \
+    file://0003-route-link-bonding-rename-bsi_mask-to-ce_mask.patch \
+    file://0004-route-link-bonding-add-missing-compare-to-slave_ops.patch \
 "
 # this is actually master:
 SRCREV = "08160f0555f988db1ec3de65fa188a9d48ebff9d"
