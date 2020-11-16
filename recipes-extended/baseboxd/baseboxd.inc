@@ -30,5 +30,6 @@ TARGET_LDFLAGS_append = " -lssl"
 TARGET_LDFLAGS_append = " -lcrypto"
 
 FILES_${PN} += "/lib/systemd/system/baseboxd.service"
+CONFFILES_${PN} += "${sysconfdir}/default/baseboxd"
 # Enable baseboxd service (SYSTEMD_AUTO_ENABLE default is enable)
 SYSTEMD_SERVICE_${PN} = "baseboxd.service"
