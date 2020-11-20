@@ -84,6 +84,9 @@ echo "Retrieving client tools information"
 } >> ${TMPDIR}/client_tools
 [ "$?" == "0" ] && echo "ok" || ( echo "failed" && exit 1 )
 
+echo "Retrieving basic techsupport from SDK"
+/usr/sbin/client_drivshell techsupport basic >> ${TMPDIR}/tech_support
+
 echo "onlpdump -S"
 {
   echo "onlpdump -S"
