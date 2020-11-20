@@ -28,22 +28,9 @@ then
 fi
 
 TMPDIR=$(mktemp -d)
-declare -a PACKAGES=(
-  ofdpa
-  ofdpa-grpc
-  ofagent
-  baseboxd
-  frr
-) 
 
 echo "Retrieving package data"
-{
-  for pkg in ${PACKAGES[@]}; 
-  do 
-    echo "Retrieving package data for $pkg"
-    opkg info $pkg
-  done
-} >> ${TMPDIR}/package_data
+opkg list_installed >> ${TMPDIR}/package_data
 [ "$?" == "0" ] && echo "ok" || ( echo "failed" && exit 1 )
 
 echo "Retrieving logs"
