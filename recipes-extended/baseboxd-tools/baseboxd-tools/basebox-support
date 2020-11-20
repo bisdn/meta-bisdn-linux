@@ -75,6 +75,12 @@ echo "Retrieving client tools information"
   echo ""
   echo "Client Ports"
   /usr/sbin/client_drivshell ports
+  echo ""
+  echo "STG State"
+  /usr/sbin/client_drivshell stg show
+  echo ""
+  echo "Trunk Group State"
+  /usr/sbin/client_drivshell trunk show
 } >> ${TMPDIR}/client_tools
 [ "$?" == "0" ] && echo "ok" || ( echo "failed" && exit 1 )
 
