@@ -43,6 +43,8 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL += "\
     python3-pip \
     radvd \
     tcpdump \
+    tmux \
+    vim \
     "
 
 IMAGE_LINGUAS = " "
