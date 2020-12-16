@@ -31,6 +31,7 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL += "\
     ofagent \
     ofdpa \
     ofdpa-grpc \
+    ofdpa-tools \
     procps \
     python \
     python-modules \
