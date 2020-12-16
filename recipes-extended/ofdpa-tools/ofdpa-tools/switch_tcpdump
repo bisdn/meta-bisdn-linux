@@ -1,0 +1,200 @@
+#!/usr/bin/env python3
+"""
+    switch_tcpdump
+    Capture packets on the switch by passing a rule to the ACL table
+    and then conducting capture on a port interface using tcpdump.
+
+    MIT License
+    Copyright (c) 2020 Mario Senecic
+    Copyright (c) 2020 BISDN GmbH
+
+    Permission is hereby granted, free of charge, to any person obtaining a
+    copy of this software and associated documentation files (the "Software"),
+    to deal in the Software without restriction, including without limitation
+    the rights to use, copy, modify, merge, publish, distribute, sublicense,
+    and/or sell copies of the Software, and to permit persons to whom the
+    Software is furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included
+    in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+    OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+    THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+    OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+    ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+    OTHER DEALINGS IN THE SOFTWARE.
+"""
+
+import argparse
+import os
+import subprocess
+import time
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        prog="switch_tcpdump",
+        description="Capture packets in the switch controller")
+    parser.add_argument(
+        "--inPort",
+        required=True,
+        type=str,
+        help="interface to conduct capture on, named portX")
+    parser.add_argument(
+        "--maxSize",
+        type=int,
+        help="maximum tcpdump file size in MB",
+        default=100)
+    parser.add_argument(
+        "--timeout",
+        type=int,
+        help="capture duration, in seconds (0 for manual stop)",
+        default=0)
+    parser.add_argument(
+        "--filters",
+        nargs='+',
+        help="tcpdump filter arguments")
+
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument(
+        "--filePath",
+        type=str,
+        help="resulting .pcap file location")
+    group.add_argument(
+        "--stdout",
+        action='store_true',
+        help="output to stdout instead of file - overrides file path",
+        default=False)
+
+    args = parser.parse_args()
+
+    print("=" * 80)
+    print("Running switch_tcpdump")
+    print(f"Interface name: {args.inPort}")
+
+    if interface_exists(args.inPort) != 0:
+        print("Interface %s does not exist" % args.inPort)
+        return 1
+
+    if args.maxSize <= 0:
+        print("--maxSize should be greater than 0 (got %d)" % args.maxSize)
+        return 1
+
+    if args.timeout < 0:
+        print("--timeout should 0 or greater (got %d)" % args.timeout)
+        return 1
+
+    portNumber = int(args.inPort.replace("port", ""))
+
+    if rule_insert(portNumber) != 0:
+        print("Failed while inserting rule into the ACL table")
+        return 1
+
+    print("Rule inserted to the ACL table")
+
+    tcpdumpReturnCode = run_tcpdump(
+        args.inPort,
+        args.filePath,
+        args.timeout,
+        args.maxSize,
+        args.stdout,
+        args.filters)
+
+    if rule_delete(portNumber) != 0:
+        print("Failed while deleting rule in the ACL table")
+        return 1
+
+    print("Rule deleted from the ACL table")
+
+    print("Finished capturing")
+    print("=" * 80)
+
+    return tcpdumpReturnCode
+
+
+def interface_exists(interfaceName):
+    completed_process = subprocess.run([
+        "/sbin/ip",
+        "link",
+        "show",
+        interfaceName])
+
+    return completed_process.returncode
+
+
+def rule_insert(portNumber):
+    completed_process = subprocess.run([
+        "python",
+        "/usr/sbin/ofdpa_acl_flow_cli.py",
+        "-a",
+        "--inPort",
+        str(portNumber),
+        "--inPortMask",
+        "0xffffffff",
+        "--controller"])
+
+    return completed_process.returncode
+
+
+def rule_delete(portNumber):
+    completed_process = subprocess.run([
+        "python",
+        "/usr/sbin/ofdpa_acl_flow_cli.py",
+        "-d",
+        "--inPort",
+        str(portNumber),
+        "--inPortMask",
+        "0xffffffff"])
+
+    return completed_process.returncode
+
+
+def run_tcpdump(portName, filePath, timeoutSeconds,
+                maxSizeMB, stdout, filters):
+
+    tcpdumpCommand = ["tcpdump", "-i", portName]
+
+    # Override file argument for stdout
+    if not stdout:
+        tcpdumpCommand = tcpdumpCommand + ["-w", filePath]
+        print(f"Saving to {filePath}")
+
+    if filters:
+        tcpdumpCommand = tcpdumpCommand + filters
+
+    print("Starting tcpdump...")
+    if timeoutSeconds:
+        print(f"The timeout is {timeoutSeconds} seconds")
+    else:
+        print("Capturing traffic until user interruption")
+    starting_time = time.time()
+
+    tcpdumpProcess = subprocess.Popen(tcpdumpCommand)
+
+    try:
+        while tcpdumpProcess.poll() is None:
+            time.sleep(0.1)
+
+            if timeoutSeconds and (
+                    time.time() - starting_time > timeoutSeconds):
+                tcpdumpProcess.terminate()
+                print("Reached capture timeout, stopping")
+
+            if not stdout and os.path.isfile(filePath) \
+                    and int(os.path.getsize(filePath) / 1e6) > maxSizeMB:
+                tcpdumpProcess.terminate()
+                print("Max file size reached, stopping")
+
+    except KeyboardInterrupt:
+        tcpdumpProcess.terminate()
+
+    if not stdout:
+        print(f"Final file size: {os.path.getsize(filePath)/1e6} MB")
+    return tcpdumpProcess.returncode
+
+
+if __name__ == "__main__":
+    exit_status = main()
+    exit(exit_status)
