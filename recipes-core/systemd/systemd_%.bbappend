@@ -8,6 +8,7 @@ SRC_URI += " \
     file://99-enp.network \
     file://20-network-io.conf \
     file://0001-v245-backport-add-vlan-protocol-parameter-for-bridge.patch \
+    file://0001-v247-backport-basic-cap-list-parse-print-numerical-capabilities.patch \
 "
 
 FILES_${PN} += "\
