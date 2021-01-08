@@ -2,4 +2,4 @@
 # Released under the MIT license (see COPYING.MIT for the terms)
 
 require rofl-ofdpa.inc
-SRCREV = "f768ee0590ef4c192be1f9eb2d009dfcbf4737b8"
+SRCREV = "d39db551adeddda870e2fa3e9e783ebc67c6e8bd"
