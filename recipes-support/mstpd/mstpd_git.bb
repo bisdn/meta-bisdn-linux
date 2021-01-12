@@ -5,6 +5,9 @@ LIC_FILES_CHKSUM = "file://LICENSE;md5=4325afd396febcb659c36b49533135d4"
 
 SRC_URI = "\
   git://github.com/mstpd/mstpd.git;protocol=https \
+  file://0001-libnetlink-introduce-rta_nest-and-u8-u16-u64-helpers.patch \
+  file://0002-libnetlink-Set-NLA_F_NESTED-in-rta_nest.patch \
+  file://driver_deps.c;subdir=git \
   file://bridge-stp.conf"
 
 PV = "0.0.8+git${SRCPV}"

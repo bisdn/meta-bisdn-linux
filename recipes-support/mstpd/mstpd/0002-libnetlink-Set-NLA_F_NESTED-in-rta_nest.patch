@@ -1,0 +1,28 @@
+From 104657a337b535d287a64b15e561a39857c4b997 Mon Sep 17 00:00:00 2001
+From: David Ahern <dsahern@gmail.com>
+Date: Fri, 7 Jun 2019 15:38:07 -0700
+Subject: [PATCH 2/2] libnetlink: Set NLA_F_NESTED in rta_nest
+
+Kernel now requires NLA_F_NESTED to be set on new nested
+attributes. Set NLA_F_NESTED in rta_nest.
+
+Signed-off-by: David Ahern <dsahern@gmail.com>
+---
+ libnetlink.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/libnetlink.c b/libnetlink.c
+index 6e9907d..97b4f20 100644
+--- a/libnetlink.c
++++ b/libnetlink.c
+@@ -631,6 +631,7 @@ struct rtattr *rta_nest(struct rtattr *rta, int maxlen, int type)
+ 	struct rtattr *nest = RTA_TAIL(rta);
+ 
+ 	rta_addattr_l(rta, maxlen, type, NULL, 0);
++	nest->rta_type |= NLA_F_NESTED;
+ 
+ 	return nest;
+ }
+-- 
+2.29.2
+
