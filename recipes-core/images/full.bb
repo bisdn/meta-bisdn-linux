@@ -17,6 +17,7 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL += "\
     iproute2-ss \
     iptables \
     jq \
+    keepalived \
     kernel-module-linux-kernel-bde \
     kernel-module-linux-user-bde \
     less \
