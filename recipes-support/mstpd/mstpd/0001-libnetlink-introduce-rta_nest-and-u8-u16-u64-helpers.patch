@@ -1,7 +1,7 @@
 From 941b94000998218a92a4a416136e0c28be732e51 Mon Sep 17 00:00:00 2001
 From: Roopa Prabhu <roopa@cumulusnetworks.com>
 Date: Thu, 15 Oct 2015 13:13:38 +0200
-Subject: [PATCH 1/2] libnetlink: introduce rta_nest and u8, u16, u64 helpers
+Subject: [PATCH 1/4] libnetlink: introduce rta_nest and u8, u16, u64 helpers
  for nesting within rtattr
 
 This patch introduces two new api's rta_nest and rta_nest_end to
