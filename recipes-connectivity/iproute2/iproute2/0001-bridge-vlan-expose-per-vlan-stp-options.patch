@@ -1,17 +1,17 @@
-From 6f4a2a495c1818e8da93d54219268621f1b0bb6b Mon Sep 17 00:00:00 2001
+From 5d9b02a60c462bce6c23637966d9efcfe1cc880f Mon Sep 17 00:00:00 2001
 From: Rubens Figueiredo <rubens.figueiredo@bisdn.de>
 Date: Mon, 4 Jan 2021 21:05:44 +0100
 Subject: [PATCH] bridge-vlan: expose per vlan stp options
 
 Signed-off-by: Rubens Figueiredo <rubens.figueiredo@bisdn.de>
 ---
- bridge/vlan.c        | 70 ++++++++++++++++++++++++++++++++++++++++++++
+ bridge/vlan.c        | 65 ++++++++++++++++++++++++++++++++++++++++++++
  include/libnetlink.h |  7 +++++
- lib/libnetlink.c     | 16 ++++++++++
- 3 files changed, 93 insertions(+)
+ lib/libnetlink.c     | 16 +++++++++++
+ 3 files changed, 88 insertions(+)
 
 diff --git a/bridge/vlan.c b/bridge/vlan.c
-index 0d142bc9..d73dacb7 100644
+index 0d142bc9..d21f0500 100644
 --- a/bridge/vlan.c
 +++ b/bridge/vlan.c
 @@ -8,6 +8,7 @@
@@ -22,7 +22,7 @@ index 0d142bc9..d73dacb7 100644
  #include <string.h>
  
  #include "json_print.h"
-@@ -521,6 +522,72 @@ static int print_vlan_stats(struct nlmsghdr *n, void *arg)
+@@ -521,6 +522,67 @@ static int print_vlan_stats(struct nlmsghdr *n, void *arg)
  	return 0;
  }
  
@@ -33,22 +33,17 @@ index 0d142bc9..d73dacb7 100644
 +	struct bridge_vlan_info *vinfo = NULL;
 +	int rem = n->nlmsg_len;
 +
-+	for (pos = (void *)NLMSG_DATA(n); RTA_OK(pos, rem); pos =  RTA_NEXT(pos, rem))
++	for (pos = BRIDGE_VLANDB_RTA(n); RTA_OK(pos, rem); pos =  RTA_NEXT(pos, rem))
 +	{
 +		if ((pos->rta_type & NLA_TYPE_MASK) != BRIDGE_VLANDB_ENTRY)
 +			continue;
 +
-+		print_uint(PRINT_ANY, 
++		print_string(PRINT_ANY, 
 +				"Interface:",
 +				"Interface: %s ",
 +				ll_index_to_name(br_msg->ifindex));
-+		print_uint(PRINT_ANY, 
-+				"ifindex:",
-+				"ifindex: %u\n",
-+				br_msg->ifindex);
 +
 +		parse_rtattr_nested(tb, BRIDGE_VLANDB_ENTRY_MAX, pos);
-+
 +
 +		if (tb[BRIDGE_VLANDB_ENTRY_INFO]) {
 +			vinfo = RTA_DATA(tb[BRIDGE_VLANDB_ENTRY_INFO]);
@@ -95,7 +90,7 @@ index 0d142bc9..d73dacb7 100644
  static int vlan_show(int argc, char **argv, int subject)
  {
  	char *filter_dev = NULL;
-@@ -667,6 +734,9 @@ int do_vlan(int argc, char **argv)
+@@ -667,6 +729,9 @@ int do_vlan(int argc, char **argv)
  		if (matches(*argv, "tunnelshow") == 0) {
  			return vlan_show(argc-1, argv+1, VLAN_SHOW_TUNNELINFO);
  		}
@@ -158,5 +153,5 @@ index c958aa57..80506fa6 100644
  {
  	return send(rth->fd, buf, len, 0);
 -- 
-2.29.2
+2.26.2
 
