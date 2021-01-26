@@ -1,17 +1,17 @@
-From 5d9b02a60c462bce6c23637966d9efcfe1cc880f Mon Sep 17 00:00:00 2001
+From 839926c3ffcb09a69658fdf70bf0d6a7fbc22162 Mon Sep 17 00:00:00 2001
 From: Rubens Figueiredo <rubens.figueiredo@bisdn.de>
 Date: Mon, 4 Jan 2021 21:05:44 +0100
 Subject: [PATCH] bridge-vlan: expose per vlan stp options
 
 Signed-off-by: Rubens Figueiredo <rubens.figueiredo@bisdn.de>
 ---
- bridge/vlan.c        | 65 ++++++++++++++++++++++++++++++++++++++++++++
+ bridge/vlan.c        | 67 ++++++++++++++++++++++++++++++++++++++++++++
  include/libnetlink.h |  7 +++++
  lib/libnetlink.c     | 16 +++++++++++
- 3 files changed, 88 insertions(+)
+ 3 files changed, 90 insertions(+)
 
 diff --git a/bridge/vlan.c b/bridge/vlan.c
-index 0d142bc9..d21f0500 100644
+index 0d142bc9..e16a2ac2 100644
 --- a/bridge/vlan.c
 +++ b/bridge/vlan.c
 @@ -8,6 +8,7 @@
@@ -22,7 +22,7 @@ index 0d142bc9..d21f0500 100644
  #include <string.h>
  
  #include "json_print.h"
-@@ -521,6 +522,67 @@ static int print_vlan_stats(struct nlmsghdr *n, void *arg)
+@@ -521,6 +522,69 @@ static int print_vlan_stats(struct nlmsghdr *n, void *arg)
  	return 0;
  }
  
@@ -33,14 +33,16 @@ index 0d142bc9..d21f0500 100644
 +	struct bridge_vlan_info *vinfo = NULL;
 +	int rem = n->nlmsg_len;
 +
-+	for (pos = BRIDGE_VLANDB_RTA(n); RTA_OK(pos, rem); pos =  RTA_NEXT(pos, rem))
++	for (pos = (void*)(NLMSG_DATA(n) + NLMSG_ALIGN(sizeof(*br_msg)));
++       RTA_OK(pos, rem);
++       pos =  RTA_NEXT(pos, rem))
 +	{
 +		if ((pos->rta_type & NLA_TYPE_MASK) != BRIDGE_VLANDB_ENTRY)
 +			continue;
 +
 +		print_string(PRINT_ANY, 
 +				"Interface:",
-+				"Interface: %s ",
++				"Interface: %s\n",
 +				ll_index_to_name(br_msg->ifindex));
 +
 +		parse_rtattr_nested(tb, BRIDGE_VLANDB_ENTRY_MAX, pos);
@@ -90,7 +92,7 @@ index 0d142bc9..d21f0500 100644
  static int vlan_show(int argc, char **argv, int subject)
  {
  	char *filter_dev = NULL;
-@@ -667,6 +729,9 @@ int do_vlan(int argc, char **argv)
+@@ -667,6 +731,9 @@ int do_vlan(int argc, char **argv)
  		if (matches(*argv, "tunnelshow") == 0) {
  			return vlan_show(argc-1, argv+1, VLAN_SHOW_TUNNELINFO);
  		}
