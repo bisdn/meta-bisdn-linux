@@ -1,15 +1,15 @@
-From 65246ee4fd7c9b633d01bc7bf6ed3490b9ba1a9c Mon Sep 17 00:00:00 2001
+From 489f161655eaacacd9812e73b4d242dc046e9369 Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Tue, 26 Jan 2021 10:21:08 +0100
 Subject: [PATCH 4/4] WIP: pvstate
 
 ---
  bridge_ctl.h   |  12 ++++
- bridge_track.c | 132 ++++++++++++++++++++++++++++++++++++++++--
+ bridge_track.c | 154 +++++++++++++++++++++++++++++++++++++++++++++++--
  bridge_track.h |   1 +
- brmon.c        | 151 ++++++++++++++++++++++++++++++++++++++++++++++++-
+ brmon.c        | 151 +++++++++++++++++++++++++++++++++++++++++++++++-
  mstp.h         |   1 +
- 5 files changed, 289 insertions(+), 8 deletions(-)
+ 5 files changed, 311 insertions(+), 8 deletions(-)
 
 diff --git a/bridge_ctl.h b/bridge_ctl.h
 index d09a8b4..2590b20 100644
@@ -54,7 +54,7 @@ index d09a8b4..2590b20 100644
 +
  #endif /* BRIDGE_CTL_H */
 diff --git a/bridge_track.c b/bridge_track.c
-index 968e15b..05de242 100644
+index 968e15b..a766b0e 100644
 --- a/bridge_track.c
 +++ b/bridge_track.c
 @@ -46,6 +46,7 @@
@@ -113,7 +113,53 @@ index 968e15b..05de242 100644
      MSTP_IN_delete_port(prt);
      free(prt);
  }
-@@ -347,6 +364,49 @@ int bridge_notify(int br_index, int if_index, bool newlink, unsigned flags)
+@@ -184,6 +201,8 @@ static bool check_mac_address(char *name, __u8 *addr)
+     }
+ }
+ 
++static int br_set_state(struct rtnl_handle *rth, unsigned ifindex, __u8 state);
++
+ static void set_br_up(bridge_t * br, bool up)
+ {
+     bool changed = false;
+@@ -204,9 +223,23 @@ static void set_br_up(bridge_t * br, bool up)
+     }
+ 
+     if(changed)
++    {
+         MSTP_IN_set_bridge_enable(br, br->sysdeps.up);
++
++        if (!up && have_per_vlan_state)
++        {
++            port_t *prt;
++
++            list_for_each_entry(prt, &br->ports, br_list)
++            {
++                br_set_state(&rth_state,  prt->sysdeps.if_index, BR_STATE_DISABLED);
++                /* TODO: vlans to forwarding? */
++            }
++        }
++    }
+ }
+ 
++
+ static void set_if_up(port_t *prt, bool up)
+ {
+     INFO("Port %s : %s", prt->sysdeps.name, (up ? "up" : "down"));
+@@ -259,8 +292,12 @@ static void set_if_up(port_t *prt, bool up)
+         }
+     }
+     if(changed)
++    {
+         MSTP_IN_set_port_enable(prt, prt->sysdeps.up, prt->sysdeps.speed,
+                                 prt->sysdeps.duplex);
++        if (up && have_per_vlan_state)
++            br_set_state(&rth_state,  prt->sysdeps.if_index, BR_STATE_FORWARDING);
++    }
+ }
+ 
+ /* br_index == if_index means: interface is bridge master */
+@@ -347,6 +384,49 @@ int bridge_notify(int br_index, int if_index, bool newlink, unsigned flags)
      return 0;
  }
  
@@ -145,10 +191,10 @@ index 968e15b..05de242 100644
 +            continue;
 +
 +        if (ptp->state == state)
-+	{
++        {
 +            LOG_MSTINAME(br, prt, ptp, "VID %i: already in desired STP state %i", vid, ptp->state);
 +            continue;
-+	}
++        }
 +
 +        if (0 > br_set_vlan_state(&rth_state, if_index, vid, ptp->state))
 +        {
@@ -163,7 +209,7 @@ index 968e15b..05de242 100644
  struct llc_header
  {
      __u8 dest_addr[ETH_ALEN];
-@@ -410,6 +470,46 @@ void bridge_bpdu_rcv(int if_index, const unsigned char *data, int len)
+@@ -410,6 +490,46 @@ void bridge_bpdu_rcv(int if_index, const unsigned char *data, int len)
                      (bpdu_t *)(data + sizeof(*h)), l - LLC_PDU_LEN_U);
  }
  
@@ -210,7 +256,16 @@ index 968e15b..05de242 100644
  static int br_set_state(struct rtnl_handle *rth, unsigned ifindex, __u8 state)
  {
      struct
-@@ -493,9 +593,29 @@ void MSTP_OUT_set_state(per_tree_port_t *ptp, int new_state)
+@@ -419,6 +539,8 @@ static int br_set_state(struct rtnl_handle *rth, unsigned ifindex, __u8 state)
+         char buf[256];
+     } req;
+ 
++    LOG("ifindex %d state %d", ifindex, state);
++
+     memset(&req, 0, sizeof(req));
+ 
+     req.n.nlmsg_len = NLMSG_LENGTH(sizeof(struct ifinfomsg));
+@@ -493,9 +615,29 @@ void MSTP_OUT_set_state(per_tree_port_t *ptp, int new_state)
      }
      INFO_MSTINAME(br, prt, ptp, "entering %s state", state_name);
  
