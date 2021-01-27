@@ -7,7 +7,8 @@ SRC_URI = "\
   git://github.com/mstpd/mstpd.git;protocol=https \
   file://0001-libnetlink-introduce-rta_nest-and-u8-u16-u64-helpers.patch \
   file://0002-libnetlink-Set-NLA_F_NESTED-in-rta_nest.patch \
-  file://driver_deps.c;subdir=git \
+  file://0003-libnetlink-Add-helper-to-add-a-group-via-setsockopt.patch \
+  file://0004-WIP-pvstate.patch \
   file://bridge-stp.conf"
 
 PV = "0.0.8+git${SRCPV}"
