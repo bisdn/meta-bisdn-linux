@@ -1,18 +1,20 @@
-From 29637c99ea2002217a6a45bc18eb694fbb49f327 Mon Sep 17 00:00:00 2001
+From a162cdcac50351cc83e67fdb5da22290f04f6114 Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Tue, 26 Jan 2021 10:21:08 +0100
-Subject: [PATCH 4/4] WIP: pvstate
+Subject: [PATCH 4/4] WIP: set CIST/MSTI port states to the newly added per
+ vlan STP state
 
+Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
  bridge_ctl.h   |  12 ++++
  bridge_track.c | 158 +++++++++++++++++++++++++++++++++++++++++++++++--
  bridge_track.h |   1 +
- brmon.c        | 151 +++++++++++++++++++++++++++++++++++++++++++++-
+ brmon.c        | 147 ++++++++++++++++++++++++++++++++++++++++++++-
  mstp.h         |   1 +
- 5 files changed, 315 insertions(+), 8 deletions(-)
+ 5 files changed, 311 insertions(+), 8 deletions(-)
 
 diff --git a/bridge_ctl.h b/bridge_ctl.h
-index d09a8b4..2590b20 100644
+index d09a8b4..79a415f 100644
 --- a/bridge_ctl.h
 +++ b/bridge_ctl.h
 @@ -31,6 +31,9 @@
@@ -50,11 +52,11 @@ index d09a8b4..2590b20 100644
  
 +int vlan_notify(int if_index, bool newvlan, __u16 vid, __u8 state);
 +
-+int fill_vlan_table(int if_index, __u8 *vlan_table);
++int fill_vlan_table(sysdep_if_data_t *if_data);
 +
  #endif /* BRIDGE_CTL_H */
 diff --git a/bridge_track.c b/bridge_track.c
-index 968e15b..7e0ae17 100644
+index 968e15b..267a176 100644
 --- a/bridge_track.c
 +++ b/bridge_track.c
 @@ -46,6 +46,7 @@
@@ -70,7 +72,7 @@ index 968e15b..7e0ae17 100644
      }
  
 +    memset(prt->sysdeps.vlan_state, VLAN_STATE_UNASSIGNED, sizeof(prt->sysdeps.vlan_state));
-+    fill_vlan_table(if_index, prt->sysdeps.vlan_state);
++    fill_vlan_table(&prt->sysdeps);
 +
      INFO("Add iface %s as port#%d to bridge %s", prt->sysdeps.name,
           portno, br->sysdeps.name);
@@ -315,7 +317,7 @@ index d3aec99..a1083fa 100644
  
  #endif
 diff --git a/brmon.c b/brmon.c
-index aa7e3b7..5a9433c 100644
+index aa7e3b7..16b9cb7 100644
 --- a/brmon.c
 +++ b/brmon.c
 @@ -17,6 +17,7 @@
@@ -339,7 +341,7 @@ index aa7e3b7..5a9433c 100644
  {
      struct ifinfomsg *ifi = NLMSG_DATA(n);
      struct rtattr * tb[IFLA_MAX + 1];
-@@ -166,6 +169,144 @@ static int dump_msg(const struct sockaddr_nl *who, struct nlmsghdr *n,
+@@ -166,6 +169,140 @@ static int dump_msg(const struct sockaddr_nl *who, struct nlmsghdr *n,
      return 0;
  }
  
@@ -395,9 +397,9 @@ index aa7e3b7..5a9433c 100644
 +    struct br_vlan_msg *bvm = NLMSG_DATA(n);
 +    struct rtattr *pos;
 +    int len = n->nlmsg_len;
-+    struct vlan_dump_table *req = arg;
++    sysdep_if_data_t *if_data = arg;
 +
-+    if (bvm->ifindex != req->if_index)
++    if (bvm->ifindex != if_data->if_index)
 +            return 0;
 +
 +    for (pos = NLMSG_DATA(n) + NLMSG_ALIGN(sizeof(*bvm)); RTA_OK(pos, len); pos = RTA_NEXT(pos, len))
@@ -427,7 +429,7 @@ index aa7e3b7..5a9433c 100644
 +            range = info->vid;
 +
 +        for (i = info->vid; i <= range; i++)
-+            req->table[i] = state;
++            if_data->vlan_state[i] = state;
 +    }
 +
 +    return 0;
@@ -449,15 +451,11 @@ index aa7e3b7..5a9433c 100644
 +    }
 +}
 +
-+int fill_vlan_table(int if_index, uint8_t *vlan_table)
++int fill_vlan_table(sysdep_if_data_t *if_data)
 +{
 +    struct br_vlan_msg bvm = {
 +        .family = PF_BRIDGE,
-+     /* .ifindex = if_index, */
-+    };
-+    struct vlan_dump_table req = {
-+        .if_index = if_index,
-+        .table = vlan_table,
++     /* .ifindex = if_data->if_index, */
 +    };
 +
 +    if(!have_per_vlan_state)
@@ -472,7 +470,7 @@ index aa7e3b7..5a9433c 100644
 +        return -1;
 +    }
 +
-+    if(rtnl_dump_filter(&rth, vlan_table_msg, &req, NULL, NULL) < 0)
++    if(rtnl_dump_filter(&rth, vlan_table_msg, if_data, NULL, NULL) < 0)
 +    {
 +        ERROR("Dump terminated\n");
 +        return -1;
@@ -484,7 +482,7 @@ index aa7e3b7..5a9433c 100644
  static inline void br_ev_handler(uint32_t events, struct epoll_event_handler *h)
  {
      if(rtnl_listen(&rth, dump_msg, stdout) < 0)
-@@ -182,6 +323,12 @@ int init_bridge_ops(void)
+@@ -182,6 +319,12 @@ int init_bridge_ops(void)
          return -1;
      }
  
