@@ -1,4 +1,4 @@
-From a162cdcac50351cc83e67fdb5da22290f04f6114 Mon Sep 17 00:00:00 2001
+From a42c104ada95d1b93a425c876b97217a06ad7160 Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Tue, 26 Jan 2021 10:21:08 +0100
 Subject: [PATCH 4/4] WIP: set CIST/MSTI port states to the newly added per
@@ -7,11 +7,11 @@ Subject: [PATCH 4/4] WIP: set CIST/MSTI port states to the newly added per
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
  bridge_ctl.h   |  12 ++++
- bridge_track.c | 158 +++++++++++++++++++++++++++++++++++++++++++++++--
+ bridge_track.c | 171 +++++++++++++++++++++++++++++++++++++++++++++++--
  bridge_track.h |   1 +
- brmon.c        | 147 ++++++++++++++++++++++++++++++++++++++++++++-
+ brmon.c        | 147 +++++++++++++++++++++++++++++++++++++++++-
  mstp.h         |   1 +
- 5 files changed, 311 insertions(+), 8 deletions(-)
+ 5 files changed, 324 insertions(+), 8 deletions(-)
 
 diff --git a/bridge_ctl.h b/bridge_ctl.h
 index d09a8b4..79a415f 100644
@@ -56,7 +56,7 @@ index d09a8b4..79a415f 100644
 +
  #endif /* BRIDGE_CTL_H */
 diff --git a/bridge_track.c b/bridge_track.c
-index 968e15b..267a176 100644
+index 968e15b..d3113ed 100644
 --- a/bridge_track.c
 +++ b/bridge_track.c
 @@ -46,6 +46,7 @@
@@ -124,21 +124,34 @@ index 968e15b..267a176 100644
  static void set_br_up(bridge_t * br, bool up)
  {
      bool changed = false;
-@@ -204,9 +223,23 @@ static void set_br_up(bridge_t * br, bool up)
+@@ -204,9 +223,36 @@ static void set_br_up(bridge_t * br, bool up)
      }
  
      if(changed)
 +    {
          MSTP_IN_set_bridge_enable(br, br->sysdeps.up);
 +
-+        if (!up && have_per_vlan_state)
++        if (have_per_vlan_state)
 +        {
 +            port_t *prt;
 +
 +            list_for_each_entry(prt, &br->ports, br_list)
 +            {
-+                br_set_state(&rth_state,  prt->sysdeps.if_index, BR_STATE_DISABLED);
-+                /* TODO: vlans to forwarding? */
++	        __u8 state;
++
++                /* when the bridge transitions from down to up, the Linux
++		 * kernel will put all ports into the blocked state.
++		 * This blocks traffic on all vlans, so to make the per vlan
++		 * STP state effective, we will need to put them into forwarding
++		 * again.
++		 */
++		if (up && prt->sysdeps.up)
++                  state = BR_STATE_FORWARDING;
++		else
++                  state = BR_STATE_DISABLED;
++
++                br_set_state(&rth_state,  prt->sysdeps.if_index, state);
++                /* TODO: vlans? */
 +            }
 +        }
 +    }
@@ -148,20 +161,20 @@ index 968e15b..267a176 100644
  static void set_if_up(port_t *prt, bool up)
  {
      INFO("Port %s : %s", prt->sysdeps.name, (up ? "up" : "down"));
-@@ -259,8 +292,12 @@ static void set_if_up(port_t *prt, bool up)
+@@ -259,8 +305,12 @@ static void set_if_up(port_t *prt, bool up)
          }
      }
      if(changed)
 +    {
          MSTP_IN_set_port_enable(prt, prt->sysdeps.up, prt->sysdeps.speed,
                                  prt->sysdeps.duplex);
-+        if (up && have_per_vlan_state)
-+            br_set_state(&rth_state,  prt->sysdeps.if_index, BR_STATE_FORWARDING);
++        if (have_per_vlan_state)
++            br_set_state(&rth_state,  prt->sysdeps.if_index, up ? BR_STATE_FORWARDING : BR_STATE_DISABLED);
 +    }
  }
  
  /* br_index == if_index means: interface is bridge master */
-@@ -347,6 +384,53 @@ int bridge_notify(int br_index, int if_index, bool newlink, unsigned flags)
+@@ -347,6 +397,53 @@ int bridge_notify(int br_index, int if_index, bool newlink, unsigned flags)
      return 0;
  }
  
@@ -215,7 +228,7 @@ index 968e15b..267a176 100644
  struct llc_header
  {
      __u8 dest_addr[ETH_ALEN];
-@@ -410,6 +494,46 @@ void bridge_bpdu_rcv(int if_index, const unsigned char *data, int len)
+@@ -410,6 +507,46 @@ void bridge_bpdu_rcv(int if_index, const unsigned char *data, int len)
                      (bpdu_t *)(data + sizeof(*h)), l - LLC_PDU_LEN_U);
  }
  
@@ -262,7 +275,7 @@ index 968e15b..267a176 100644
  static int br_set_state(struct rtnl_handle *rth, unsigned ifindex, __u8 state)
  {
      struct
-@@ -419,6 +543,8 @@ static int br_set_state(struct rtnl_handle *rth, unsigned ifindex, __u8 state)
+@@ -419,6 +556,8 @@ static int br_set_state(struct rtnl_handle *rth, unsigned ifindex, __u8 state)
          char buf[256];
      } req;
  
@@ -271,7 +284,7 @@ index 968e15b..267a176 100644
      memset(&req, 0, sizeof(req));
  
      req.n.nlmsg_len = NLMSG_LENGTH(sizeof(struct ifinfomsg));
-@@ -493,9 +619,29 @@ void MSTP_OUT_set_state(per_tree_port_t *ptp, int new_state)
+@@ -493,9 +632,29 @@ void MSTP_OUT_set_state(per_tree_port_t *ptp, int new_state)
      }
      INFO_MSTINAME(br, prt, ptp, "entering %s state", state_name);
  
