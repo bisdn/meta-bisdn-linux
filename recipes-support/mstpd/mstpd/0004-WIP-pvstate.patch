@@ -1,15 +1,15 @@
-From 489f161655eaacacd9812e73b4d242dc046e9369 Mon Sep 17 00:00:00 2001
+From 29637c99ea2002217a6a45bc18eb694fbb49f327 Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Tue, 26 Jan 2021 10:21:08 +0100
 Subject: [PATCH 4/4] WIP: pvstate
 
 ---
  bridge_ctl.h   |  12 ++++
- bridge_track.c | 154 +++++++++++++++++++++++++++++++++++++++++++++++--
+ bridge_track.c | 158 +++++++++++++++++++++++++++++++++++++++++++++++--
  bridge_track.h |   1 +
- brmon.c        | 151 +++++++++++++++++++++++++++++++++++++++++++++++-
+ brmon.c        | 151 +++++++++++++++++++++++++++++++++++++++++++++-
  mstp.h         |   1 +
- 5 files changed, 311 insertions(+), 8 deletions(-)
+ 5 files changed, 315 insertions(+), 8 deletions(-)
 
 diff --git a/bridge_ctl.h b/bridge_ctl.h
 index d09a8b4..2590b20 100644
@@ -54,7 +54,7 @@ index d09a8b4..2590b20 100644
 +
  #endif /* BRIDGE_CTL_H */
 diff --git a/bridge_track.c b/bridge_track.c
-index 968e15b..a766b0e 100644
+index 968e15b..7e0ae17 100644
 --- a/bridge_track.c
 +++ b/bridge_track.c
 @@ -46,6 +46,7 @@
@@ -159,7 +159,7 @@ index 968e15b..a766b0e 100644
  }
  
  /* br_index == if_index means: interface is bridge master */
-@@ -347,6 +384,49 @@ int bridge_notify(int br_index, int if_index, bool newlink, unsigned flags)
+@@ -347,6 +384,53 @@ int bridge_notify(int br_index, int if_index, bool newlink, unsigned flags)
      return 0;
  }
  
@@ -170,7 +170,8 @@ index 968e15b..a766b0e 100644
 +    per_tree_port_t *ptp;
 +    bridge_t *br = NULL;
 +    port_t *prt = NULL;
-+    __u16 fid, mstid;
++    __u16 fid;
++    __be16 mstid;
 +
 +    LOG("if_index %d, newvlan %d, vid %d, state %d",
 +        if_index, newvlan, vid, state);
@@ -182,25 +183,28 @@ index 968e15b..a766b0e 100644
 +    br = prt->bridge;
 +    prt->sysdeps.vlan_state[vid] = state;
 +
++    /* VLAN was deleted, nothing to do here */
++    if (!newvlan)
++        return 0;
++
 +    fid = br->vid2fid[vid];
 +    mstid = br->fid2mstid[fid];
 +
 +    list_for_each_entry(ptp, &prt->trees, port_list)
 +    {
-+        if (ptp->MSTID != mstid)
-+            continue;
++        if (ptp->MSTID == mstid)
++            break;
++    }
 +
-+        if (ptp->state == state)
-+        {
-+            LOG_MSTINAME(br, prt, ptp, "VID %i: already in desired STP state %i", vid, ptp->state);
-+            continue;
-+        }
++    TST(ptp->MSTID == mstid, -1);
 +
-+        if (0 > br_set_vlan_state(&rth_state, if_index, vid, ptp->state))
-+        {
-+            ERROR_MSTINAME(br, prt, ptp, "VID %i: failed setting STP state %i in kernel", vid, ptp->state);
-+        }
-+
++    if (ptp->state != state)
++    {
++      if (0 > br_set_vlan_state(&rth_state, if_index, vid, ptp->state))
++      {
++          ERROR_MSTINAME(br, prt, ptp, "VID %i: failed setting STP state %i in kernel", vid, ptp->state);
++          return -1;
++      }
 +    }
 +
 +    return 0;
@@ -209,7 +213,7 @@ index 968e15b..a766b0e 100644
  struct llc_header
  {
      __u8 dest_addr[ETH_ALEN];
-@@ -410,6 +490,46 @@ void bridge_bpdu_rcv(int if_index, const unsigned char *data, int len)
+@@ -410,6 +494,46 @@ void bridge_bpdu_rcv(int if_index, const unsigned char *data, int len)
                      (bpdu_t *)(data + sizeof(*h)), l - LLC_PDU_LEN_U);
  }
  
@@ -256,7 +260,7 @@ index 968e15b..a766b0e 100644
  static int br_set_state(struct rtnl_handle *rth, unsigned ifindex, __u8 state)
  {
      struct
-@@ -419,6 +539,8 @@ static int br_set_state(struct rtnl_handle *rth, unsigned ifindex, __u8 state)
+@@ -419,6 +543,8 @@ static int br_set_state(struct rtnl_handle *rth, unsigned ifindex, __u8 state)
          char buf[256];
      } req;
  
@@ -265,7 +269,7 @@ index 968e15b..a766b0e 100644
      memset(&req, 0, sizeof(req));
  
      req.n.nlmsg_len = NLMSG_LENGTH(sizeof(struct ifinfomsg));
-@@ -493,9 +615,29 @@ void MSTP_OUT_set_state(per_tree_port_t *ptp, int new_state)
+@@ -493,9 +619,29 @@ void MSTP_OUT_set_state(per_tree_port_t *ptp, int new_state)
      }
      INFO_MSTINAME(br, prt, ptp, "entering %s state", state_name);
  
