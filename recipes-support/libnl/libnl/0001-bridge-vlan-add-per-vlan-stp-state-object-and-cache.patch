@@ -1,4 +1,4 @@
-From 0ac01f646ad3b021a199d5aad81b8056d3ebdcd4 Mon Sep 17 00:00:00 2001
+From 11bb0a71c61273ad73ad38143bb595a2aac73b49 Mon Sep 17 00:00:00 2001
 From: Rubens Figueiredo <rubens.figueiredo@bisdn.de>
 Date: Fri, 29 Jan 2021 14:06:41 +0100
 Subject: [PATCH] bridge-vlan: add per vlan stp state object and cache
@@ -14,12 +14,14 @@ Signed-off-by: Rubens Figueiredo <rubens.figueiredo@bisdn.de>
  lib/route/bridge_vlan.c                 | 444 ++++++++++++++++++++++++
  libnl-cli-3.sym                         |   3 +
  libnl-route-3.sym                       |  11 +
+ src/lib/bridge_vlan.c                   |  42 +++
  src/nl-bridge.c                         |  38 ++
  src/nl-monitor.c                        |   1 +
- 11 files changed, 1121 insertions(+), 27 deletions(-)
+ 12 files changed, 1163 insertions(+), 27 deletions(-)
  create mode 100644 include/netlink/cli/bridge_vlan.h
  create mode 100644 include/netlink/route/bridge_vlan.h
  create mode 100644 lib/route/bridge_vlan.c
+ create mode 100644 src/lib/bridge_vlan.c
  create mode 100644 src/nl-bridge.c
 
 diff --git a/Makefile.am b/Makefile.am
@@ -1391,6 +1393,54 @@ index dc89700..b276b24 100644
 +	rtnl_bridge_vlan_foreach_entry;
 +	rtnl_bridge_vlan_get_entry_head;
  } libnl_3_5;
+diff --git a/src/lib/bridge_vlan.c b/src/lib/bridge_vlan.c
+new file mode 100644
+index 0000000..7f90a7f
+--- /dev/null
++++ b/src/lib/bridge_vlan.c
+@@ -0,0 +1,42 @@
++/* SPDX-License-Identifier: LGPL-2.1-only */
++/*
++ * src/lib/bridge_vlan.c     CLI Link Helpers
++ *
++ */
++
++/**
++ * @ingroup cli
++ * @defgroup cli_bridge_vlan Bridge Vlan
++ *
++ * @{
++ */
++
++#include <netlink/cli/utils.h>
++#include <netlink/cli/bridge_vlan.h>
++#include <linux/if_bridge.h>
++#include <netlink/route/bridge_vlan.h>
++
++struct rtnl_bridge_vlan *nl_cli_bridge_vlan_alloc(void)
++{
++	struct rtnl_bridge_vlan *bvlan;
++
++	bvlan = rtnl_bridge_vlan_alloc();
++	if (!bvlan)
++		nl_cli_fatal(ENOMEM, "Unable to allocate bridge-vlan object");
++
++	return bvlan;
++}
++
++struct nl_cache *nl_cli_bridge_vlan_alloc_cache_flags(struct nl_sock *sock,
++						unsigned int flags)
++{
++	struct nl_cache *cache;
++	rtnl_bridge_vlan_alloc_cache_flags(sock, &cache, flags);
++
++	return cache;
++}
++
++void nl_cli_bridge_vlan_parse_ifindex(struct rtnl_bridge_vlan *bvlan, int ifindex)
++{
++	rtnl_bridge_vlan_set_ifindex(bvlan, ifindex);
++}
 diff --git a/src/nl-bridge.c b/src/nl-bridge.c
 new file mode 100644
 index 0000000..32530fe
