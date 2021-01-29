@@ -63,6 +63,10 @@ echo "Retrieving network state"
   echo "bridge fdb"
   echo "##########"
   bridge fdb
+  echo ""
+  echo "bridge mdb"
+  echo "##########"
+  bridge mdb
 } >> ${TMPDIR}/network_state
 [ "$?" == "0" ] && echo "ok" || ( echo "failed" && exit 1 )
 
