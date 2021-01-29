@@ -1,0 +1,116 @@
+From 5543009f1df60baeffe74df7c25d17d929003472 Mon Sep 17 00:00:00 2001
+From: Rubens Figueiredo <rubens.figueiredo@bisdn.de>
+Date: Tue, 19 Jan 2021 14:13:57 +0100
+Subject: [PATCH] refactor bridge vlan getters/setters
+
+Signed-off-by: Rubens Figueiredo <rubens.figueiredo@bisdn.de>
+---
+ include/netlink/route/bridge_vlan.h | 13 +++++++------
+ lib/route/bridge_vlan.c             | 24 ++++++++++++++++++++----
+ libnl-route-3.sym                   | 10 ++++++----
+ 3 files changed, 33 insertions(+), 14 deletions(-)
+
+diff --git a/include/netlink/route/bridge_vlan.h b/include/netlink/route/bridge_vlan.h
+index 658f057..467fcbb 100644
+--- a/include/netlink/route/bridge_vlan.h
++++ b/include/netlink/route/bridge_vlan.h
+@@ -25,14 +25,15 @@ extern "C" {
+ 	int rtnl_bridge_vlan_get_ifindex(struct rtnl_bridge_vlan *bvlan);
+ 	int rtnl_bridge_vlan_set_ifindex(struct rtnl_bridge_vlan *bvlan, int ifindex);
+ 
+-	int rtnl_bridge_vlan_get_vlan_id(struct rtnl_bridge_vlan *bvlan);
+-	int rtnl_bridge_vlan_set_vlan_id(struct rtnl_bridge_vlan *bvlan, uint16_t vid);
+-
+-	uint8_t rtnl_bridge_vlan_get_state(struct rtnl_bridge_vlan *bvlan);
+-	int rtnl_bridge_vlan_set_state(struct rtnl_bridge_vlan *bvlan, uint8_t state);
+-
+ 	struct rtnl_bvlan_entry *rtnl_bvlan_entry_alloc(void);
+ 	void rtnl_bridge_vlan_add_entry(struct rtnl_bridge_vlan *bvlan, struct rtnl_bvlan_entry *entry);
++  void rtnl_bridge_vlan_foreach_entry(struct rtnl_bridge_vlan *obj,
++      void (*cb)(struct rtnl_bvlan_entry *, void *), void *arg);
++  struct rtnl_bvlan_entry *rtnl_bridge_vlan_get_entry_head(struct rtnl_bridge_vlan *obj);
++  int rtnl_bridge_vlan_entry_get_vlan_id(struct rtnl_bvlan_entry *bvlan);
++  int rtnl_bridge_vlan_entry_set_vlan_id(struct rtnl_bvlan_entry *bvlan, uint16_t vid);
++  uint8_t rtnl_bridge_vlan_entry_get_state(struct rtnl_bvlan_entry *bvlan);
++  int rtnl_bridge_vlan_entry_set_state(struct rtnl_bvlan_entry *bvlan, uint8_t state);
+ #ifdef __cplusplus
+ }
+ #endif
+diff --git a/lib/route/bridge_vlan.c b/lib/route/bridge_vlan.c
+index 07e54f8..1632b5f 100644
+--- a/lib/route/bridge_vlan.c
++++ b/lib/route/bridge_vlan.c
+@@ -336,6 +336,22 @@ struct rtnl_bridge_vlan *rtnl_bridge_vlan_get(struct nl_cache *cache, int ifinde
+ 
+ }
+ 
++struct rtnl_bvlan_entry *rtnl_bridge_vlan_get_entry_head(struct rtnl_bridge_vlan *obj) 
++{
++			return nl_list_first_entry(&obj->bridge_vlan_list, struct rtnl_bvlan_entry, bridge_vlan_entry_list);
++
++}
++
++void rtnl_bridge_vlan_foreach_entry(struct rtnl_bridge_vlan *obj,
++			    void (*cb)(struct rtnl_bvlan_entry *, void *),
++			    void *arg)
++{
++	struct rtnl_bvlan_entry *entry;
++	nl_list_for_each_entry(entry, &obj->bridge_vlan_list, bridge_vlan_entry_list) {
++		cb(entry, arg);
++	}
++}
++
+ int rtnl_bridge_vlan_get_ifindex(struct rtnl_bridge_vlan *bvlan)
+ {
+ 	return bvlan->ifindex;
+@@ -347,23 +363,23 @@ int rtnl_bridge_vlan_set_ifindex(struct rtnl_bridge_vlan *bvlan, int ifindex)
+ 	return 0;
+ }
+ 
+-int rtnl_bridge_vlan_get_vlan_id(struct rtnl_bridge_vlan *bvlan)
++int rtnl_bridge_vlan_entry_get_vlan_id(struct rtnl_bvlan_entry *bvlan)
+ {
+ 	return bvlan->vlan_id;
+ }
+ 
+-int rtnl_bridge_vlan_set_vlan_id(struct rtnl_bridge_vlan *bvlan, uint16_t vid)
++int rtnl_bridge_vlan_entry_set_vlan_id(struct rtnl_bvlan_entry *bvlan, uint16_t vid)
+ {
+ 	bvlan->vlan_id = vid;
+ 	return 0;
+ }
+ 
+-uint8_t rtnl_bridge_vlan_get_state(struct rtnl_bridge_vlan *bvlan)
++uint8_t rtnl_bridge_vlan_entry_get_state(struct rtnl_bvlan_entry *bvlan)
+ {
+ 	return bvlan->state;
+ }
+ 
+-int rtnl_bridge_vlan_set_state(struct rtnl_bridge_vlan *bvlan, uint8_t state)
++int rtnl_bridge_vlan_entry_set_state(struct rtnl_bvlan_entry *bvlan, uint8_t state)
+ {
+ 	bvlan->state = state;
+ 	return 0;
+diff --git a/libnl-route-3.sym b/libnl-route-3.sym
+index a6dd492..17884e4 100644
+--- a/libnl-route-3.sym
++++ b/libnl-route-3.sym
+@@ -1177,9 +1177,11 @@ libnl_3_6 {
+ 	rtnl_bridge_vlan_alloc_cache_flags;
+ 	rtnl_bridge_vlan_get_ifindex;
+ 	rtnl_bridge_vlan_set_ifindex;
+-	rtnl_bridge_vlan_get_state;
+-	rtnl_bridge_vlan_set_state;
+-	rtnl_bridge_vlan_get_vlan_id;
+-	rtnl_bridge_vlan_set_vlan_id;
++  rtnl_bridge_vlan_entry_get_vlan_id;
++  rtnl_bridge_vlan_entry_set_vlan_id;
++  rtnl_bridge_vlan_entry_get_state;
++  rtnl_bridge_vlan_add_entry;
++  rtnl_bridge_vlan_foreach_entry;
++  rtnl_bridge_vlan_get_entry_head;
+ } libnl_3_5;
+ 
+-- 
+2.26.2
+

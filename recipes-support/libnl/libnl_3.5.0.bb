@@ -24,6 +24,7 @@ SRC_URI = " \
     file://0002-route-link-bonding-add-missing-io_compare.patch \
     file://0003-route-link-bonding-rename-bsi_mask-to-ce_mask.patch \
     file://0004-route-link-bonding-add-missing-compare-to-slave_ops.patch \
+    file://0001-bridge-vlan-add-per-vlan-stp-state-object-and-cache.patch \
 "
 
 # this is actually master:
