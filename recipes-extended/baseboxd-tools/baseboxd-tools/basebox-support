@@ -60,6 +60,10 @@ echo "Retrieving network state"
   echo "###########"
   bridge -c vlan
   echo ""
+  echo "bridge vlan database"
+  echo "##########"
+  bridge vlan database
+  echo ""
   echo "bridge fdb"
   echo "##########"
   bridge fdb
