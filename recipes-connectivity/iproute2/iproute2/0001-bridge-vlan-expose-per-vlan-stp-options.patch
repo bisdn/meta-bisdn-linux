@@ -1,0 +1,159 @@
+From 839926c3ffcb09a69658fdf70bf0d6a7fbc22162 Mon Sep 17 00:00:00 2001
+From: Rubens Figueiredo <rubens.figueiredo@bisdn.de>
+Date: Mon, 4 Jan 2021 21:05:44 +0100
+Subject: [PATCH] bridge-vlan: expose per vlan stp options
+
+Signed-off-by: Rubens Figueiredo <rubens.figueiredo@bisdn.de>
+---
+ bridge/vlan.c        | 67 ++++++++++++++++++++++++++++++++++++++++++++
+ include/libnetlink.h |  7 +++++
+ lib/libnetlink.c     | 16 +++++++++++
+ 3 files changed, 90 insertions(+)
+
+diff --git a/bridge/vlan.c b/bridge/vlan.c
+index 0d142bc9..e16a2ac2 100644
+--- a/bridge/vlan.c
++++ b/bridge/vlan.c
+@@ -8,6 +8,7 @@
+ #include <netinet/in.h>
+ #include <linux/if_bridge.h>
+ #include <linux/if_ether.h>
++#include <linux/netlink.h>
+ #include <string.h>
+ 
+ #include "json_print.h"
+@@ -521,6 +522,69 @@ static int print_vlan_stats(struct nlmsghdr *n, void *arg)
+ 	return 0;
+ }
+ 
++static int print_vlan_options(struct nlmsghdr *n, void *arg)
++{
++	struct br_vlan_msg *br_msg = NLMSG_DATA(n);
++	struct rtattr *tb[BRIDGE_VLANDB_ENTRY_MAX + 1], *pos;
++	struct bridge_vlan_info *vinfo = NULL;
++	int rem = n->nlmsg_len;
++
++	for (pos = (void*)(NLMSG_DATA(n) + NLMSG_ALIGN(sizeof(*br_msg)));
++       RTA_OK(pos, rem);
++       pos =  RTA_NEXT(pos, rem))
++	{
++		if ((pos->rta_type & NLA_TYPE_MASK) != BRIDGE_VLANDB_ENTRY)
++			continue;
++
++		print_string(PRINT_ANY, 
++				"Interface:",
++				"Interface: %s\n",
++				ll_index_to_name(br_msg->ifindex));
++
++		parse_rtattr_nested(tb, BRIDGE_VLANDB_ENTRY_MAX, pos);
++
++		if (tb[BRIDGE_VLANDB_ENTRY_INFO]) {
++			vinfo = RTA_DATA(tb[BRIDGE_VLANDB_ENTRY_INFO]);
++			printf("vlan_id = %d ", vinfo->vid);
++		}
++
++		if (tb[BRIDGE_VLANDB_ENTRY_STATE]) {
++			print_uint(PRINT_ANY,
++				   "stp_state",
++				   "stp_state %u ",
++				   rta_getattr_u8(tb[BRIDGE_VLANDB_ENTRY_STATE]));
++		}
++
++		if (tb[BRIDGE_VLANDB_ENTRY_RANGE]) {
++			print_uint(PRINT_ANY,
++				   "range",
++				   "range %u ",
++				   rta_getattr_u16(tb[BRIDGE_VLANDB_ENTRY_RANGE]));
++		}
++
++		printf("\n");
++	}
++
++	return 0;
++}
++
++static int vlan_show_options(int argc, char **argv)
++{
++	new_json_obj(json);
++
++	if (rtnl_vlandump_req(&rth, PF_BRIDGE) < 0) {
++		perror("Cannot send dump request");
++		exit(1);
++	}
++
++	rtnl_dump_filter(&rth, print_vlan_options, NULL);
++
++	delete_json_obj();
++	fflush(stdout);
++	return 0;
++
++}
++
+ static int vlan_show(int argc, char **argv, int subject)
+ {
+ 	char *filter_dev = NULL;
+@@ -667,6 +731,9 @@ int do_vlan(int argc, char **argv)
+ 		if (matches(*argv, "tunnelshow") == 0) {
+ 			return vlan_show(argc-1, argv+1, VLAN_SHOW_TUNNELINFO);
+ 		}
++		if (matches(*argv, "database") == 0) {
++			return vlan_show_options(argc-1, argv+1);
++		}
+ 		if (matches(*argv, "help") == 0)
+ 			usage();
+ 	} else {
+diff --git a/include/libnetlink.h b/include/libnetlink.h
+index b9073a6a..500ab5b4 100644
+--- a/include/libnetlink.h
++++ b/include/libnetlink.h
+@@ -88,6 +88,8 @@ int rtnl_nsiddump_req_filter_fn(struct rtnl_handle *rth, int family,
+ 	__attribute__((warn_unused_result));
+ int rtnl_statsdump_req_filter(struct rtnl_handle *rth, int fam, __u32 filt_mask)
+ 	__attribute__((warn_unused_result));
++int rtnl_vlandump_req(struct rtnl_handle *rth, int fam)
++	__attribute__((warn_unused_result));
+ int rtnl_dump_request(struct rtnl_handle *rth, int type, void *req,
+ 			     int len)
+ 	__attribute__((warn_unused_result));
+@@ -280,6 +282,11 @@ int rtnl_from_file(FILE *, rtnl_listen_filter_t handler,
+ 	((struct rtattr *)(((char *)(r)) + NLMSG_ALIGN(sizeof(struct if_stats_msg))))
+ #endif
+ 
++#ifndef BRIDGE_VLANDB_RTA
++#define BRIDGE_VLANDB_RTA(r) \
++	((struct rtattr *)(((char *)(r)) + NLMSG_ALIGN(sizeof(struct br_vlan_msg))))
++#endif
++
+ /* User defined nlmsg_type which is used mostly for logging netlink
+  * messages from dump file */
+ #define NLMSG_TSTAMP	15
+diff --git a/lib/libnetlink.c b/lib/libnetlink.c
+index c958aa57..80506fa6 100644
+--- a/lib/libnetlink.c
++++ b/lib/libnetlink.c
+@@ -590,6 +590,22 @@ int rtnl_statsdump_req_filter(struct rtnl_handle *rth, int fam, __u32 filt_mask)
+ 	return send(rth->fd, &req, sizeof(req), 0);
+ }
+ 
++int rtnl_vlandump_req(struct rtnl_handle *rth, int family)
++{
++	struct {
++		struct nlmsghdr nlh;
++		struct br_vlan_msg ifm;
++	} req = {
++		.nlh.nlmsg_len = NLMSG_LENGTH(sizeof(struct br_vlan_msg)),
++		.nlh.nlmsg_type = RTM_GETVLAN,
++		.nlh.nlmsg_flags = NLM_F_DUMP | NLM_F_REQUEST,
++		.nlh.nlmsg_seq = rth->dump = ++rth->seq,
++		.ifm.family = family,
++	};
++
++	return send(rth->fd, &req, sizeof(req), 0);
++}
++
+ int rtnl_send(struct rtnl_handle *rth, const void *buf, int len)
+ {
+ 	return send(rth->fd, buf, len, 0);
+-- 
+2.26.2
+
