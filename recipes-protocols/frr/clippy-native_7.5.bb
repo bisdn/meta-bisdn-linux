@@ -1,13 +1,10 @@
 require frr.inc
 
-GIT_BRANCH = "stable/6.0"
-SRCREV = "1bdbe6ef03e18f99fb31e3d959d2c42eabcf1574"
+GIT_BRANCH = "stable/7.5"
+# commit hash of release tag frr-7.5
+SRCREV = "35e42b176e957ad76db4cd909f56458286c76e28"
 
 PR = "r1"
-
-SRC_URI += " \
-	file://configure.ac-clippy-native.patch \
-	"
 
 inherit native
 

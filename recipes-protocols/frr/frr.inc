@@ -111,9 +111,9 @@ EXTRA_OECONF_class-target = "\
   --enable-vty-group=frrvty \
   --enable-vtysh \
   --disable-doc \
+  --with-clippy=${RECIPE_SYSROOT_NATIVE}/usr/lib/clippy \
   ap_cv_cc_pie=no \
   ${SNMP_CONF} \
-  CLIPPY_ROOT=${RECIPE_SYSROOT_NATIVE}/ \
   "
 
 CACHED_CONFIGUREVARS += "ac_cv_path_PERL='/usr/bin/env perl'"
