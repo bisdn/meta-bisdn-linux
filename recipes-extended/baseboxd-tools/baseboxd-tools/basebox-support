@@ -56,6 +56,10 @@ echo "Retrieving network state"
   echo "###"
   ip route list table all
   echo ""
+  echo "ip neigh"
+  echo "###"
+  ip neigh
+  echo ""
   echo "bridge vlan"
   echo "###########"
   bridge -c vlan
