@@ -103,6 +103,10 @@ echo "Retrieving client tools information"
 echo "Retrieving basic techsupport from SDK"
 /usr/sbin/client_drivshell techsupport basic >> ${TMPDIR}/tech_support
 
+echo "Retrieving support bundle from FRR"
+/usr/lib/frr/generate_support_bundle.py
+cp /var/log/frr/*_support_bundle.log ${TMPDIR}
+
 echo "onlpdump -S"
 {
   echo "onlpdump -S"
