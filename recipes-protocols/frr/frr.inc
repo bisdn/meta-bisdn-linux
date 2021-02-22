@@ -127,6 +127,7 @@ do_install () {
         fi
         touch ${D}${sysconfdir}/frr/$f.conf
     done
+    install -m 0640 ${S}/tools/etc/frr/support_bundle_commands.conf ${D}/${sysconfdir}/frr/support_bundle_commands.conf
 
     install -m 0640 ${S}/tools/etc/frr/daemons* ${D}${sysconfdir}/frr/
     sed -i '/_options/s/-A/--daemon -A/g' ${D}${sysconfdir}/frr/daemons
