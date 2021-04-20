@@ -3,7 +3,8 @@
 
 DESCRIPTION = "BISDN Linux ONIE tools"
 HOMEPAGE = "https://www.bisdn.de/"
-LICENSE = "CLOSED"
+LICENSE = "MPL-2.0"
+LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/MPL-2.0;md5=815ca599c9df247a0c7f619bab123dad"
 SECTION = "base"
 RDEPENDS_onie-tools = "bash ${@oe.utils.conditional('BISDN_ARCH', 'u-boot-arch', ' u-boot-fw-utils', '', d)}"
 
