@@ -126,7 +126,6 @@ def interface_exists(interfaceName):
 
 def rule_insert(portNumber):
     completed_process = subprocess.run([
-        "python",
         "/usr/sbin/ofdpa_acl_flow_cli.py",
         "-a",
         "--inPort",
@@ -140,7 +139,6 @@ def rule_insert(portNumber):
 
 def rule_delete(portNumber):
     completed_process = subprocess.run([
-        "python",
         "/usr/sbin/ofdpa_acl_flow_cli.py",
         "-d",
         "--inPort",
