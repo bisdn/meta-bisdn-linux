@@ -39,10 +39,10 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL += "\
     python-msgpack \
     python-redis \
     python-requests \
-    python-ryu \
     python3 \
     python3-ofdpa \
     python3-pip \
+    python3-ryu \
     radvd \
     tcpdump \
     tmux \
