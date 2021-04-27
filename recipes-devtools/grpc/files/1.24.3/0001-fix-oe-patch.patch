@@ -1,0 +1,29 @@
+From 6bc0f0a4651907d8cbd2134413f50cf3f267dac4 Mon Sep 17 00:00:00 2001
+From: Jonas Gorski <jonas.gorski@bisdn.de>
+Date: Mon, 17 Feb 2020 16:31:40 +0000
+Subject: [PATCH] fixup 0001-CMakeLists.txt-Fix-libraries-installation-for-Linux.patch
+
+Fix a copy paste error introduced by a OE patch for grpc.
+
+---
+ CMakeLists.txt | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 313f7a4051..cec988806c 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -3867,8 +3867,8 @@ target_link_libraries(grpc++_test_config
+ )
+ 
+ if(_gRPC_PLATFORM_LINUX)
+-  set_property(TARGET grpc++_cronet PROPERTY VERSION ${CPP_VERSION})
+-  set_property(TARGET grpc++_cronet PROPERTY SOVERSION ${CPP_VERSION_MAJOR})
++  set_property(TARGET grpc++_test_config PROPERTY VERSION ${CPP_VERSION})
++  set_property(TARGET grpc++_test_config PROPERTY SOVERSION ${CPP_VERSION_MAJOR})
+ endif()
+ 
+ endif (gRPC_BUILD_TESTS OR gRPC_BUILD_CLI)
+-- 
+2.17.1
+

@@ -2,17 +2,14 @@
 # we need to use the submodule way. For some reason, this hangs on
 # checkout so do the checkout manually. Luckily we only need googletest.
 
-# clear SRVREV, else bitbake will try to use it for everything
-SRCREV_grpc := "${SRCREV}"
-SRCREV = ""
-
 FILESEXTRAPATHS_append := "${THISDIR}/files:"
 
-SRC_URI = "git://github.com/grpc/grpc.git;protocol=https;branch=${BRANCH};name=grpc \
+SRC_URI += " \
            git://github.com/google/googletest.git;protocol=https;name=gtest;tag=release-1.8.0;destsuffix=git/third_party/googletest \
-           file://0001-CMakeLists.txt-Fix-libraries-installation-for-Linux.patch \
-           file://1.14.1/force_gflags_libname.patch \
-           file://1.14.1/add_grpc_cli_build_option.patch \
+           git://github.com/google/benchmark.git;protocol=https;name=benchmark;tag=v1.5.0;destsuffix=git/third_party/benchmark \
+           file://1.24.3/force_gflags_libname.patch \
+           file://1.24.3/add_grpc_cli_build_option.patch \
+           file://1.24.3/0001-fix-oe-patch.patch \
 "
 
 # build grpc_cli as well

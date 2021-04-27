@@ -1,0 +1,34 @@
+From 4458c48d7729d58046e4f96951612c03928b4203 Mon Sep 17 00:00:00 2001
+From: Jonas Gorski <jonas.gorski@bisdn.de>
+Date: Mon, 10 May 2021 15:35:23 +0000
+Subject: [PATCH] force gflags libname
+
+For some reason glags fails to populate _gRPC_GFLAGS_LIBRARIES so force
+populate it ourselves.
+
+Fixes linking against it in a non portable way.
+
+Fixes errors like:
+
+| libgrpc_cli_libs.a(grpc_tool.cc.o): In function `_GLOBAL__sub_I_grpc_tool.cc':
+| grpc_tool.cc:(.text.startup+0xed): undefined reference to `google::FlagRegisterer::FlagRegisterer<bool>(char const*, char const*, char const*, bool*, bool*)'
+| grpc_tool.cc:(.text.startup+0x11c): undefined reference to `google::FlagRegisterer::FlagRegisterer<bool>(char const*, char const*, char const*, bool*, bool*)'
+| grpc_tool.cc:(.text.startup+0x187): undefined reference to `google::FlagRegisterer::FlagRegisterer<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > >(char const*, char const*, char const*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >*)'
+---
+ cmake/gflags.cmake | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/cmake/gflags.cmake b/cmake/gflags.cmake
+index 52c054ca76..e54ea1838c 100644
+--- a/cmake/gflags.cmake
++++ b/cmake/gflags.cmake
+@@ -31,5 +31,6 @@ elseif("${gRPC_GFLAGS_PROVIDER}" STREQUAL "package")
+     set(_gRPC_GFLAGS_INCLUDE_DIR ${GFLAGS_INCLUDE_DIR})
+   endif()
+   set(_gRPC_FIND_GFLAGS "if(NOT gflags_FOUND)\n  find_package(gflags CONFIG)\nendif()")
++  set(_gRPC_GFLAGS_LIBRARIES gflags)
+ endif()
+ 
+-- 
+2.17.1
+
