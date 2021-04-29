@@ -26,12 +26,12 @@ EXTRA_OECONF = "--sbindir=/sbin"
 # Uncomment the following lines to enable debug output in the binary.
 # Output is sent as level 4.
 # Port Information state machine:
-# CFLAGS += " -DPISM_ENABLE_LOG"
+CFLAGS += " -DPISM_ENABLE_LOG"
 # Port Role Transitions state machine:
-# CFLAGS += " -DPRTSM_ENABLE_LOG"
-# 
+CFLAGS += " -DPRTSM_ENABLE_LOG"
+#
 # Packets (printf, always active):
-# CFLAGS += " -DPACKET_DEBUG"
+CFLAGS += " -DPACKET_DEBUG"
 
 FILES_${PN} += "${systemd_system_unitdir}/mstpd.service"
 
