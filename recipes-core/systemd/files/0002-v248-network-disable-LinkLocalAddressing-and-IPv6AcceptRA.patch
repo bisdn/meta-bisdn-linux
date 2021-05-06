@@ -1,0 +1,31 @@
+From 8f1918016f762bafdb6178b99faa655c599c51f1 Mon Sep 17 00:00:00 2001
+From: Yu Watanabe <watanabe.yu+github@gmail.com>
+Date: Wed, 20 Feb 2019 10:17:11 +0900
+Subject: [PATCH] network: disable LinkLocalAddressing= and IPv6AcceptRA= on
+ bridge slaves by default
+
+If they are not explicitly configured, then let's disable these
+functionality on bridge slaves.
+---
+ src/network/networkd-network.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/src/network/networkd-network.c b/src/network/networkd-network.c
+index a83df49038..dff542e194 100644
+--- a/src/network/networkd-network.c
++++ b/src/network/networkd-network.c
+@@ -141,7 +141,10 @@ static int network_verify(Network *network) {
+         }
+ 
+         if (network->link_local < 0)
+-                network->link_local = ADDRESS_FAMILY_IPV6;
++                network->link_local = network->bridge ? ADDRESS_FAMILY_NO : ADDRESS_FAMILY_IPV6;
++
++        if (network->ipv6_accept_ra < 0 && network->bridge)
++                network->ipv6_accept_ra = false;
+ 
+         /* IPMasquerade=yes implies IPForward=yes */
+         if (network->ip_masquerade)
+-- 
+2.31.1
+
