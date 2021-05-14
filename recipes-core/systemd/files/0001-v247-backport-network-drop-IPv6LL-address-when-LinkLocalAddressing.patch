@@ -1,4 +1,4 @@
-From 5539fc0f73402add1f60298e75c91a454aa3a05c Mon Sep 17 00:00:00 2001
+From 9f4783521efb9a83f1175ef0c44c38e1ba1ca8c7 Mon Sep 17 00:00:00 2001
 From: Yu Watanabe <watanabe.yu+github@gmail.com>
 Date: Mon, 16 Sep 2019 06:07:38 +0900
 Subject: [PATCH] network: drop IPv6LL address when LinkLocalAddressing=no|ipv4
@@ -6,15 +6,16 @@ Subject: [PATCH] network: drop IPv6LL address when LinkLocalAddressing=no|ipv4
 C.f. disscussion in #13533.
 
 Hopefully fixes #12886.
+
 ---
  src/network/networkd-link.c | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/src/network/networkd-link.c b/src/network/networkd-link.c
-index a05971c8d4..f1aeb7287e 100644
+index 792862e6a5..d3eface5ba 100644
 --- a/src/network/networkd-link.c
 +++ b/src/network/networkd-link.c
-@@ -2389,7 +2389,7 @@ static int link_drop_foreign_config(Link *link) {
+@@ -2714,7 +2714,7 @@ static int link_drop_foreign_config(Link *link) {
  
          SET_FOREACH(address, link->addresses_foreign, i) {
                  /* we consider IPv6LL addresses to be managed by the kernel */
@@ -22,8 +23,8 @@ index a05971c8d4..f1aeb7287e 100644
 +                if (address->family == AF_INET6 && in_addr_is_link_local(AF_INET6, &address->in_addr) == 1 && link_ipv6ll_enabled(link))
                          continue;
  
-                 if (link_address_is_dynamic(link, address)) {
-@@ -2466,7 +2466,7 @@ static int link_drop_config(Link *link) {
+                 if (link_is_static_address_configured(link, address)) {
+@@ -2755,7 +2755,7 @@ static int link_drop_config(Link *link) {
  
          SET_FOREACH(address, link->addresses, i) {
                  /* we consider IPv6LL addresses to be managed by the kernel */
@@ -32,5 +33,4 @@ index a05971c8d4..f1aeb7287e 100644
                          continue;
  
                  r = address_remove(address, link, NULL);
--- 
-2.31.1
+
