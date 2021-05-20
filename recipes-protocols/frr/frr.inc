@@ -42,7 +42,7 @@ GIT_BRANCH ?= "master"
 SRC_URI = "git://github.com/FRRouting/frr.git;protocol=https;branch=${GIT_BRANCH} \
            file://frr.pam \
            file://frr.service \
-           file://support_bundle_commands.conf;subdir=git/tools/etc \
+           file://support_bundle_commands.conf;subdir=git/tools/etc/frr \
            "
 
 S = "${WORKDIR}/git"
