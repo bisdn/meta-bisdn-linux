@@ -9,7 +9,7 @@ SRC_URI += " \
 	file://0002-vtysh-fix-searching-commands-in-parent-nodes.patch \
 "
 
-PR="r1"
+PR="r2"
 
 DEPENDS += " \
         clippy-native \
