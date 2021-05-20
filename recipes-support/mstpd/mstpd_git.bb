@@ -16,9 +16,6 @@ SRCREV = "4d98707b9047a74bc473345875e60ca5a24f0c96"
 
 S = "${WORKDIR}/git"
 
-DEPENDS = "python"
-RDEPENDS_${PN} = "python-core"
-
 inherit autotools systemd
 
 EXTRA_OECONF = "--sbindir=/sbin"
@@ -39,6 +36,10 @@ SYSTEMD_SERVICE_${PN} = "mstpd.service"
 SYSTEMD_AUTO_ENABLE_${PN} = "disable"
 
 do_install_append() {
+   # we do not use it nor can we use it, and shipping it will add a unnecessary
+   # depdency on python (2)
+   rm ${D}${libexecdir}/mstpctl-utils/ifquery
+
    install -d ${D}${systemd_unitdir}/system
    install -m 0644 ${WORKDIR}/build/utils/mstpd.service ${D}${systemd_unitdir}/system
 
