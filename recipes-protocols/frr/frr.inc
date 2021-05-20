@@ -34,7 +34,7 @@ SNMP_CONF="${@bb.utils.contains('DISTRO_FEATURES', 'snmp', '--enable-snmp', '', 
 # the "ip" command from busybox is not sufficient (flush by protocol flushes all routes)
 RDEPENDS_${PN}_class-target += " \
 			    iproute2 \
-			    python \
+			    python3-core \
 			    bash \
 			    "
 
