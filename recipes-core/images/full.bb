@@ -34,11 +34,6 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL += "\
     ofdpa-grpc \
     ofdpa-tools \
     procps \
-    python \
-    python-modules \
-    python-msgpack \
-    python-redis \
-    python-requests \
     python3 \
     python3-ofdpa \
     python3-pip \
