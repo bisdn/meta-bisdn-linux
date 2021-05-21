@@ -1,0 +1,23 @@
+From df48d311f43f505e393c31be72559fa703588230 Mon Sep 17 00:00:00 2001
+From: Jonas Gorski <jonas.gorski@bisdn.de>
+Date: Wed, 19 May 2021 13:58:33 +0000
+Subject: [PATCH 4/4] tools: make frr-reload.py python3 only
+
+Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
+---
+ tools/frr-reload.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/tools/frr-reload.py b/tools/frr-reload.py
+index 4a5ac8a1b..a7ad3bc06 100755
+--- a/tools/frr-reload.py
++++ b/tools/frr-reload.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/python
++#!/usr/bin/env python3
+ # Frr Reloader
+ # Copyright (C) 2014 Cumulus Networks, Inc.
+ #
+-- 
+2.17.1
+
