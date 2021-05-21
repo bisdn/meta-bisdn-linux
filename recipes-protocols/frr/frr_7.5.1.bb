@@ -11,9 +11,10 @@ SRC_URI += " \
 	file://0002-tests-make-generate-support-bundle-python3-only.patch \
 	file://0003-tools-Fix-warning-when-running-frr-reload.py.patch \
 	file://0004-tools-make-frr-reload.py-python3-only.patch \
+	file://0005-tools-fix-error-handling-in-generate_support_bundle..patch \
 "
 
-PR="r3"
+PR="r4"
 
 DEPENDS += " \
         clippy-native \

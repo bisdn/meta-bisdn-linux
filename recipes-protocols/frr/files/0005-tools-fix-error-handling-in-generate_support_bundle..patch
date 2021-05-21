@@ -1,0 +1,54 @@
+From c23f23ebdcf3f2dfbcbce57ddb25f305b8c20c12 Mon Sep 17 00:00:00 2001
+From: Jonas Gorski <jonas.gorski@bisdn.de>
+Date: Fri, 21 May 2021 17:13:24 +0200
+Subject: [PATCH 5/5] tools: fix error handling in generate_support_bundle.py
+
+Before we can write or print the output of errors, we need to convert it
+to strings.
+
+Fixes the following error on errors:
+
+  File "/usr/lib/frr/generate_support_bundle.py", line 55, in executeCommand
+    cmd_output = subprocess.check_output(cmd_exec_str, shell=True)
+  File "/usr/lib/python3.7/subprocess.py", line 411, in check_output
+    **kwargs).stdout
+  File "/usr/lib/python3.7/subprocess.py", line 512, in run
+    output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command 'vtysh -c "show zebra fpm stats" ' returned non-zero exit status 1.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/lib/frr/generate_support_bundle.py", line 117, in <module>
+    processConfFile()
+  File "/usr/lib/frr/generate_support_bundle.py", line 113, in processConfFile
+    executeCommand(cmd_line[0], outputFile)
+  File "/usr/lib/frr/generate_support_bundle.py", line 69, in executeCommand
+    outputFile.write(e.output)
+TypeError: write() argument must be str, not bytes
+
+Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
+---
+ tools/generate_support_bundle.py | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/tools/generate_support_bundle.py b/tools/generate_support_bundle.py
+index 38fdbd46d..a414dc12c 100755
+--- a/tools/generate_support_bundle.py
++++ b/tools/generate_support_bundle.py
+@@ -66,10 +66,10 @@ def executeCommand(cmd, outputFile):
+     except subprocess.CalledProcessError as e:
+         dateTime = datetime.datetime.now()
+         outputFile.write(">>[" + str(dateTime) + "]" + cmd + "\n")
+-        outputFile.write(e.output)
++        outputFile.write(str(e.output))
+         outputFile.write("########################################################\n")
+         outputFile.write("\n")
+-        print("Error:" + e.output)
++        print("Error:" + str(e.output))
+ 
+ 
+ # Process the support bundle configuration file
+-- 
+2.31.1
+
