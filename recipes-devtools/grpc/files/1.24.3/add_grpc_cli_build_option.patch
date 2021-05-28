@@ -1,0 +1,98 @@
+From 7fd2f89d1b197ac2a494afd2d65c6ff21130e1d0 Mon Sep 17 00:00:00 2001
+From: Jonas Gorski <jonas.gorski@bisdn.de>
+Date: Mon, 17 Feb 2020 14:54:07 +0000
+Subject: [PATCH] add grpc_cli
+
+---
+ CMakeLists.txt | 27 +++++++++++++++++----------
+ 1 file changed, 17 insertions(+), 10 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index f3094ae710..313f7a4051 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -3680,10 +3680,10 @@ if (gRPC_INSTALL)
+ endif()
+ 
+ endif (gRPC_BUILD_CODEGEN)
+-if (gRPC_BUILD_TESTS)
++if (gRPC_BUILD_TESTS OR gRPC_BUILD_CLI)
+ 
+ if (gRPC_BUILD_CODEGEN)
+-add_library(grpc++_proto_reflection_desc_db
++add_library(grpc++_proto_reflection_desc_db STATIC
+   test/cpp/util/proto_reflection_descriptor_database.cc
+   ${_gRPC_PROTO_GENS_DIR}/src/proto/grpc/reflection/v1alpha/reflection.pb.cc
+   ${_gRPC_PROTO_GENS_DIR}/src/proto/grpc/reflection/v1alpha/reflection.grpc.pb.cc
+@@ -3745,7 +3745,7 @@ foreach(_hdr
+ endforeach()
+ endif (gRPC_BUILD_CODEGEN)
+ 
+-endif (gRPC_BUILD_TESTS)
++endif (gRPC_BUILD_TESTS OR gRPC_BUILD_CLI)
+ 
+ if (gRPC_BUILD_CODEGEN)
+ add_library(grpc++_reflection
+@@ -3823,9 +3823,9 @@ if (gRPC_INSTALL)
+ endif()
+ 
+ endif (gRPC_BUILD_CODEGEN)
+-if (gRPC_BUILD_TESTS)
++if (gRPC_BUILD_TESTS OR gRPC_BUILD_CLI)
+ 
+-add_library(grpc++_test_config
++add_library(grpc++_test_config STATIC
+   test/cpp/util/test_config_cc.cc
+ )
+ 
+@@ -3871,7 +3871,7 @@ if(_gRPC_PLATFORM_LINUX)
+   set_property(TARGET grpc++_cronet PROPERTY SOVERSION ${CPP_VERSION_MAJOR})
+ endif()
+ 
+-endif (gRPC_BUILD_TESTS)
++endif (gRPC_BUILD_TESTS OR gRPC_BUILD_CLI)
+ if (gRPC_BUILD_TESTS)
+ 
+ if (gRPC_BUILD_CODEGEN)
+@@ -4710,10 +4710,10 @@ target_link_libraries(grpc_benchmark
+ 
+ 
+ endif (gRPC_BUILD_TESTS)
+-if (gRPC_BUILD_TESTS)
++if (gRPC_BUILD_TESTS OR gRPC_BUILD_CLI)
+ 
+ if (gRPC_BUILD_CODEGEN)
+-add_library(grpc_cli_libs
++add_library(grpc_cli_libs STATIC
+   test/cpp/util/cli_call.cc
+   test/cpp/util/cli_credentials.cc
+   test/cpp/util/grpc_tool.cc
+@@ -13453,7 +13453,7 @@ target_link_libraries(grpc_alts_credentials_options_test
+ 
+ 
+ endif (gRPC_BUILD_TESTS)
+-if (gRPC_BUILD_TESTS)
++if (gRPC_BUILD_TESTS OR gRPC_BUILD_CLI)
+ 
+ add_executable(grpc_cli
+   test/cpp/util/grpc_cli.cc
+@@ -13494,8 +13494,15 @@ target_link_libraries(grpc_cli
+   ${_gRPC_GFLAGS_LIBRARIES}
+ )
+ 
++if (gRPC_INSTALL)
++  install(TARGETS grpc_cli EXPORT gRPCTargets
++    RUNTIME DESTINATION ${gRPC_INSTALL_BINDIR}
++    LIBRARY DESTINATION ${gRPC_INSTALL_LIBDIR}
++    ARCHIVE DESTINATION ${gRPC_INSTALL_LIBDIR}
++  )
++endif()
+ 
+-endif (gRPC_BUILD_TESTS)
++endif (gRPC_BUILD_TESTS OR gRPC_BUILD_CLI)
+ if (gRPC_BUILD_TESTS)
+ 
+ add_executable(grpc_core_map_test
+-- 
+2.17.1
+
