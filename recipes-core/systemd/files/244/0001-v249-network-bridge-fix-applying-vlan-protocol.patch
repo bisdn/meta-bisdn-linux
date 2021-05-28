@@ -1,0 +1,33 @@
+From 06a213d00ba97594208604475ad3d1af7cebab53 Mon Sep 17 00:00:00 2001
+From: Jonas Gorski <jonas.gorski@bisdn.de>
+Date: Wed, 28 Apr 2021 11:50:19 +0200
+Subject: [PATCH] network: bridge: fix applying vlan protocol
+
+The vlan protocol is expected in network byte order, so we need to
+convert it before passing it on.
+
+Without this the kernel will reject the bridge configuration as invalid
+and the bridge will have none of the configuration applied when setting
+VLANProtocol.
+
+Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
+---
+ src/network/netdev/bridge.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/network/netdev/bridge.c b/src/network/netdev/bridge.c
+index 38432f1578..19305dccb0 100644
+--- a/src/network/netdev/bridge.c
++++ b/src/network/netdev/bridge.c
+@@ -126,7 +126,7 @@ static int netdev_bridge_post_create(NetDev *netdev, Link *link, sd_netlink_mess
+         }
+ 
+         if (b->vlan_protocol >= 0) {
+-                r = sd_netlink_message_append_u16(req, IFLA_BR_VLAN_PROTOCOL, b->vlan_protocol);
++                r = sd_netlink_message_append_u16(req, IFLA_BR_VLAN_PROTOCOL, htons(b->vlan_protocol));
+                 if (r < 0)
+                         return log_netdev_error_errno(netdev, r, "Could not append IFLA_BR_VLAN_PROTOCOL attribute: %m");
+         }
+-- 
+2.31.1
+
