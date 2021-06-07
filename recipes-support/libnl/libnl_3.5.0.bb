@@ -20,7 +20,7 @@ SRC_URI = " \
     file://0002-link-bonding-expose-state-on-enslaved-interfaces.patch \
     file://0001-route-link-print-slave-line.patch \
     file://0002-bonding-dump-slave-line.patch \
-    file://0001-route-link-add-missing-compare-for-slave-info.patch \
+    file://0001-route-link-implement-comparing-slave-info.patch \
     file://0002-route-link-bonding-add-missing-io_compare.patch \
     file://0003-route-link-bonding-rename-bsi_mask-to-ce_mask.patch \
     file://0004-route-link-bonding-add-missing-compare-to-slave_ops.patch \
