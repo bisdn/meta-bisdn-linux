@@ -1,0 +1,75 @@
+From 215dd9eade1f2bb789a321ee6b540097bdbcd9c6 Mon Sep 17 00:00:00 2001
+From: Jonas Gorski <jonas.gorski@bisdn.de>
+Date: Wed, 2 Jun 2021 11:55:15 +0200
+Subject: [PATCH 1/4] route: link: implement comparing slave info
+
+Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
+---
+ include/netlink-private/route/link/api.h |  4 ++++
+ lib/route/link.c                         |  1 +
+ lib/route/link/api.c                     | 22 ++++++++++++++++++++++
+ 3 files changed, 27 insertions(+)
+
+diff --git a/include/netlink-private/route/link/api.h b/include/netlink-private/route/link/api.h
+index dcd972f..48eec75 100644
+--- a/include/netlink-private/route/link/api.h
++++ b/include/netlink-private/route/link/api.h
+@@ -225,6 +225,10 @@ extern int			rtnl_link_info_data_compare(struct rtnl_link *a,
+ 							    struct rtnl_link *b,
+ 							    int flags);
+ 
++extern int			rtnl_link_info_slave_data_compare(struct rtnl_link *a,
++							          struct rtnl_link *b,
++							          int flags);
++
+ #ifdef __cplusplus
+ }
+ #endif
+diff --git a/lib/route/link.c b/lib/route/link.c
+index 01b3cd1..9bee207 100644
+--- a/lib/route/link.c
++++ b/lib/route/link.c
+@@ -1192,6 +1192,7 @@ static uint64_t link_compare(struct nl_object *_a, struct nl_object *_b,
+ 	}
+ 
+ 	diff |= LINK_DIFF(LINKINFO, rtnl_link_info_data_compare(a, b, flags) != 0);
++	diff |= LINK_DIFF(LINKINFO_SLAVE_KIND, rtnl_link_info_slave_data_compare(a, b, flags) != 0);
+ out:
+ 	return diff;
+ 
+diff --git a/lib/route/link/api.c b/lib/route/link/api.c
+index d406783..7b66a75 100644
+--- a/lib/route/link/api.c
++++ b/lib/route/link/api.c
+@@ -413,6 +413,28 @@ int rtnl_link_info_data_compare(struct rtnl_link *a, struct rtnl_link *b, int fl
+ 	return a->l_info_ops->io_compare(a, b, flags);
+ }
+ 
++/**
++ * Compare link info slave data
++ * @arg a              Link object a
++ * @arg b              Link object b
++ *
++ * This function will compare link_info slave data between two links
++ * a and b
++ *
++ * @return 0 if link_info data matches or is not present
++ * or != 0 if it mismatches.
++ */
++int rtnl_link_info_slave_data_compare(struct rtnl_link *a, struct rtnl_link *b, int flags)
++{
++	if (a->l_info_slave_ops != b->l_info_slave_ops)
++		return ~0;
++
++	if (!a->l_info_slave_ops || !a->l_info_slave_ops->io_slave_compare)
++		return 0;
++
++	return a->l_info_slave_ops->io_slave_compare(a, b, flags);
++}
++
+ /** @} */
+ 
+ /** @} */
+-- 
+2.31.1
+
