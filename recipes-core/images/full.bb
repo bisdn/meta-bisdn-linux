@@ -10,6 +10,7 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL += "\
     baseboxd-tools \
     bridge-utils  \
     curl \
+    docker-ce \
     ethtool \
     file \
     frr \
