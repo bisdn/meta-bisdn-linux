@@ -1,7 +1,7 @@
 From b8eab4f536b32f9c44e11bec30994b5ceb946842 Mon Sep 17 00:00:00 2001
 From: Mark Stapp <mjs@voltanet.io>
 Date: Thu, 4 Feb 2021 11:13:01 -0500
-Subject: [PATCH 2/5] tests: make generate support bundle python3 only
+Subject: [PATCH 2/6] tests: make generate support bundle python3 only
 
 Make the generate-support-bundle script and interactions more
 python3-friendly, and use python3 explicitly.
