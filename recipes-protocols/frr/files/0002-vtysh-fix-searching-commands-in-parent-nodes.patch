@@ -1,7 +1,7 @@
 From 757534e552ed01350b45f77bb55f916156b3960b Mon Sep 17 00:00:00 2001
 From: Pavel Ivashchenko <pivashchenko@nfware.com>
 Date: Mon, 30 Sep 2019 15:57:10 +0000
-Subject: [PATCH 2/2] vtysh: fix searching commands in parent nodes
+Subject: [PATCH 2/6] vtysh: fix searching commands in parent nodes
 
   Do not check parent command nodes in case of ambiguous and incomplete commands
 
