@@ -1,7 +1,7 @@
 From 9e225c9e3670cbc335c6a8c9a68e9b334f0e624e Mon Sep 17 00:00:00 2001
 From: whitespace <nobody@nobody>
 Date: Wed, 7 Oct 2020 17:22:26 -0400
-Subject: [PATCH 1/5] *: reformat python files
+Subject: [PATCH 1/6] *: reformat python files
 
 We are now using black.
 

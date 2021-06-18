@@ -1,7 +1,7 @@
 From c23f23ebdcf3f2dfbcbce57ddb25f305b8c20c12 Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Fri, 21 May 2021 17:13:24 +0200
-Subject: [PATCH 5/5] tools: fix error handling in generate_support_bundle.py
+Subject: [PATCH 5/6] tools: fix error handling in generate_support_bundle.py
 
 Before we can write or print the output of errors, we need to convert it
 to strings.
