@@ -34,6 +34,15 @@ if [ ! $# -eq 0 ]; then
   shift
 fi
 
+separator=$(printf '#%.0s' {1..80})
+
+function title() {
+  local title=$1
+  echo "$separator"
+  echo "# $title"
+  echo "$separator"
+}
+
 TMPDIR=$(mktemp -d)
 
 echo "Retrieving package data"
