@@ -94,9 +94,13 @@ function get_package_data() {
 
 get_package_data
 
-echo "Retrieving logs"
-journalctl -b > "${TMPDIR}"/journal.log
-[ "$?" == "0" ] && echo "ok" || ( echo "failed" && exit 1 )
+function get_logs() {
+  title "Retrieving all logs since last reboot"
+  OUTPUT_FILE="$TMPDIR/journal.log"
+  log_cmd_output journalctl -b
+}
+
+get_logs
 
 echo "Retrieving network state"
 # echo "global IP: $(curl -sL ip.bisdn.de || echo 'not reachable')" > ${TMPDIR}/network_state
