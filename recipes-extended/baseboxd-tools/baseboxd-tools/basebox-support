@@ -4,7 +4,7 @@
 # Bash script intended to gather important information regarding Switch status
 # and logs for support purposes
 
-set -o errexit -o pipefail -o noclobber -o nounset -o allexport
+set -o pipefail -o noclobber -o nounset -o allexport
 
 if [[ $EUID -ne 0 ]]; then
    echo -e "Please run this program as root\nExiting" 1>&2
