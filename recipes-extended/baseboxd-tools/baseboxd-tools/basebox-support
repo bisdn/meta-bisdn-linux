@@ -43,6 +43,22 @@ function title() {
   echo "$separator"
 }
 
+function exe_in_path() {
+  local executable_name=$1
+  which "$executable_name" > /dev/null
+}
+
+function report_result() {
+  local exit_status=$1
+  if [ "$exit_status" -eq 0 ]; then
+    echo "Done."
+  else
+    echo >&2 "Failed. Aborting."
+    # Kill this process
+    kill $$
+  fi
+}
+
 TMPDIR=$(mktemp -d)
 
 echo "Retrieving package data"
