@@ -18,13 +18,20 @@ function print_help() {
 }
 
 # Handling command line arguments
-if [ ! $# -eq 0 ]
-then
+if [ ! $# -eq 0 ]; then
   _cli_arguments=$1
   case $_cli_arguments in
-      -h|--help) print_help; exit 0;;
-        *) echo "Unknown parameter passed: $1"; print_help; exit 1;;
-  esac; shift;
+    -h | --help)
+      print_help
+      exit 0
+      ;;
+    *)
+      echo "Unknown parameter passed: $1"
+      print_help
+      exit 1
+      ;;
+  esac
+  shift
 fi
 
 TMPDIR=$(mktemp -d)
