@@ -81,9 +81,15 @@ function copy_dir() {
 
 TMPDIR=$(mktemp -d)
 
-echo "Retrieving package data"
-opkg list_installed >> "${TMPDIR}"/package_data
-[ "$?" == "0" ] && echo "ok" || ( echo "failed" && exit 1 )
+function get_package_data() {
+  title "Retrieving package data"
+  if exe_in_path opkg; then
+      opkg list_installed >> "$TMPDIR"/package_data
+      report_result $?
+  fi
+}
+
+get_package_data
 
 echo "Retrieving logs"
 journalctl -b > "${TMPDIR}"/journal.log
