@@ -86,6 +86,9 @@ function get_package_data() {
   if exe_in_path opkg; then
       opkg list_installed >> "$TMPDIR"/package_data
       report_result $?
+  elif exe_in_path dpkg; then
+      dpkg -l >> "$TMPDIR/package_data"
+      report_result $?
   fi
 }
 
