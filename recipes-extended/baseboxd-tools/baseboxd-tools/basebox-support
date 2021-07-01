@@ -37,11 +37,11 @@ fi
 TMPDIR=$(mktemp -d)
 
 echo "Retrieving package data"
-opkg list_installed >> ${TMPDIR}/package_data
+opkg list_installed >> "${TMPDIR}"/package_data
 [ "$?" == "0" ] && echo "ok" || ( echo "failed" && exit 1 )
 
 echo "Retrieving logs"
-journalctl -b > ${TMPDIR}/journal.log
+journalctl -b > "${TMPDIR}"/journal.log
 [ "$?" == "0" ] && echo "ok" || ( echo "failed" && exit 1 )
 
 echo "Retrieving network state"
@@ -82,7 +82,7 @@ echo "Retrieving network state"
   echo "bridge mdb"
   echo "##########"
   bridge mdb
-} >> ${TMPDIR}/network_state
+} >> "${TMPDIR}"/network_state
 [ "$?" == "0" ] && echo "ok" || ( echo "failed" && exit 1 )
 
 echo "Retrieving client tools information"
@@ -104,29 +104,29 @@ echo "Retrieving client tools information"
   echo ""
   echo "Trunk Group State"
   /usr/sbin/client_drivshell trunk show
-} >> ${TMPDIR}/client_tools
+} >> "${TMPDIR}"/client_tools
 [ "$?" == "0" ] && echo "ok" || ( echo "failed" && exit 1 )
 
 echo "Retrieving basic techsupport from SDK"
-/usr/sbin/client_drivshell techsupport basic >> ${TMPDIR}/tech_support
+/usr/sbin/client_drivshell techsupport basic >> "${TMPDIR}"/tech_support
 
 echo "Retrieving support bundle from FRR"
 /usr/lib/frr/generate_support_bundle.py
-cp /var/log/frr/*_support_bundle.log ${TMPDIR}
+cp /var/log/frr/*_support_bundle.log "${TMPDIR}"
 
 echo "onlpdump -S"
 {
   echo "onlpdump -S"
   onlpdump -S
-} >> ${TMPDIR}/port_list
+} >> "${TMPDIR}"/port_list
 [ "$?" == "0" ] && echo "ok" || ( echo "failed" && exit 1 )
 
 echo "Create tarball"
 FILE="/home/basebox/support-data_$(date "+%Y%m%d-%H%M%S")-SWITCH.tar.xz"
-( tar czf ${FILE} ${TMPDIR} /etc/systemd/network /etc/frr 2>&1) > /dev/null
+( tar czf "${FILE}" "${TMPDIR}" /etc/systemd/network /etc/frr 2>&1) > /dev/null
 [ "$?" == "0" ] && echo "ok" || ( echo "failed" && exit 1 )
 
 echo "Tarball created: ${FILE}"
 echo "Please send the tarball to support@basebox.freshdesk.com"
 
-rm -rf ${TMPDIR}
+rm -rf "${TMPDIR}"
