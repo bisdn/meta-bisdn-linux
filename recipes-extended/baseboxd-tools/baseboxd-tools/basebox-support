@@ -59,6 +59,17 @@ function report_result() {
   fi
 }
 
+function log_cmd_output() {
+  local cmd=("$@")
+  # Save stdout fd 1 in fd 5 and redirect stdout to file
+  exec 5>&1 >> "$OUTPUT_FILE"
+  echo "${cmd[@]}"
+  "${cmd[@]}"
+  echo "$separator"
+  # Restore saved stdout.
+  exec 1>&5
+}
+
 TMPDIR=$(mktemp -d)
 
 echo "Retrieving package data"
