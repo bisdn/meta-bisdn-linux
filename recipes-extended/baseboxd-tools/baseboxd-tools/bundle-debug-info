@@ -19,8 +19,9 @@ function print_help() {
   local name
   name=$(basename "$0")
   cat << EOF
-BISDN-Linux/baseboxd support script
-Backs up internal switch status and creates a tarball for support
+BISDN-Linux support script
+Gathers system debug information and creates a tarball for the
+ISDN Linux support.
 Usage: $name [arg...]
 Arguments:
     -h, --help: print this message
