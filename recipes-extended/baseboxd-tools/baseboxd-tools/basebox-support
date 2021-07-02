@@ -17,23 +17,6 @@ function print_help() {
     -h, --help : print this message"
 }
 
-# Handling command line arguments
-if [ ! $# -eq 0 ]; then
-  _cli_arguments=$1
-  case $_cli_arguments in
-    -h | --help)
-      print_help
-      exit 0
-      ;;
-    *)
-      echo "Unknown parameter passed: $1"
-      print_help
-      exit 1
-      ;;
-  esac
-  shift
-fi
-
 separator=$(printf '#%.0s' {1..80})
 
 function title() {
@@ -95,8 +78,6 @@ function copy_dir() {
   fi
 }
 
-TMPDIR=$(mktemp -d)
-
 function get_package_data() {
   title "Retrieving package data"
   OUTPUT_FILE="$TMPDIR/package_data"
@@ -107,15 +88,11 @@ function get_package_data() {
   fi
 }
 
-get_package_data
-
 function get_logs() {
   title "Retrieving all logs since last reboot"
   OUTPUT_FILE="$TMPDIR/journal.log"
   log_cmd_output journalctl -b
 }
-
-get_logs
 
 function get_network_state() {
   title "Retrieving network state"
@@ -133,8 +110,6 @@ function get_network_state() {
   log_cmd_output bridge mdb
 }
 
-get_network_state
-
 function get_client_tools_info() {
   title "Retrieving client tools information"
 
@@ -147,6 +122,27 @@ function get_client_tools_info() {
   LST="Trunk Group State" log_cmd_output /usr/sbin/client_drivshell trunk show
 }
 
+# Handling command line arguments
+if [ ! $# -eq 0 ]; then
+  _cli_arguments=$1
+  case $_cli_arguments in
+    -h | --help)
+      print_help
+      exit 0
+      ;;
+    *)
+      echo "Unknown parameter passed: $1"
+      print_help
+      exit 1
+      ;;
+  esac
+  shift
+fi
+
+TMPDIR=$(mktemp -d)
+get_package_data
+get_logs
+get_network_state
 get_client_tools_info
 
 title "Retrieving basic techsupport from SDK"
