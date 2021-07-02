@@ -148,6 +148,12 @@ function get_network_state() {
 function get_client_tools_info() {
   title "Retrieving client tools information"
 
+  client_flowtable_dump > /dev/null 2>&1 || rc=$?
+  if [ "${rc:-0}" -ne 0 ]; then
+    echo "WARNING: client_* tools not working. Skipping."
+    return 0
+  fi
+
   OUTPUT_FILE="$TMPDIR/client_tools"
   LST="Group table" log_cmd_output /usr/sbin/client_grouptable_dump
   LST="Flow table" log_cmd_output /usr/sbin/client_flowtable_dump
