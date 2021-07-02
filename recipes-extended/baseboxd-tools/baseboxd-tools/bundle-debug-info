@@ -70,7 +70,8 @@ function report_result() {
 # command and its status to the console.
 function log_cmd_output() {
   local cmd=("$@")
-  # Skip commands that are not present.
+  # Skip commands that cannot run because the executable is not available
+  # on the system.
   if ! exe_in_path "${cmd[0]}"; then
     echo "${cmd[0]} not found, skipping."
     return 0
