@@ -70,6 +70,15 @@ function log_cmd_output() {
   exec 1>&5
 }
 
+function copy_dir() {
+  local cdir=$1
+  if [ -e "$cdir" ]; then
+    title "Copying $cdir"
+    mkdir -p "$TMPDIR/$(dirname "$cdir")"
+    cp -a "$cdir" "$TMPDIR/$cdir"
+  fi
+}
+
 TMPDIR=$(mktemp -d)
 
 echo "Retrieving package data"
