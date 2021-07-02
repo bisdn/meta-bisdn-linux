@@ -156,12 +156,9 @@ if [ -x /usr/lib/frr/generate_support_bundle.py ]; then
   report_result $?
 fi
 
-echo "onlpdump -S"
-{
-  echo "onlpdump -S"
-  onlpdump -S
-} >> "${TMPDIR}"/port_list
-[ "$?" == "0" ] && echo "ok" || ( echo "failed" && exit 1 )
+title "Retrieving SFP information"
+OUTPUT_FILE="$TMPDIR/port_list"
+log_cmd_output onlpdump -S
 
 copy_dir /etc/systemd/network
 copy_dir /etc/frr
