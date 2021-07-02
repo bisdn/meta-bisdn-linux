@@ -37,6 +37,7 @@ EOF
 
 separator=$(printf '#%.0s' {1..80})
 
+# Print a title with separator lines above and below it
 function title() {
   local title=$1
   echo "$separator"
@@ -44,11 +45,14 @@ function title() {
   echo "$separator"
 }
 
+# Check if an executable is in PATH
 function exe_in_path() {
   local executable_name=$1
   which "$executable_name" > /dev/null
 }
 
+# Check exit status. Indicate error and kill script in case of error. Print
+# "Done." otherwise.
 function report_result() {
   local exit_status=$1
   if [ "$exit_status" -eq 0 ]; then
@@ -60,6 +64,9 @@ function report_result() {
   fi
 }
 
+# Run command and arguments passed to the function, provided that the command
+# is present. Log the command and its output to OUTPUT_FILE. Print the
+# command and its status to the console.
 function log_cmd_output() {
   local cmd=("$@")
   # Skip commands that are not present.
@@ -87,6 +94,7 @@ function log_cmd_output() {
   exec 1>&5
 }
 
+# Copy a directory to TMPDIR to have it included in the support tarball.
 function copy_dir() {
   local cdir=$1
   if [ -e "$cdir" ]; then
