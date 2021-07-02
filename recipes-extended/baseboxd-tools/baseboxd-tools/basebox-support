@@ -83,12 +83,11 @@ TMPDIR=$(mktemp -d)
 
 function get_package_data() {
   title "Retrieving package data"
+  OUTPUT_FILE="$TMPDIR/package_data"
   if exe_in_path opkg; then
-      opkg list_installed >> "$TMPDIR"/package_data
-      report_result $?
+      log_cmd_output opkg list_installed
   elif exe_in_path dpkg; then
-      dpkg -l >> "$TMPDIR/package_data"
-      report_result $?
+      log_cmd_output dpkg -l
   fi
 }
 
