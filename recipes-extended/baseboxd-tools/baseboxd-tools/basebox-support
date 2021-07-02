@@ -16,9 +16,12 @@ fi
 ###############################################################################
 
 function print_help() {
-  echo -e "basebox support script\nBackup internal switch status, and creates a tarball for support"
-  echo -e "execution:
-    -h, --help : print this message"
+  cat << EOF
+BISDN-Linux/baseboxd support script
+Backs up internal switch status and creates a tarball for support
+execution:
+    -h, --help : print this message
+EOF
 }
 
 separator=$(printf '#%.0s' {1..80})
