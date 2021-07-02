@@ -241,6 +241,6 @@ FILE="/home/basebox/support-data_$(date "+%Y%m%d-%H%M%S")-SWITCH.tgz"
 tar czf "$FILE" -C "$TMPDIR" .
 
 echo "Tarball created: $FILE"
-echo "Please send the tarball to support@basebox.freshdesk.com"
+echo "Please send the tarball to support@bisdn.freshdesk.com"
 
 rm -rf "$TMPDIR"
