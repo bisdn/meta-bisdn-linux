@@ -138,6 +138,16 @@ function get_client_tools_info() {
   log_cmd_output /usr/sbin/client_drivshell techsupport basic
 }
 
+function get_frr_support_bundle() {
+  if [ -x /usr/lib/frr/generate_support_bundle.py ]; then
+    title "Retrieving support bundle from FRR"
+    if /usr/lib/frr/generate_support_bundle.py; then
+      cp /var/log/frr/*_support_bundle.log "$TMPDIR"
+    fi
+    report_result $?
+  fi
+}
+
 ###############################################################################
 # Main
 ###############################################################################
@@ -164,13 +174,7 @@ get_package_data
 get_logs
 get_network_state
 get_client_tools_info
-
-if [ -x /usr/lib/frr/generate_support_bundle.py ]; then
-  title "Retrieving support bundle from FRR"
-  /usr/lib/frr/generate_support_bundle.py
-  cp /var/log/frr/*_support_bundle.log "$TMPDIR"
-  report_result $?
-fi
+get_frr_support_bundle
 
 title "Retrieving SFP information"
 OUTPUT_FILE="$TMPDIR/port_list"
