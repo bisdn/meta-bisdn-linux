@@ -1,0 +1,15 @@
+[Unit]
+Description=Run pending preinsts
+DefaultDependencies=no
+After=systemd-remount-fs.service systemd-tmpfiles-setup.service tmp.mount
+Before=sysinit.target run-postinsts.target
+
+[Service]
+Type=oneshot
+ExecStart=#SBINDIR#/run-preinsts
+ExecStartPost=#BASE_BINDIR#/systemctl --no-reload disable run-preinsts.service
+RemainAfterExit=No
+TimeoutSec=0
+
+[Install]
+WantedBy=sysinit.target
