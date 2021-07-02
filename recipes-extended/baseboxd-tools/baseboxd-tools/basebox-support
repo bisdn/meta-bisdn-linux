@@ -11,6 +11,10 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
+###############################################################################
+# Helper functions
+###############################################################################
+
 function print_help() {
   echo -e "basebox support script\nBackup internal switch status, and creates a tarball for support"
   echo -e "execution:
@@ -78,6 +82,10 @@ function copy_dir() {
   fi
 }
 
+###############################################################################
+# Data collection functions
+###############################################################################
+
 function get_package_data() {
   title "Retrieving package data"
   OUTPUT_FILE="$TMPDIR/package_data"
@@ -121,6 +129,10 @@ function get_client_tools_info() {
   LST="STG State" log_cmd_output /usr/sbin/client_drivshell stg show
   LST="Trunk Group State" log_cmd_output /usr/sbin/client_drivshell trunk show
 }
+
+###############################################################################
+# Main
+###############################################################################
 
 # Handling command line arguments
 if [ ! $# -eq 0 ]; then
