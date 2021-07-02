@@ -131,6 +131,11 @@ function get_client_tools_info() {
   LST="Client Ports" log_cmd_output /usr/sbin/client_drivshell ports
   LST="STG State" log_cmd_output /usr/sbin/client_drivshell stg show
   LST="Trunk Group State" log_cmd_output /usr/sbin/client_drivshell trunk show
+
+  title "Retrieving basic techsupport from SDK"
+
+  OUTPUT_FILE="$TMPDIR/tech_support"
+  log_cmd_output /usr/sbin/client_drivshell techsupport basic
 }
 
 ###############################################################################
@@ -159,10 +164,6 @@ get_package_data
 get_logs
 get_network_state
 get_client_tools_info
-
-title "Retrieving basic techsupport from SDK"
-OUTPUT_FILE="$TMPDIR/tech_support"
-log_cmd_output /usr/sbin/client_drivshell techsupport basic
 
 if [ -x /usr/lib/frr/generate_support_bundle.py ]; then
   title "Retrieving support bundle from FRR"
