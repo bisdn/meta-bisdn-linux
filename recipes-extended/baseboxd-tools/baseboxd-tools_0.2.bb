@@ -19,7 +19,7 @@ S = "${WORKDIR}"
 do_install () {
   install -m 0755 -d ${D}${bindir}
   install -m 0755 basebox-change-config ${D}${bindir}
-  install -m 0755 basebox-support ${D}${bindir}
+  install -m 0755 bundle-debug-info ${D}${bindir}
 }
 
 FILES_${PN} = "/"
