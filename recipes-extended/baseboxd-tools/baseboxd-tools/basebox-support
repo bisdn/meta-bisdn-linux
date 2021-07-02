@@ -16,11 +16,22 @@ fi
 ###############################################################################
 
 function print_help() {
+  local name
+  name=$(basename "$0")
   cat << EOF
 BISDN-Linux/baseboxd support script
 Backs up internal switch status and creates a tarball for support
-execution:
-    -h, --help : print this message
+Usage: $name [arg...]
+Arguments:
+    -h, --help: print this message
+    pkg       : add software package list
+    log       : add systemd-journald system log since last reboot
+    net       : add network configuration (live and systemd-networkd files)
+    ofdpa     : add switch configuration (client_*)
+    frr       : add FRR configuration
+    port      : add SFP info
+    all       : all of the above [default]
+Example: $name pkg net ofdpa
 EOF
 }
 
@@ -154,17 +165,59 @@ function get_port_list() {
   log_cmd_output onlpdump -S
 }
 
+function get_all() {
+  get_package_data
+  get_logs
+  get_network_state
+  # The client tools write a lot of log entries; make sure to call get_logs
+  # before get_client_tools_info.
+  get_client_tools_info
+  get_frr_support_bundle
+  get_port_list
+  copy_dir /etc/systemd/network
+  copy_dir /etc/frr
+}
+
 ###############################################################################
 # Main
 ###############################################################################
 
+TMPDIR=$(mktemp -d)
+
 # Handling command line arguments
-if [ ! $# -eq 0 ]; then
-  _cli_arguments=$1
-  case $_cli_arguments in
+if [ $# -eq 0 ]; then
+  get_all
+fi
+
+while [ $# -gt 0 ]; do
+  _cli_argument=$1
+  case $_cli_argument in
     -h | --help)
       print_help
       exit 0
+      ;;
+    pkg)
+      get_package_data
+      ;;
+    log)
+      get_logs
+      ;;
+    net)
+      get_network_state
+      copy_dir /etc/systemd/network
+      ;;
+    ofdpa)
+      get_client_tools_info
+      ;;
+    frr)
+      get_frr_support_bundle
+      copy_dir /etc/frr
+      ;;
+    port)
+      get_port_list
+      ;;
+    all)
+      get_all
       ;;
     *)
       echo "Unknown parameter passed: $1"
@@ -173,18 +226,7 @@ if [ ! $# -eq 0 ]; then
       ;;
   esac
   shift
-fi
-
-TMPDIR=$(mktemp -d)
-get_package_data
-get_logs
-get_network_state
-get_client_tools_info
-get_frr_support_bundle
-get_port_list
-
-copy_dir /etc/systemd/network
-copy_dir /etc/frr
+done
 
 title "Creating tarball"
 FILE="/home/basebox/support-data_$(date "+%Y%m%d-%H%M%S")-SWITCH.tgz"
