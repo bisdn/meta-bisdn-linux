@@ -163,12 +163,11 @@ log_cmd_output onlpdump -S
 copy_dir /etc/systemd/network
 copy_dir /etc/frr
 
-echo "Create tarball"
-FILE="/home/basebox/support-data_$(date "+%Y%m%d-%H%M%S")-SWITCH.tar.xz"
-( tar czf "${FILE}" -C "${TMPDIR}" . 2>&1) > /dev/null
-[ "$?" == "0" ] && echo "ok" || ( echo "failed" && exit 1 )
+title "Creating tarball"
+FILE="/home/basebox/support-data_$(date "+%Y%m%d-%H%M%S")-SWITCH.tgz"
+tar czf "$FILE" -C "$TMPDIR" .
 
-echo "Tarball created: ${FILE}"
+echo "Tarball created: $FILE"
 echo "Please send the tarball to support@basebox.freshdesk.com"
 
-rm -rf "${TMPDIR}"
+rm -rf "$TMPDIR"
