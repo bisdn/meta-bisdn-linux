@@ -145,8 +145,9 @@ function get_client_tools_info() {
 
 get_client_tools_info
 
-echo "Retrieving basic techsupport from SDK"
-/usr/sbin/client_drivshell techsupport basic >> "${TMPDIR}"/tech_support
+title "Retrieving basic techsupport from SDK"
+OUTPUT_FILE="$TMPDIR/tech_support"
+log_cmd_output /usr/sbin/client_drivshell techsupport basic
 
 echo "Retrieving support bundle from FRR"
 /usr/lib/frr/generate_support_bundle.py
