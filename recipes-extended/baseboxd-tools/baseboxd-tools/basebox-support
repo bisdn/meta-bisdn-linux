@@ -61,6 +61,11 @@ function report_result() {
 
 function log_cmd_output() {
   local cmd=("$@")
+  # Skip commands that are not present.
+  if ! exe_in_path "${cmd[0]}"; then
+    echo "${cmd[0]} not found, skipping."
+    return 0
+  fi
   # Save stdout fd 1 in fd 5 and redirect stdout to file
   exec 5>&1 >> "$OUTPUT_FILE"
   if [ -n "${LST:-""}" ]; then
