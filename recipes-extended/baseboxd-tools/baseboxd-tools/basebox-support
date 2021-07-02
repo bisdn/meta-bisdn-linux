@@ -148,6 +148,12 @@ function get_frr_support_bundle() {
   fi
 }
 
+function get_port_list() {
+  title "Retrieving SFP information"
+  OUTPUT_FILE="$TMPDIR/port_list"
+  log_cmd_output onlpdump -S
+}
+
 ###############################################################################
 # Main
 ###############################################################################
@@ -175,10 +181,7 @@ get_logs
 get_network_state
 get_client_tools_info
 get_frr_support_bundle
-
-title "Retrieving SFP information"
-OUTPUT_FILE="$TMPDIR/port_list"
-log_cmd_output onlpdump -S
+get_port_list
 
 copy_dir /etc/systemd/network
 copy_dir /etc/frr
