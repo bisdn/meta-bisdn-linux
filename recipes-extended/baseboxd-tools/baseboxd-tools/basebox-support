@@ -126,27 +126,19 @@ function get_network_state() {
 
 get_network_state
 
-echo "Retrieving client tools information"
-{
-  echo "Group table"
-  /usr/sbin/client_grouptable_dump
-  echo ""
-  echo "Flow table"
-  /usr/sbin/client_flowtable_dump
-  echo ""
-  echo "Port table"
-  /usr/sbin/client_port_table_dump
-  echo ""
-  echo "Client Ports"
-  /usr/sbin/client_drivshell ports
-  echo ""
-  echo "STG State"
-  /usr/sbin/client_drivshell stg show
-  echo ""
-  echo "Trunk Group State"
-  /usr/sbin/client_drivshell trunk show
-} >> "${TMPDIR}"/client_tools
-[ "$?" == "0" ] && echo "ok" || ( echo "failed" && exit 1 )
+function get_client_tools_info() {
+  title "Retrieving client tools information"
+
+  OUTPUT_FILE="$TMPDIR/client_tools"
+  LST="Group table" log_cmd_output /usr/sbin/client_grouptable_dump
+  LST="Flow table" log_cmd_output /usr/sbin/client_flowtable_dump
+  LST="Port table" log_cmd_output /usr/sbin/client_port_table_dump
+  LST="Client Ports" log_cmd_output /usr/sbin/client_drivshell ports
+  LST="STG State" log_cmd_output /usr/sbin/client_drivshell stg show
+  LST="Trunk Group State" log_cmd_output /usr/sbin/client_drivshell trunk show
+}
+
+get_client_tools_info
 
 echo "Retrieving basic techsupport from SDK"
 /usr/sbin/client_drivshell techsupport basic >> "${TMPDIR}"/tech_support
