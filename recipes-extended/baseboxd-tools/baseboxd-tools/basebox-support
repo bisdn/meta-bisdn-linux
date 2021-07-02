@@ -63,7 +63,14 @@ function log_cmd_output() {
   local cmd=("$@")
   # Save stdout fd 1 in fd 5 and redirect stdout to file
   exec 5>&1 >> "$OUTPUT_FILE"
-  echo "${cmd[@]}"
+  if [ -n "${LST:-""}" ]; then
+    # Write log section title into file, then reset variable.
+    echo "$LST"
+    LST=""
+  else
+    # Log the command and its arguments.
+    echo "${cmd[@]}"
+  fi
   "${cmd[@]}"
   echo "$separator"
   # Restore saved stdout.
