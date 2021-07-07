@@ -195,6 +195,7 @@ function get_all() {
   get_port_list
   copy_path /etc/systemd/network
   copy_path /etc/frr
+  copy_path /usr/lib/os-release
 }
 
 ###############################################################################
@@ -216,6 +217,7 @@ while [ $# -gt 0 ]; do
       exit 0
       ;;
     pkg)
+      copy_path /usr/lib/os-release
       get_package_data
       ;;
     log)
