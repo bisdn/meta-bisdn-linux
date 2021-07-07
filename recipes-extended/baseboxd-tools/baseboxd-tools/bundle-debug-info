@@ -96,13 +96,13 @@ function log_cmd_output() {
   exec 1>&5
 }
 
-# Copy a directory to TMPDIR to have it included in the support tarball.
-function copy_dir() {
-  local cdir=$1
-  if [ -e "$cdir" ]; then
-    title "Copying $cdir"
-    mkdir -p "$TMPDIR/$(dirname "$cdir")"
-    cp -a "$cdir" "$TMPDIR/$cdir"
+# Copy file or directory to TMPDIR to have it included in the support tarball.
+function copy_path() {
+  local cpath=$1
+  if [ -e "$cpath" ]; then
+    title "Copying $cpath"
+    mkdir -p "$TMPDIR/$(dirname "$cpath")"
+    cp -a "$cpath" "$TMPDIR/$cpath"
   fi
 }
 
@@ -193,8 +193,8 @@ function get_all() {
   get_client_tools_info
   get_frr_support_bundle
   get_port_list
-  copy_dir /etc/systemd/network
-  copy_dir /etc/frr
+  copy_path /etc/systemd/network
+  copy_path /etc/frr
 }
 
 ###############################################################################
@@ -223,14 +223,14 @@ while [ $# -gt 0 ]; do
       ;;
     net)
       get_network_state
-      copy_dir /etc/systemd/network
+      copy_path /etc/systemd/network
       ;;
     ofdpa)
       get_client_tools_info
       ;;
     frr)
       get_frr_support_bundle
-      copy_dir /etc/frr
+      copy_path /etc/frr
       ;;
     port)
       get_port_list
