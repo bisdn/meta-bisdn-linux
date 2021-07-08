@@ -250,7 +250,7 @@ while [ $# -gt 0 ]; do
 done
 
 title "Creating tarball"
-FILE="/home/basebox/support-data_$(date "+%Y%m%d-%H%M%S")-SWITCH.tgz"
+FILE="/tmp/support-data_$(date "+%Y%m%d-%H%M%S")-SWITCH.tgz"
 tar czf "$FILE" -C "$TMPDIR" .
 
 echo "Tarball created: $FILE"
