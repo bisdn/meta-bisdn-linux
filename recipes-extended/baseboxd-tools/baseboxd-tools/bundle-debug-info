@@ -1,0 +1,263 @@
+#!/usr/bin/env bash
+# Copyright (C) 2019 Rubens Figueiredo of BISDN GmbH
+
+# Bash script intended to gather important information regarding Switch status
+# and logs for support purposes
+
+set -o pipefail -o noclobber -o nounset
+
+if [[ $EUID -ne 0 ]]; then
+   echo -e "Please run this program as root\nExiting" 1>&2
+   exit 1
+fi
+
+###############################################################################
+# Helper functions
+###############################################################################
+
+function print_help() {
+  local name
+  name=$(basename "$0")
+  cat << EOF
+BISDN-Linux support script
+Gathers system debug information and creates a tarball for the
+ISDN Linux support.
+Usage: $name [arg...]
+Arguments:
+    -h, --help: print this message
+    pkg       : add software package list
+    log       : add systemd-journald system log since last reboot
+    net       : add network configuration (live and systemd-networkd files)
+    ofdpa     : add switch configuration (client_*)
+    frr       : add FRR configuration
+    port      : add SFP info
+    all       : all of the above [default]
+Example: $name pkg net ofdpa
+EOF
+}
+
+separator=$(printf '#%.0s' {1..80})
+
+# Print a title with separator lines above and below it
+function title() {
+  local title=$1
+  echo "$separator"
+  echo "# $title"
+  echo "$separator"
+}
+
+# Check if an executable is in PATH
+function exe_in_path() {
+  local executable_name=$1
+  which "$executable_name" > /dev/null
+}
+
+# Check exit status. Indicate error and kill script in case of error. Print
+# "Done." otherwise.
+function report_result() {
+  local exit_status=$1
+  if [ "$exit_status" -eq 0 ]; then
+    echo "Done."
+  else
+    echo >&2 "Failed. Aborting."
+    # Kill this process
+    kill $$
+  fi
+}
+
+# Run command and arguments passed to the function, provided that the command
+# is present. Log the command and its output to OUTPUT_FILE. Print the
+# command and its status to the console.
+function log_cmd_output() {
+  local cmd=("$@")
+  # Skip commands that cannot run because the executable is not available
+  # on the system.
+  if ! exe_in_path "${cmd[0]}"; then
+    echo "${cmd[0]} not found, skipping."
+    return 0
+  fi
+  # Save stdout fd 1 in fd 5 and redirect stdout to file
+  exec 5>&1 >> "$OUTPUT_FILE"
+  if [ -n "${LST:-""}" ]; then
+    # Write log section title into file, then reset variable.
+    echo "$LST"
+    LST=""
+  else
+    # Log the command and its arguments.
+    echo "${cmd[@]}"
+  fi
+  # Execute command and arguments, reporting status on console (fd 5)
+  echo -n "${cmd[*]}: " >&5
+  "${cmd[@]}"
+  report_result $? >&5
+
+  echo "$separator"
+  # Restore saved stdout.
+  exec 1>&5
+}
+
+# Copy file or directory to TMPDIR to have it included in the support tarball.
+function copy_path() {
+  local cpath=$1
+  if [ -e "$cpath" ]; then
+    title "Copying $cpath"
+    mkdir -p "$TMPDIR/$(dirname "$cpath")"
+    cp -a "$cpath" "$TMPDIR/$cpath"
+  fi
+}
+
+###############################################################################
+# Data collection functions
+###############################################################################
+
+function get_package_data() {
+  title "Retrieving package data"
+  OUTPUT_FILE="$TMPDIR/package_data"
+  if exe_in_path opkg; then
+      log_cmd_output opkg list_installed
+  elif exe_in_path dpkg; then
+      log_cmd_output dpkg -l
+  fi
+}
+
+function get_logs() {
+  title "Retrieving all logs since last reboot"
+  OUTPUT_FILE="$TMPDIR/journal.log"
+  log_cmd_output journalctl -b
+}
+
+function get_network_state() {
+  title "Retrieving network state"
+
+  OUTPUT_FILE="$TMPDIR/network_state"
+  log_cmd_output sysctl net.ipv4.ip_forward
+  log_cmd_output sysctl net.ipv4.ip_forward
+  log_cmd_output sysctl net.ipv6.conf.all.forwarding
+  log_cmd_output ip a
+  log_cmd_output ip route list table all
+  log_cmd_output ip neigh
+  log_cmd_output bridge -c vlan
+  # Only our own patched bridge command responds to "database".
+  if exe_in_path bridge && grep -q database "$(which bridge)"; then
+    log_cmd_output bridge vlan database
+  fi
+  log_cmd_output bridge fdb
+  if grep -q bridge.ko "/lib/modules/$(uname -r)/modules.builtin" ||
+      grep "^bridge " /proc/modules; then
+    # bridge kernel module is available, we can go ahead with bridge mdb
+    log_cmd_output bridge mdb
+  fi
+}
+
+function get_client_tools_info() {
+  title "Retrieving client tools information"
+
+  client_flowtable_dump > /dev/null 2>&1 || rc=$?
+  if [ "${rc:-0}" -ne 0 ]; then
+    echo "WARNING: client_* tools not working. Skipping."
+    return 0
+  fi
+
+  OUTPUT_FILE="$TMPDIR/client_tools"
+  LST="Group table" log_cmd_output /usr/sbin/client_grouptable_dump
+  LST="Flow table" log_cmd_output /usr/sbin/client_flowtable_dump
+  LST="Port table" log_cmd_output /usr/sbin/client_port_table_dump
+  LST="Client Ports" log_cmd_output /usr/sbin/client_drivshell ports
+  LST="STG State" log_cmd_output /usr/sbin/client_drivshell stg show
+  LST="Trunk Group State" log_cmd_output /usr/sbin/client_drivshell trunk show
+
+  title "Retrieving basic techsupport from SDK"
+
+  OUTPUT_FILE="$TMPDIR/tech_support"
+  log_cmd_output /usr/sbin/client_drivshell techsupport basic
+}
+
+function get_frr_support_bundle() {
+  if [ -x /usr/lib/frr/generate_support_bundle.py ]; then
+    title "Retrieving support bundle from FRR"
+    if /usr/lib/frr/generate_support_bundle.py; then
+      cp /var/log/frr/*_support_bundle.log "$TMPDIR"
+    fi
+    report_result $?
+  fi
+}
+
+function get_port_list() {
+  title "Retrieving SFP information"
+  OUTPUT_FILE="$TMPDIR/port_list"
+  log_cmd_output onlpdump -S
+}
+
+function get_all() {
+  get_package_data
+  get_logs
+  get_network_state
+  # The client tools write a lot of log entries; make sure to call get_logs
+  # before get_client_tools_info.
+  get_client_tools_info
+  get_frr_support_bundle
+  get_port_list
+  copy_path /etc/systemd/network
+  copy_path /etc/frr
+  copy_path /usr/lib/os-release
+}
+
+###############################################################################
+# Main
+###############################################################################
+
+TMPDIR=$(mktemp -d)
+
+# Handling command line arguments
+if [ $# -eq 0 ]; then
+  get_all
+fi
+
+while [ $# -gt 0 ]; do
+  _cli_argument=$1
+  case $_cli_argument in
+    -h | --help)
+      print_help
+      exit 0
+      ;;
+    pkg)
+      copy_path /usr/lib/os-release
+      get_package_data
+      ;;
+    log)
+      get_logs
+      ;;
+    net)
+      get_network_state
+      copy_path /etc/systemd/network
+      ;;
+    ofdpa)
+      get_client_tools_info
+      ;;
+    frr)
+      get_frr_support_bundle
+      copy_path /etc/frr
+      ;;
+    port)
+      get_port_list
+      ;;
+    all)
+      get_all
+      ;;
+    *)
+      echo "Unknown parameter passed: $1"
+      print_help
+      exit 1
+      ;;
+  esac
+  shift
+done
+
+title "Creating tarball"
+FILE="/tmp/support-data_$(date "+%Y%m%d-%H%M%S")-SWITCH.tgz"
+tar czf "$FILE" -C "$TMPDIR" .
+
+echo "Tarball created: $FILE"
+echo "Please send the tarball to support@bisdn.freshdesk.com"
+
+rm -rf "$TMPDIR"
