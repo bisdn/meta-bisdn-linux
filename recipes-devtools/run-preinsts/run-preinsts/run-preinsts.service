@@ -1,8 +1,8 @@
 [Unit]
 Description=Run pending preinsts
 DefaultDependencies=no
+Before=sysinit.target run-postinsts.service
 After=systemd-remount-fs.service systemd-tmpfiles-setup.service tmp.mount
-Before=sysinit.target run-postinsts.target
 
 [Service]
 Type=oneshot
