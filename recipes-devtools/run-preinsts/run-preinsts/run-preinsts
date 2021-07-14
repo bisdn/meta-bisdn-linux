@@ -1,100 +1,60 @@
 #!/bin/sh
 #
-# Copyright 2007 Openedhand Ltd.
+# Copyright 2021 BISDN GmbH.
 #
-# Author: Richard Purdie <rpurdie@openedhand.com>
-#
+# Author: Hilmar Magnusson <hilmar.magnusson@bisdn.de>
+# based on the work in https://git.yoctoproject.org/cgit/cgit.cgi/poky/tree/meta/recipes-devtools/run-postinsts/run-postinsts/run-postinsts?h=dunfell
+# by Richard Purdie <rpurdie@openedhand.com>
 
-# The following script will run all the scriptlets found in #SYSCONFDIR#/deb-postinsts,
-# #SYSCONFDIR#/ipk-postinsts or #SYSCONFDIR#/rpm-postinsts or the package manager in
-# case available.
+# This script is meant to run preinst of newly added packages. Preinst scripts
+# can only be run after we boot, so this script wil be run once on first boot.
+# This will run all the *.preinst scriptlets found in /var/lib/opkg/info/ with
+# the exception of a few scripts listed in the BLACKLIST variable below
 
-# the order of this list is important, do not change!
-backend_list="rpm deb ipk"
+# BISDN Linux uses opkg which has the following packet manager directory
+pi_dir="/var/lib/opkg/info"
+PREINST_LOGGING=1
 
-pm_installed=false
+# Maybe this is defined higher up?
+LOGFILE="/var/log/preinst.log"
 
-for pm in $backend_list; do
-	# found the package manager, it has postinsts
-	case $pm in
-		"deb")
-			if [ -s "#LOCALSTATEDIR#/lib/dpkg/status" ]; then
-				pm_installed=true
-				break
-			fi
-			;;
+echo "Configuring pre-packages on first boot...."
+echo " (This should generally not take long.)"
 
-		"ipk")
-			if [ -s "#LOCALSTATEDIR#/lib/opkg/status" ]; then
-				pm_installed=true
-				break
-			fi
-			;;
-	esac
+echo "log function"
+rm -f $LOGFILE
+append_log=">>$LOGFILE 2>&1"
 
-	pi_dir="#SYSCONFDIR#/$pm-postinsts"
+# list of preinst scripts that should NOT be run. We run all preinsts scripts
+# with the assumptions that they are idempotent. The blacklisted files are
+# eiter not idempotent, or they change things we do not want to change, e.g.
+# passwords.
+BLACKLIST="base-files.preinst base-passwd.preinst basebox-user.preinst"
 
-	# found postinsts directory
-	if [ -d $pi_dir ]; then
-		break
-	fi
-done
+exec_preinst_scriptlets() {
+    # Loop through all files ending with '.preinst' in pi_dir
+    for i in $pi_dir/*.preinst; do
+        # Check if preinst file is blacklisted
+        if echo $BLACKLIST | grep -w $(basename $i) > /dev/null; then
+            echo "$i is blacklisted and will not be run"
+            continue
+        fi
+        # preinst can be run
+        echo "$i is NOT in BLACKLIST, running script"
 
-remove_rcsd_link () {
-	if [ -n "`which update-rc.d`" ]; then
-		update-rc.d -f run-postinsts remove
-	fi
+        # Execute preinst script if executable
+        if [ -x $i ]; then
+            (sh -c $i $append_log)
+            if [ "$?" -gt "0" ]; then
+                echo "executing $i returned non-zero exit code: $?"
+                echo "executing $i returned non-zero exit code: $?" $append_log
+            fi
+        else
+            echo "$i not executable"
+            echo "$i not executable" $append_log
+        fi
+    done
 }
 
-if ! [ -d $pi_dir ] && ! $pm_installed; then
-	remove_rcsd_link
-	exit 0
-fi
-
-echo "Configuring packages on first boot...."
-echo " (This may take several minutes. Please do not power off the machine.)"
-
-[ -e #SYSCONFDIR#/default/postinst ] && . #SYSCONFDIR#/default/postinst
-
-if [ "$POSTINST_LOGGING" = "1" ]; then
-	rm -f $LOGFILE
-	append_log=">>$LOGFILE 2>&1"
-fi
-
-exec_postinst_scriptlets() {
-	for i in `ls $pi_dir`; do
-		i=$pi_dir/$i
-		echo "Running postinst $i..."
-		[ "$POSTINST_LOGGING" = "1" ] && eval echo "Running postinst $i..." $append_log
-		if [ -x $i ]; then
-			(sh -c $i $append_log)
-			rm $i
-		else
-			echo "ERROR: postinst $i failed."
-			[ "$POSTINST_LOGGING" = "1" ] && eval echo "ERROR: postinst $i failed." $append_log
-			remove_pi_dir=0
-		fi
-	done
-}
-
-remove_pi_dir=1
-if $pm_installed; then
-	case $pm in
-		"ipk")
-			eval opkg configure $append_log
-			;;
-
-		"deb")
-			eval dpkg --configure -a $append_log
-			;;
-	esac
-else
-	exec_postinst_scriptlets
-fi
-
-# since all postinstalls executed successfully, remove the postinstalls directory
-# and the rcS.d link
-if [ $remove_pi_dir = 1 ]; then
-	rm -rf $pi_dir
-	remove_rcsd_link
-fi
+echo "Running preinst"
+exec_preinst_scriptlets
