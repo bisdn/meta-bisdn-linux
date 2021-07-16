@@ -1,0 +1,60 @@
+#!/bin/sh
+#
+# Copyright 2021 BISDN GmbH.
+#
+# Author: Hilmar Magnusson <hilmar.magnusson@bisdn.de>
+# based on the work in https://git.yoctoproject.org/cgit/cgit.cgi/poky/tree/meta/recipes-devtools/run-postinsts/run-postinsts/run-postinsts?h=dunfell
+# by Richard Purdie <rpurdie@openedhand.com>
+
+# This script is meant to run preinst of newly added packages. Preinst scripts
+# can only be run after we boot, so this script wil be run once on first boot.
+# This will run all the *.preinst scriptlets found in /var/lib/opkg/info/ with
+# the exception of a few scripts listed in the BLACKLIST variable below
+
+# BISDN Linux uses opkg which has the following packet manager directory
+pi_dir="/var/lib/opkg/info"
+PREINST_LOGGING=1
+
+# Maybe this is defined higher up?
+LOGFILE="/var/log/preinst.log"
+
+echo "Configuring pre-packages on first boot...."
+echo " (This should generally not take long.)"
+
+echo "log function"
+rm -f $LOGFILE
+append_log=">>$LOGFILE 2>&1"
+
+# list of preinst scripts that should NOT be run. We run all preinsts scripts
+# with the assumptions that they are idempotent. The blacklisted files are
+# eiter not idempotent, or they change things we do not want to change, e.g.
+# passwords.
+BLACKLIST="base-files.preinst base-passwd.preinst basebox-user.preinst"
+
+exec_preinst_scriptlets() {
+    # Loop through all files ending with '.preinst' in pi_dir
+    for i in $pi_dir/*.preinst; do
+        # Check if preinst file is blacklisted
+        if echo $BLACKLIST | grep -w $(basename $i) > /dev/null; then
+            echo "$i is blacklisted and will not be run"
+            continue
+        fi
+        # preinst can be run
+        echo "$i is NOT in BLACKLIST, running script"
+
+        # Execute preinst script if executable
+        if [ -x $i ]; then
+            (sh -c $i $append_log)
+            if [ "$?" -gt "0" ]; then
+                echo "executing $i returned non-zero exit code: $?"
+                echo "executing $i returned non-zero exit code: $?" $append_log
+            fi
+        else
+            echo "$i not executable"
+            echo "$i not executable" $append_log
+        fi
+    done
+}
+
+echo "Running preinst"
+exec_preinst_scriptlets
