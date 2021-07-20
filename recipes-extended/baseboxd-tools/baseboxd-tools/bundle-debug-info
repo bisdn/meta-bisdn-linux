@@ -90,12 +90,13 @@ function log_cmd_output() {
     # Log the command and its arguments.
     echo "${cmd[@]}"
   fi
+  echo "$separator"
   # Execute command and arguments, reporting status on console (fd 5)
   echo -n "${cmd[*]}: " >&5
   "${cmd[@]}"
   report_result $? >&5
 
-  echo "$separator"
+  echo ""
   # Restore saved stdout.
   exec 1>&5
 }
