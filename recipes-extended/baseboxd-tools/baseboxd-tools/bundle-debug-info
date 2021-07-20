@@ -6,6 +6,10 @@
 
 set -o pipefail -o noclobber -o nounset
 
+if [ "$(basename $0)" != "bundle-debug-info" ]; then
+   echo "'$(basename $0)' is deprecated and will be removed in the future, please use 'bundle-debug-info' instead" >&2
+fi
+
 if [[ $EUID -ne 0 ]]; then
    echo -e "Please run this program as root\nExiting" 1>&2
    exit 1
