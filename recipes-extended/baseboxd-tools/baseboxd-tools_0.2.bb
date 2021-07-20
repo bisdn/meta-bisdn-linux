@@ -20,6 +20,7 @@ do_install () {
   install -m 0755 -d ${D}${bindir}
   install -m 0755 basebox-change-config ${D}${bindir}
   install -m 0755 bundle-debug-info ${D}${bindir}
+  ln -s bundle-debug-info ${D}${bindir}/basebox-support
 }
 
 FILES_${PN} = "/"
