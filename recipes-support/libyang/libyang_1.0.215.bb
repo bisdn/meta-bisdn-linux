@@ -19,8 +19,16 @@ EXTRA_OECMAKE += " \
 
 S = "${WORKDIR}/git"
 
-FILES_${PN} += " \
+PACKAGES += "${PN}-utils"
+
+FILES_${PN} = " \
+  ${libdir}/libyang.so.1* \
   ${libdir}/libyang1 \
+"
+
+FILES_${PN}-utils = " \
+  ${bindir}/yanglint \
+  ${bindir}/yangre \
 "
 
 inherit cmake
