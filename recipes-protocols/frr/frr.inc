@@ -47,7 +47,7 @@ SRC_URI = "git://github.com/FRRouting/frr.git;protocol=https;branch=${GIT_BRANCH
 
 S = "${WORKDIR}/git"
 
-FRR_DAEMONS ?= "zebra staticd bgpd ospfd ospf6d ripd ripngd isisd pimd ldpd nhrpd eigrpd babeld sharpd pbrd bfdd"
+FRR_DAEMONS ?= "zebra staticd bgpd ospfd ospf6d ripd ripngd isisd pimd ldpd nhrpd eigrpd babeld sharpd pbrd bfdd pathd"
 FRR_EXTRA_CONF ?= "cumulus datacenter"
 
 PACKAGECONFIG ??= " \
@@ -69,6 +69,7 @@ PACKAGECONFIG ??= " \
     ${@bb.utils.filter('FRR_DAEMONS', 'sharpd', d)} \
     ${@bb.utils.filter('FRR_DAEMONS', 'pbrd', d)} \
     ${@bb.utils.filter('FRR_DAEMONS', 'bfdd', d)} \
+    ${@bb.utils.filter('FRR_DAEMONS', 'pathd', d)} \
     ${@bb.utils.filter('FRR_EXTRA_CONF', 'cumulus', d)} \
     ${@bb.utils.filter('FRR_EXTRA_CONF', 'datacenter', d)} \
     "
@@ -91,6 +92,7 @@ PACKAGECONFIG[babeld] = "--enable-babeld,--disable-babeld,"
 PACKAGECONFIG[sharpd] = "--enable-sharpd,--disable-sharpd,"
 PACKAGECONFIG[pbrd] = "--enable-pbrd,--disable-pbrd,"
 PACKAGECONFIG[bfdd] = "--enable-bfdd,--disable-bfdd,"
+PACKAGECONFIG[pathd] = "--enable-pathd,--disable-pathd,"
 PACKAGECONFIG[cumulus] = "--enable-cumulus,--disable-cumulus,"
 PACKAGECONFIG[datacenter] = "--enable-datacenter,--disable-datacenter,"
 
@@ -193,6 +195,7 @@ CONFFILES_${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'babeld', '${sysconfdir
 CONFFILES_${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'sharpd', '${sysconfdir}/frr/sharpd.conf', '', d)}"
 CONFFILES_${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'pbrd', '${sysconfdir}/frr/pbrd.conf', '', d)}"
 CONFFILES_${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'bfdd', '${sysconfdir}/frr/bfdd.conf', '', d)}"
+CONFFILES_${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'pathd', '${sysconfdir}/frr/pathd.conf', '', d)}"
 CONFFILES_${PN}-watchfrr = "${sysconfdir}/default/watchfrr"
 
 # Stop the names being rewritten due to the internal shared libraries
