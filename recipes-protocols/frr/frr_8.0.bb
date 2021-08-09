@@ -1,25 +1,21 @@
 require frr.inc
 
-GIT_BRANCH = "stable/7.5"
-# commit hash of release tag frr-7.5.1
-SRCREV = "df7ab485bde1a511f131f7ad6b70cb43c48c8e6d"
+GIT_BRANCH = "stable/8.0"
+# commit hash of release tag frr-8.0
+SRCREV = "9931db75f7730381ad4fba16efd39cbb67749470"
 
 SRC_URI += " \
-	file://0001-lib-correctly-exit-CLI-nodes-on-file-config-load.patch \
 	file://0002-vtysh-fix-searching-commands-in-parent-nodes.patch \
-	file://0001-reformat-python-files.patch \
-	file://0002-tests-make-generate-support-bundle-python3-only.patch \
-	file://0003-tools-Fix-warning-when-running-frr-reload.py.patch \
 	file://0004-tools-make-frr-reload.py-python3-only.patch \
 	file://0005-tools-fix-error-handling-in-generate_support_bundle..patch \
 	file://0006-tools-generate-human-readable-output-in-support-bund.patch \
 "
 
-PR="r5"
+PR="r1"
 
 DEPENDS += " \
         clippy-native \
-        libyang \
+        libyang2 \
 "
 do_compile_prepend_class-target () {
         export PYTHONHOME=${RECIPE_SYSROOT_NATIVE}/usr
