@@ -14,17 +14,11 @@ DEPENDS = "flex-native bison-native"
 
 SRC_URI = " \
     git://github.com/thom311/${BPN}.git;protocol=https \
-    file://support-bridge-multicast-database.patch \
+    file://0001-mdb-support-bridge-multicast-database-notification.patch \
     file://0002-link-bonding-parse-and-expose-bonding-options.patch \
-    file://0001-WIP-add-info-slave-data-support.patch \
-    file://0002-link-bonding-expose-state-on-enslaved-interfaces.patch \
-    file://0001-route-link-print-slave-line.patch \
-    file://0002-bonding-dump-slave-line.patch \
-    file://0001-route-link-implement-comparing-slave-info.patch \
-    file://0002-route-link-bonding-add-missing-io_compare.patch \
-    file://0003-route-link-bonding-rename-bsi_mask-to-ce_mask.patch \
-    file://0004-route-link-bonding-add-missing-compare-to-slave_ops.patch \
-    file://0001-bridge-vlan-add-per-vlan-stp-state-object-and-cache.patch \
+    file://0003-WIP-add-info-slave-data-support.patch \
+    file://0004-link-bonding-expose-state-on-enslaved-interfaces.patch \
+    file://0005-bridge-vlan-add-per-vlan-stp-state-object-and-cache.patch \
 "
 
 # this is actually master:

@@ -1,20 +1,20 @@
-From f8c5ec5ed534c9ef15a2ce0fe5a3fa4e034eb087 Mon Sep 17 00:00:00 2001
+From 9148e5dd3900034394885141a8b5d9658ef92dfd Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Tue, 6 Oct 2020 16:53:36 +0200
-Subject: [PATCH 2/2] link/bonding: expose state on enslaved interfaces
+Subject: [PATCH 4/5] link/bonding: expose state on enslaved interfaces
 
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
  include/netlink/route/link/bonding.h |   3 +
- lib/route/link/bonding.c             | 152 +++++++++++++++++++++++++++
+ lib/route/link/bonding.c             | 180 +++++++++++++++++++++++++++
  libnl-route-3.sym                    |   2 +
- 3 files changed, 157 insertions(+)
+ 3 files changed, 185 insertions(+)
 
 diff --git a/include/netlink/route/link/bonding.h b/include/netlink/route/link/bonding.h
-index 56de595..2a1741f 100644
+index a68cf1e..1719e36 100644
 --- a/include/netlink/route/link/bonding.h
 +++ b/include/netlink/route/link/bonding.h
-@@ -37,6 +37,9 @@ extern int	rtnl_link_bond_get_primary(struct rtnl_link *, uint32_t *);
+@@ -43,6 +43,9 @@ extern int	rtnl_link_bond_get_primary(struct rtnl_link *, uint32_t *);
  extern int	rtnl_link_bond_set_xmit_hash_policy(struct rtnl_link *, uint8_t);
  extern int	rtnl_link_bond_get_xmit_hash_policy(struct rtnl_link *, uint8_t *);
  
@@ -25,11 +25,11 @@ index 56de595..2a1741f 100644
  }
  #endif
 diff --git a/lib/route/link/bonding.c b/lib/route/link/bonding.c
-index aa43910..1522ae9 100644
+index 0774223..65d54af 100644
 --- a/lib/route/link/bonding.c
 +++ b/lib/route/link/bonding.c
-@@ -147,6 +147,104 @@ nla_put_failure:
- 	return 0;
+@@ -172,6 +172,120 @@ static int bond_compare(struct rtnl_link *link_a, struct rtnl_link *link_b,
+ 	return diff;
  }
  
 +/** @cond SKIP */
@@ -38,7 +38,7 @@ index aa43910..1522ae9 100644
 +struct bond_slave_info
 +{
 +	uint8_t  bsi_state;
-+	uint32_t bsi_mask;
++	uint32_t ce_mask;
 +};
 +
 +/** @endcond */
@@ -81,7 +81,7 @@ index aa43910..1522ae9 100644
 +
 +	if (tb[IFLA_BOND_SLAVE_STATE]) {
 +		info->bsi_state = nla_get_u8(tb[IFLA_BOND_SLAVE_STATE]);
-+		info->bsi_mask |= BOND_SLAVE_ATTR_STATE;
++		info->ce_mask |= BOND_SLAVE_ATTR_STATE;
 +	}
 +
 +	err = 0;
@@ -121,7 +121,7 @@ index aa43910..1522ae9 100644
 +	if (!(data = nla_nest_start(msg, IFLA_INFO_SLAVE_DATA)))
 +		return -NLE_MSGSIZE;
 +
-+	if (info->bsi_mask & BOND_SLAVE_ATTR_STATE)
++	if (info->ce_mask & BOND_SLAVE_ATTR_STATE)
 +		NLA_PUT_U8(msg, IFLA_BOND_SLAVE_STATE, info->bsi_state);
 +
 +	nla_nest_end(msg, data);
@@ -130,22 +130,57 @@ index aa43910..1522ae9 100644
 +	return 0;
 +}
 +
++static int bond_slave_compare(struct rtnl_link *link_a, struct rtnl_link *link_b,
++			 int flags)
++{
++	struct bond_slave_info *a = link_a->l_info_slave;
++	struct bond_slave_info *b = link_b->l_info_slave;
++	int diff = 0;
++	uint32_t attrs = flags & LOOSE_COMPARISON ? b->ce_mask : ~0;
++
++#define BOND_SLAVE_DIFF(ATTR, EXPR) ATTR_DIFF(attrs, BOND_SLAVE_ATTR_##ATTR, a, b, EXPR)
++
++	diff |= BOND_SLAVE_DIFF(STATE, a->bsi_state != b->bsi_state);
++#undef BONDSLAVE__DIFF
++
++	return diff;
++}
++
  /**
   * Allocate link object of type bond
   *
-@@ -340,6 +438,11 @@ static struct rtnl_link_info_ops bonding_info_ops = {
- 	.io_clone		= bonding_clone,
- 	.io_put_attrs		= bonding_put_attrs,
- 	.io_free		= bonding_free,
+@@ -358,6 +472,14 @@ int rtnl_link_bond_release(struct nl_sock *sock, struct rtnl_link *slave)
+ 				rtnl_link_get_ifindex(slave));
+ }
+ 
++static void bond_slave_dump_line(struct rtnl_link *link, struct nl_dump_params *p)
++{
++	struct bond_slave_info *info = link->l_info_slave;
++
++	if (info->ce_mask & BOND_SLAVE_ATTR_STATE)
++		nl_dump(p, "bond-slave-state %d", info->bsi_state);
++}
++
+ static struct rtnl_link_info_ops bonding_info_ops = {
+ 	.io_name		= "bond",
+ 	.io_alloc		= bond_alloc,
+@@ -366,6 +488,15 @@ static struct rtnl_link_info_ops bonding_info_ops = {
+ 	.io_put_attrs		= bond_put_attrs,
+ 	.io_free		= bond_free,
+ 	.io_compare		= bond_compare,
 +	.io_slave_alloc		= bond_slave_alloc,
 +	.io_slave_parse		= bond_slave_parse,
 +	.io_slave_clone		= bond_slave_clone,
 +	.io_slave_put_attrs	= bond_slave_put_attrs,
 +	.io_slave_free		= bond_slave_free,
++	.io_slave_dump = {
++	    [NL_DUMP_LINE]	= bond_slave_dump_line,
++	},
++	.io_slave_compare	= bond_slave_compare,
  };
  
  /** @cond SKIP */
-@@ -512,6 +615,55 @@ int rtnl_link_bond_get_xmit_hash_policy(struct rtnl_link *link, uint8_t *policy)
+@@ -538,6 +669,55 @@ int rtnl_link_bond_get_xmit_hash_policy(struct rtnl_link *link, uint8_t *policy)
  	return 0;
  }
  
@@ -171,7 +206,7 @@ index aa43910..1522ae9 100644
 +	IS_BOND_SLAVE_LINK_ASSERT(link);
 +
 +	info->bsi_state = state;
-+	info->bsi_mask |= BOND_SLAVE_ATTR_STATE;
++	info->ce_mask |= BOND_SLAVE_ATTR_STATE;
 +
 +	return 0;
 +}
@@ -189,7 +224,7 @@ index aa43910..1522ae9 100644
 +
 +	IS_BOND_SLAVE_LINK_ASSERT(link);
 +
-+	if (!(info->bsi_mask & BOND_SLAVE_ATTR_STATE))
++	if (!(info->ce_mask & BOND_SLAVE_ATTR_STATE))
 +		return -NLE_NOATTR;
 +
 +	if (state)
@@ -202,18 +237,18 @@ index aa43910..1522ae9 100644
  {
  	rtnl_link_register_info(&bonding_info_ops);
 diff --git a/libnl-route-3.sym b/libnl-route-3.sym
-index fcc9b1a..91ea222 100644
+index 37ad514..62b44ad 100644
 --- a/libnl-route-3.sym
 +++ b/libnl-route-3.sym
-@@ -243,6 +243,8 @@ global:
+@@ -1160,6 +1160,8 @@ libnl_3_6 {
  	rtnl_link_bond_set_mode;
  	rtnl_link_bond_set_primary;
  	rtnl_link_bond_set_xmit_hash_policy;
 +	rtnl_link_bond_slave_get_state;
 +	rtnl_link_bond_slave_set_state;
- 	rtnl_link_bridge_add;
- 	rtnl_link_bridge_alloc;
- 	rtnl_link_bridge_flags2str;
+ 	rtnl_mdb_add_entry;
+ 	rtnl_mdb_alloc_cache_flags;
+ 	rtnl_mdb_foreach_entry;
 -- 
-2.28.0
+2.32.0
 
