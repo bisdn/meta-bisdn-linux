@@ -1,17 +1,18 @@
-From 663c5d7037a90e4db50de417983e4f58125a82ad Mon Sep 17 00:00:00 2001
+From 338bad57b5024f607ee3c251ed3ee30dd92cc3c2 Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Tue, 6 Oct 2020 15:25:38 +0200
-Subject: [PATCH] WIP: add info slave data support
+Subject: [PATCH 3/5] WIP: add info slave data support
 
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
- include/netlink-private/route/link/api.h | 33 +++++++++++++
+ include/netlink-private/route/link/api.h | 37 +++++++++++++
  include/netlink-private/types.h          |  2 +
- lib/route/link.c                         | 62 ++++++++++++++++++++++++
- 3 files changed, 97 insertions(+)
+ lib/route/link.c                         | 66 ++++++++++++++++++++++++
+ lib/route/link/api.c                     | 22 ++++++++
+ 4 files changed, 127 insertions(+)
 
 diff --git a/include/netlink-private/route/link/api.h b/include/netlink-private/route/link/api.h
-index 6d30bf7..dcd972f 100644
+index 6d30bf7..48eec75 100644
 --- a/include/netlink-private/route/link/api.h
 +++ b/include/netlink-private/route/link/api.h
 @@ -64,6 +64,39 @@ struct rtnl_link_info_ops
@@ -54,8 +55,19 @@ index 6d30bf7..dcd972f 100644
  	struct nl_list_head		io_list;
  };
  
+@@ -192,6 +225,10 @@ extern int			rtnl_link_info_data_compare(struct rtnl_link *a,
+ 							    struct rtnl_link *b,
+ 							    int flags);
+ 
++extern int			rtnl_link_info_slave_data_compare(struct rtnl_link *a,
++							          struct rtnl_link *b,
++							          int flags);
++
+ #ifdef __cplusplus
+ }
+ #endif
 diff --git a/include/netlink-private/types.h b/include/netlink-private/types.h
-index 700c1fb..f04d5a8 100644
+index c2f28d4..eec2e83 100644
 --- a/include/netlink-private/types.h
 +++ b/include/netlink-private/types.h
 @@ -217,8 +217,10 @@ struct rtnl_link
@@ -70,10 +82,10 @@ index 700c1fb..f04d5a8 100644
  	uint32_t			l_promiscuity;
  	uint32_t			l_num_tx_queues;
 diff --git a/lib/route/link.c b/lib/route/link.c
-index d5d1f9f..06f1764 100644
+index df01a71..211573d 100644
 --- a/lib/route/link.c
 +++ b/lib/route/link.c
-@@ -264,12 +264,29 @@ static void release_link_info(struct rtnl_link *link)
+@@ -263,12 +263,29 @@ static void release_link_info(struct rtnl_link *link)
  	}
  }
  
@@ -103,7 +115,7 @@ index d5d1f9f..06f1764 100644
  
  		/* proto info af reference */
  		rtnl_link_af_ops_put(link->l_af_ops);
-@@ -323,6 +340,12 @@ static int link_clone(struct nl_object *_dst, struct nl_object *_src)
+@@ -322,6 +339,12 @@ static int link_clone(struct nl_object *_dst, struct nl_object *_src)
  			return err;
  	}
  
@@ -116,7 +128,7 @@ index d5d1f9f..06f1764 100644
  	if ((err = do_foreach_af(src, af_clone, dst)) < 0)
  		return err;
  
-@@ -381,6 +404,8 @@ static struct nla_policy link_info_policy[IFLA_INFO_MAX+1] = {
+@@ -379,6 +402,8 @@ static struct nla_policy link_info_policy[IFLA_INFO_MAX+1] = {
  	[IFLA_INFO_KIND]	= { .type = NLA_STRING },
  	[IFLA_INFO_DATA]	= { .type = NLA_NESTED },
  	[IFLA_INFO_XSTATS]	= { .type = NLA_NESTED },
@@ -125,7 +137,7 @@ index d5d1f9f..06f1764 100644
  };
  
  int rtnl_link_info_parse(struct rtnl_link *link, struct nlattr **tb)
-@@ -695,12 +720,27 @@ static int link_msg_parser(struct nl_cache_ops *ops, struct sockaddr_nl *who,
+@@ -688,12 +713,27 @@ static int link_msg_parser(struct nl_cache_ops *ops, struct sockaddr_nl *who,
  		}
  
  		if (li[IFLA_INFO_SLAVE_KIND]) {
@@ -153,7 +165,25 @@ index d5d1f9f..06f1764 100644
  			link->ce_mask |= LINK_ATTR_LINKINFO_SLAVE_KIND;
  		}
  	}
-@@ -1626,6 +1666,12 @@ static int build_link_msg(int cmd, struct ifinfomsg *hdr,
+@@ -891,6 +931,9 @@ static void link_dump_line(struct nl_object *obj, struct nl_dump_params *p)
+ 	if (link->l_info_ops && link->l_info_ops->io_dump[NL_DUMP_LINE])
+ 		link->l_info_ops->io_dump[NL_DUMP_LINE](link, p);
+ 
++	if (link->l_info_slave_ops && link->l_info_slave_ops->io_slave_dump[NL_DUMP_LINE])
++		link->l_info_slave_ops->io_slave_dump[NL_DUMP_LINE](link, p);
++
+ 	do_foreach_af(link, af_dump_line, p);
+ 
+ 	nl_dump(p, "\n");
+@@ -1149,6 +1192,7 @@ static uint64_t link_compare(struct nl_object *_a, struct nl_object *_b,
+ 	}
+ 
+ 	diff |= LINK_DIFF(LINKINFO, rtnl_link_info_data_compare(a, b, flags) != 0);
++	diff |= LINK_DIFF(LINKINFO_SLAVE_KIND, rtnl_link_info_slave_data_compare(a, b, flags) != 0);
+ out:
+ 	return diff;
+ 
+@@ -1616,6 +1660,12 @@ static int build_link_msg(int cmd, struct ifinfomsg *hdr,
  
  		if (link->ce_mask & LINK_ATTR_LINKINFO_SLAVE_KIND) {
  			NLA_PUT_STRING(msg, IFLA_INFO_SLAVE_KIND, link->l_info_slave_kind);
@@ -166,7 +196,7 @@ index d5d1f9f..06f1764 100644
  		}
  
  		nla_nest_end(msg, info);
-@@ -2635,6 +2681,8 @@ char *rtnl_link_get_type(struct rtnl_link *link)
+@@ -2625,6 +2675,8 @@ char *rtnl_link_get_type(struct rtnl_link *link)
  int rtnl_link_set_slave_type(struct rtnl_link *link, const char *type)
  {
  	char *kind = NULL;
@@ -175,7 +205,7 @@ index d5d1f9f..06f1764 100644
  
  	if (type) {
  		kind = strdup(type);
-@@ -2644,12 +2692,26 @@ int rtnl_link_set_slave_type(struct rtnl_link *link, const char *type)
+@@ -2634,12 +2686,26 @@ int rtnl_link_set_slave_type(struct rtnl_link *link, const char *type)
  
  	free(link->l_info_slave_kind);
  	link->l_info_slave_kind = kind;
@@ -193,8 +223,8 @@ index d5d1f9f..06f1764 100644
 +			goto errout;
 +
 +		link->l_info_slave_ops = io;
-+ 	}
-+ 
++	}
++
  	return 0;
 +errout:
 +	free(kind);
@@ -202,6 +232,39 @@ index d5d1f9f..06f1764 100644
  }
  
  /**
+diff --git a/lib/route/link/api.c b/lib/route/link/api.c
+index d406783..7b66a75 100644
+--- a/lib/route/link/api.c
++++ b/lib/route/link/api.c
+@@ -413,6 +413,28 @@ int rtnl_link_info_data_compare(struct rtnl_link *a, struct rtnl_link *b, int fl
+ 	return a->l_info_ops->io_compare(a, b, flags);
+ }
+ 
++/**
++ * Compare link info slave data
++ * @arg a              Link object a
++ * @arg b              Link object b
++ *
++ * This function will compare link_info slave data between two links
++ * a and b
++ *
++ * @return 0 if link_info data matches or is not present
++ * or != 0 if it mismatches.
++ */
++int rtnl_link_info_slave_data_compare(struct rtnl_link *a, struct rtnl_link *b, int flags)
++{
++	if (a->l_info_slave_ops != b->l_info_slave_ops)
++		return ~0;
++
++	if (!a->l_info_slave_ops || !a->l_info_slave_ops->io_slave_compare)
++		return 0;
++
++	return a->l_info_slave_ops->io_slave_compare(a, b, flags);
++}
++
+ /** @} */
+ 
+ /** @} */
 -- 
-2.29.2
+2.32.0
 
