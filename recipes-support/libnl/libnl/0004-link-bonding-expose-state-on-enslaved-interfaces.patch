@@ -1,7 +1,7 @@
-From 76eb7f953a634f4ed930e46f6ff3888072facfdc Mon Sep 17 00:00:00 2001
+From c7592e59fb7a46c1c7330275495ed364d0221e9a Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Tue, 6 Oct 2020 16:53:36 +0200
-Subject: [PATCH 4/6] link/bonding: expose state on enslaved interfaces
+Subject: [PATCH 4/7] link/bonding: expose state on enslaved interfaces
 
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---

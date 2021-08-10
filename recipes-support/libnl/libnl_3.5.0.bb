@@ -20,6 +20,7 @@ SRC_URI = " \
     file://0004-link-bonding-expose-state-on-enslaved-interfaces.patch \
     file://0005-sync-linux-headers-with-5.11.patch \
     file://0006-bridge-vlan-add-per-vlan-stp-state-object-and-cache.patch \
+    file://0007-bridge_vlan-flatten-data-structure-and-fix-various-i.patch \
 "
 
 # this is actually master:
