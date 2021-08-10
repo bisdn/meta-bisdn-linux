@@ -1,7 +1,7 @@
-From f296952a73d223b292fd03ecec0c0a6c0e72907f Mon Sep 17 00:00:00 2001
+From 08047c58e5c2ee4cfc66a4b83e6d171b23518787 Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Tue, 6 Oct 2020 10:00:37 +0200
-Subject: [PATCH 2/5] link/bonding: parse and expose bonding options
+Subject: [PATCH 2/6] link/bonding: parse and expose bonding options
 
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
