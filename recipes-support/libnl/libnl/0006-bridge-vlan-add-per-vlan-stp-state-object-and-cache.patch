@@ -1,21 +1,24 @@
-From 5e8deaa41a3e2236a3e64e2e29b9b85c192c8aa8 Mon Sep 17 00:00:00 2001
+From 653c226c95a9f774d5c0072c437c60f7ab115ca0 Mon Sep 17 00:00:00 2001
 From: Rubens Figueiredo <rubens.figueiredo@bisdn.de>
 Date: Tue, 10 Aug 2021 11:23:39 +0200
-Subject: [PATCH 6/7] bridge-vlan: add per vlan stp state object and cache
+Subject: [PATCH 6/6] bridge-vlan: add per vlan stp state object and cache
 
 Signed-off-by: Rubens Figueiredo <rubens.figueiredo@bisdn.de>
+Co-authored-by: Jonas Gorski <jonas.gorski@bisdn.de>
+Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
  Makefile.am                         |   7 +
- include/netlink-private/types.h     |  24 ++
+ include/netlink-private/types.h     |  11 +
  include/netlink/cli/bridge_vlan.h   |  23 ++
- include/netlink/route/bridge_vlan.h |  51 ++++
- lib/route/bridge_vlan.c             | 444 ++++++++++++++++++++++++++++
+ include/netlink/route/bridge_vlan.h |  42 ++++
+ lib/route/bridge_vlan.c             | 361 ++++++++++++++++++++++++++++
  libnl-cli-3.sym                     |   3 +
- libnl-route-3.sym                   |  11 +
- src/lib/bridge_vlan.c               |  42 +++
+ libnl-route-3.sym                   |   9 +
+ src/.gitignore                      |   1 +
+ src/lib/bridge_vlan.c               |  42 ++++
  src/nl-bridge.c                     |  38 +++
  src/nl-monitor.c                    |   1 +
- 10 files changed, 644 insertions(+)
+ 11 files changed, 538 insertions(+)
  create mode 100644 include/netlink/cli/bridge_vlan.h
  create mode 100644 include/netlink/route/bridge_vlan.h
  create mode 100644 lib/route/bridge_vlan.c
@@ -76,24 +79,13 @@ index 1d70059..77d796c 100644
  src_nl_class_add_LDADD =            $(src_ldadd)
  src_nl_class_delete_CPPFLAGS =      $(src_cppflags)
 diff --git a/include/netlink-private/types.h b/include/netlink-private/types.h
-index eec2e83..90e9298 100644
+index eec2e83..ad50032 100644
 --- a/include/netlink-private/types.h
 +++ b/include/netlink-private/types.h
-@@ -1358,4 +1358,28 @@ struct rtnl_mdb_entry {
+@@ -1358,4 +1358,15 @@ struct rtnl_mdb_entry {
  
  	struct nl_list_head mdb_list;
  };
-+
-+struct rtnl_bvlan_entry {
-+	uint32_t  ce_mask; /* HACK to support attr macros */
-+
-+	uint16_t vlan_id;
-+	uint16_t flags;
-+	uint16_t range;
-+	uint8_t state;
-+
-+	struct nl_list_head bridge_vlan_entry_list;
-+};
 +
 +struct rtnl_bridge_vlan {
 +	NLHDR_COMMON
@@ -102,11 +94,9 @@ index eec2e83..90e9298 100644
 +
 +	uint16_t vlan_id;
 +	uint16_t flags;
-+	uint16_t range;
 +	uint8_t state;
-+
-+	struct nl_list_head bridge_vlan_list;
 +};
++
  #endif
 diff --git a/include/netlink/cli/bridge_vlan.h b/include/netlink/cli/bridge_vlan.h
 new file mode 100644
@@ -139,10 +129,10 @@ index 0000000..8d3adbd
 +#endif
 diff --git a/include/netlink/route/bridge_vlan.h b/include/netlink/route/bridge_vlan.h
 new file mode 100644
-index 0000000..475e053
+index 0000000..62f2994
 --- /dev/null
 +++ b/include/netlink/route/bridge_vlan.h
-@@ -0,0 +1,51 @@
+@@ -0,0 +1,42 @@
 +/* SPDX-License-Identifier: LGPL-2.1-only */
 +
 +#ifndef NETLINK_B_VLAN_H_
@@ -156,7 +146,7 @@ index 0000000..475e053
 +#endif
 +	struct rtnl_bridge_vlan *rtnl_bridge_vlan_alloc(void);
 +	struct rtnl_bridge_vlan *rtnl_bridge_vlan_get(struct nl_cache *cache,
-+						      int ifindex);
++						      int ifindex, int vlan);
 +	void rtnl_bridge_vlan_put(struct rtnl_bridge_vlan *bvlan);
 +	int rtnl_bridge_vlan_alloc_cache(struct nl_sock *sk,
 +					 struct nl_cache **result);
@@ -174,21 +164,12 @@ index 0000000..475e053
 +	int rtnl_bridge_vlan_set_ifindex(struct rtnl_bridge_vlan *bvlan,
 +					 int ifindex);
 +
-+	struct rtnl_bvlan_entry *rtnl_bvlan_entry_alloc(void);
-+	void rtnl_bridge_vlan_add_entry(struct rtnl_bridge_vlan *bvlan,
-+					struct rtnl_bvlan_entry *entry);
-+	void rtnl_bridge_vlan_foreach_entry(struct rtnl_bridge_vlan *obj,
-+					    void (*cb)(struct rtnl_bvlan_entry
-+						       *, void *), void *arg);
-+	struct rtnl_bvlan_entry *rtnl_bridge_vlan_get_entry_head(struct
-+								 rtnl_bridge_vlan
-+								 *obj);
-+	int rtnl_bridge_vlan_entry_get_vlan_id(struct rtnl_bvlan_entry *bvlan);
-+	int rtnl_bridge_vlan_entry_set_vlan_id(struct rtnl_bvlan_entry *bvlan,
++	int rtnl_bridge_vlan_get_vlan_id(struct rtnl_bridge_vlan *bvlan);
++	int rtnl_bridge_vlan_set_vlan_id(struct rtnl_bridge_vlan *bvlan,
 +					       uint16_t vid);
-+	uint8_t rtnl_bridge_vlan_entry_get_state(struct rtnl_bvlan_entry
++	uint8_t rtnl_bridge_vlan_get_state(struct rtnl_bridge_vlan
 +						 *bvlan);
-+	int rtnl_bridge_vlan_entry_set_state(struct rtnl_bvlan_entry *bvlan,
++	int rtnl_bridge_vlan_set_state(struct rtnl_bridge_vlan *bvlan,
 +					     uint8_t state);
 +#ifdef __cplusplus
 +}
@@ -196,10 +177,10 @@ index 0000000..475e053
 +#endif
 diff --git a/lib/route/bridge_vlan.c b/lib/route/bridge_vlan.c
 new file mode 100644
-index 0000000..1cf844d
+index 0000000..99719ab
 --- /dev/null
 +++ b/lib/route/bridge_vlan.c
-@@ -0,0 +1,444 @@
+@@ -0,0 +1,361 @@
 +/* SPDX-License-Identifier: LGPL-2.1-only */
 +/*
 + * lib/route/bridge_vlan.c		Bridge VLAN database
@@ -213,34 +194,13 @@ index 0000000..1cf844d
 +
 +/** @cond SKIP */
 +#define BRIDGE_VLAN_ATTR_IFINDEX         0x000001
-+#define BRIDGE_VLAN_ATTR_RANGE           0x000002
-+#define BRIDGE_VLAN_ATTR_FAMILY          0x000004
-+#define BRIDGE_VLAN_ATTR_VID             0x000008
++#define BRIDGE_VLAN_ATTR_FAMILY          0x000002
++#define BRIDGE_VLAN_ATTR_VID             0x000004
++#define BRIDGE_VLAN_ATTR_STATE           0x000008
 +
 +static struct nl_cache_ops rtnl_bridge_vlan_ops;
 +static struct nl_object_ops bridge_vlan_obj_ops;
 +/** @endcond */
-+
-+static void bridge_vlan_constructor(struct nl_object *obj)
-+{
-+	struct rtnl_bridge_vlan *_bridge_vlan = (struct rtnl_bridge_vlan *) obj;
-+
-+	nl_init_list_head(&_bridge_vlan->bridge_vlan_list);
-+}
-+
-+static void bvlan_entry_free_data(struct rtnl_bvlan_entry *entry)
-+{
-+	free(entry);
-+}
-+
-+static void bridge_vlan_free_data(struct nl_object *obj)
-+{
-+	struct rtnl_bridge_vlan *bvlan = (struct rtnl_bridge_vlan *) obj;
-+	struct rtnl_bvlan_entry *bvlan_entry;
-+
-+//      nl_list_for_each_entry(bvlan_entry, &bvlan->bridge_vlan_list, bridge_vlan_entry_list)
-+//          bvlan_entry_free_data(bvlan_entry);
-+}
 +
 +static uint64_t bridge_vlan_compare(struct nl_object *_a, struct nl_object *_b,
 +				    uint64_t attrs, int flags)
@@ -249,57 +209,25 @@ index 0000000..1cf844d
 +	struct rtnl_bridge_vlan *b = (struct rtnl_bridge_vlan *) _b;
 +	uint64_t diff = 0;
 +
-+#if 0
 +#define BRIDGE_VLAN_DIFF(ATTR, EXPR) ATTR_DIFF(attrs, BRIDGE_VLAN_ATTR_##ATTR, a, b, EXPR)
++
 +	diff |= BRIDGE_VLAN_DIFF(IFINDEX, a->ifindex != b->ifindex);
++	diff |= BRIDGE_VLAN_DIFF(FAMILY, a->family != b->family);
++	diff |= BRIDGE_VLAN_DIFF(VID, a->vlan_id != b->vlan_id);
++	diff |= BRIDGE_VLAN_DIFF(STATE, a->state != b->state);
++
 +#undef BRIDGE_VLAN_DIFF
-+#endif
-+	return 1;
-+}
 +
-+static int bridge_vlan_clone(struct nl_object *_dst, struct nl_object *_src)
-+{
-+	struct rtnl_bridge_vlan *dst = nl_object_priv(_dst);
-+	struct rtnl_bridge_vlan *src = nl_object_priv(_src);
-+
-+	dst->ifindex = src->ifindex;
-+	dst->family = src->family;
-+	dst->state = src->state;
-+	dst->vlan_id = src->vlan_id;
-+	dst->range = src->range;
-+
-+	return 0;
-+}
-+
-+static int bridge_vlan_update(struct nl_object *old_obj,
-+			      struct nl_object *new_obj)
-+{
-+	struct rtnl_bridge_vlan *old = (struct rtnl_bridge_vlan *) old_obj;
-+	struct rtnl_bridge_vlan *new = (struct rtnl_bridge_vlan *) new_obj;
-+
-+	return NLE_SUCCESS;
-+}
-+
-+static void brvlan_entry_dump_line(struct rtnl_bvlan_entry *entry,
-+				   struct nl_dump_params *p)
-+{
-+	nl_dump(p, " VLAN=%d", entry->vlan_id);
-+	nl_dump(p, " State=%d\n", entry->state);
-+
-+	if (entry->range)
-+		nl_dump(p, "RANGE=%d\n", entry->range);
++	return diff;
 +}
 +
 +static void br_vlan_dump_line(struct nl_object *_obj, struct nl_dump_params *p)
 +{
 +	struct rtnl_bridge_vlan *obj = (struct rtnl_bridge_vlan *) _obj;
-+	struct rtnl_bvlan_entry *entry;
 +
 +	nl_dump(p, "Ifindex=%d:\n", obj->ifindex);
-+	nl_list_for_each_entry(entry, &obj->bridge_vlan_list,
-+			       bridge_vlan_entry_list) {
-+		brvlan_entry_dump_line(entry, p);
-+	}
++	nl_dump(p, " VLAN=%d", obj->vlan_id);
++	nl_dump(p, " State=%d\n", obj->state);
 +}
 +
 +static int bridge_vlan_request_update(struct nl_cache *cache,
@@ -335,30 +263,24 @@ index 0000000..1cf844d
 +	int err = 0;
 +	struct nlattr *tb[BRIDGE_VLANDB_MAX + 1],
 +	    *ttb[BRIDGE_VLANDB_ENTRY_MAX + 1];
-+	uint8_t state = 0;
-+	uint16_t range = 0;
-+	struct bridge_vlan_info *bvlan_info = NULL;
-+	struct rtnl_bridge_vlan *bvlan = rtnl_bridge_vlan_alloc();
 +	struct br_vlan_msg *bmsg = nlmsg_data(nlh);
 +
-+	err =
-+	    nlmsg_parse(nlh, sizeof(struct br_vlan_msg), tb, BRIDGE_VLANDB_MAX,
-+			br_vlandb_policy);
++	err = nlmsg_parse(nlh, sizeof(struct br_vlan_msg), tb,
++			  BRIDGE_VLANDB_MAX, br_vlandb_policy);
 +	if (err < 0)
-+		goto errout;
++		return err;
 +
 +	struct nlattr *pos;
 +	int rem = nlh->nlmsg_len;
 +
-+	bvlan->ce_msgtype = nlh->nlmsg_type;
-+
-+	bvlan->ifindex = bmsg->ifindex;
-+	bvlan->family = bmsg->family;
 +	for (pos = nlmsg_data(nlh); nla_ok(pos, rem); pos = nla_next(pos, &rem)) {
++		struct bridge_vlan_info *bvlan_info = NULL;
++		uint16_t range = 0;
++		uint8_t state = 0;
++		int i;
++
 +		if (nla_type(pos) != BRIDGE_VLANDB_ENTRY)
 +			continue;
-+
-+		struct rtnl_bvlan_entry *_bvlan = rtnl_bvlan_entry_alloc();
 +
 +		nla_parse_nested(ttb, BRIDGE_VLANDB_ENTRY_MAX, pos,
 +				 br_vlandb_entry_policy);
@@ -371,19 +293,32 @@ index 0000000..1cf844d
 +
 +		if (ttb[BRIDGE_VLANDB_ENTRY_RANGE])
 +			range = nla_get_u16(ttb[BRIDGE_VLANDB_ENTRY_RANGE]);
++		else
++			range = bvlan_info->vid;
 +
-+		_bvlan->state = state;
-+		_bvlan->flags = bvlan_info->flags;
-+		_bvlan->vlan_id = bvlan_info->vid;
-+		_bvlan->range = range;
++		for (i = bvlan_info->vid; i <= range; i++) {
++			struct rtnl_bridge_vlan *bvlan = rtnl_bridge_vlan_alloc();
 +
-+		rtnl_bridge_vlan_add_entry(bvlan, _bvlan);
++			bvlan->ce_msgtype = nlh->nlmsg_type;
++			bvlan->ifindex = bmsg->ifindex;
++			bvlan->ce_mask |= BRIDGE_VLAN_ATTR_IFINDEX;
++			bvlan->family = bmsg->family;
++			bvlan->ce_mask |= BRIDGE_VLAN_ATTR_FAMILY;
++
++			bvlan->state = state;
++			bvlan->ce_mask |= BRIDGE_VLAN_ATTR_STATE;
++			bvlan->vlan_id = i;
++			bvlan->ce_mask |= BRIDGE_VLAN_ATTR_VID;
++
++			err = pp->pp_cb((struct nl_object *) bvlan, pp);
++			if (err) {
++				rtnl_bridge_vlan_put(bvlan);
++				return err;
++			}
++		}
 +	}
 +
-+	err = pp->pp_cb((struct nl_object *) bvlan, pp);
-+errout:
-+	rtnl_bridge_vlan_put(bvlan);
-+	return err;
++	return 0;
 +}
 +
 +static struct nl_af_group br_vlan_groups[] = {
@@ -399,11 +334,8 @@ index 0000000..1cf844d
 +		    [NL_DUMP_DETAILS] = br_vlan_dump_line,
 +		    [NL_DUMP_STATS] = br_vlan_dump_line,
 +		    },
-+	.oo_constructor = bridge_vlan_constructor,
 +	.oo_compare = bridge_vlan_compare,
-+	.oo_clone = bridge_vlan_clone,
-+	.oo_update = bridge_vlan_update,
-+	.oo_free_data = bridge_vlan_free_data,
++	.oo_id_attrs = BRIDGE_VLAN_ATTR_IFINDEX | BRIDGE_VLAN_ATTR_VID,
 +};
 +
 +static struct nl_cache_ops bridge_vlan_ops = {
@@ -489,7 +421,6 @@ index 0000000..1cf844d
 +		.family = orig->family,
 +		.ifindex = orig->ifindex,
 +	};
-+	int err, rt;
 +
 +	build_bridge_vlan_msg(RTM_SETLINK, &bvlan, changes, flags, result);
 +
@@ -528,15 +459,9 @@ index 0000000..1cf844d
 + * @name Get/ Set
 + * @{
 + */
-+void rtnl_bridge_vlan_add_entry(struct rtnl_bridge_vlan *bvlan,
-+				struct rtnl_bvlan_entry *entry)
-+{
-+	nl_list_add_tail(&entry->bridge_vlan_entry_list,
-+			 &bvlan->bridge_vlan_list);
-+}
 +
 +struct rtnl_bridge_vlan *rtnl_bridge_vlan_get(struct nl_cache *cache,
-+					      int ifindex)
++					      int ifindex, int vlan)
 +{
 +	struct rtnl_bridge_vlan *bvlan_entry;
 +
@@ -544,7 +469,8 @@ index 0000000..1cf844d
 +		return NULL;
 +
 +	nl_list_for_each_entry(bvlan_entry, &cache->c_items, ce_list) {
-+		if (bvlan_entry->ifindex == ifindex) {
++		if (bvlan_entry->ifindex == ifindex &&
++		    bvlan_entry->vlan_id == vlan) {
 +			nl_object_get((struct nl_object *) bvlan_entry);
 +			return bvlan_entry;
 +		}
@@ -552,26 +478,6 @@ index 0000000..1cf844d
 +
 +	return NULL;
 +
-+}
-+
-+struct rtnl_bvlan_entry *rtnl_bridge_vlan_get_entry_head(struct rtnl_bridge_vlan
-+							 *obj)
-+{
-+	return nl_list_first_entry(&obj->bridge_vlan_list,
-+				   struct rtnl_bvlan_entry,
-+				   bridge_vlan_entry_list);
-+
-+}
-+
-+void rtnl_bridge_vlan_foreach_entry(struct rtnl_bridge_vlan *obj,
-+				    void (*cb)(struct rtnl_bvlan_entry *,
-+					       void *), void *arg)
-+{
-+	struct rtnl_bvlan_entry *entry;
-+	nl_list_for_each_entry(entry, &obj->bridge_vlan_list,
-+			       bridge_vlan_entry_list) {
-+		cb(entry, arg);
-+	}
 +}
 +
 +int rtnl_bridge_vlan_get_ifindex(struct rtnl_bridge_vlan *bvlan)
@@ -582,55 +488,47 @@ index 0000000..1cf844d
 +int rtnl_bridge_vlan_set_ifindex(struct rtnl_bridge_vlan *bvlan, int ifindex)
 +{
 +	bvlan->ifindex = ifindex;
++	bvlan->ce_mask |= BRIDGE_VLAN_ATTR_IFINDEX;
++
 +	return 0;
 +}
 +
-+int rtnl_bridge_vlan_entry_get_vlan_id(struct rtnl_bvlan_entry *bvlan)
++int rtnl_bridge_vlan_get_vlan_id(struct rtnl_bridge_vlan *bvlan)
 +{
 +	return bvlan->vlan_id;
 +}
 +
-+int rtnl_bridge_vlan_entry_set_vlan_id(struct rtnl_bvlan_entry *bvlan,
-+				       uint16_t vid)
++int rtnl_bridge_vlan_set_vlan_id(struct rtnl_bridge_vlan *bvlan, uint16_t vid)
 +{
 +	bvlan->vlan_id = vid;
++	bvlan->ce_mask |= BRIDGE_VLAN_ATTR_VID;
++
 +	return 0;
 +}
 +
-+uint8_t rtnl_bridge_vlan_entry_get_state(struct rtnl_bvlan_entry *bvlan)
++uint8_t rtnl_bridge_vlan_get_state(struct rtnl_bridge_vlan *bvlan)
 +{
 +	return bvlan->state;
 +}
 +
-+int rtnl_bridge_vlan_entry_set_state(struct rtnl_bvlan_entry *bvlan,
-+				     uint8_t state)
++int rtnl_bridge_vlan_set_state(struct rtnl_bridge_vlan *bvlan, uint8_t state)
 +{
 +	bvlan->state = state;
++	bvlan->ce_mask |= BRIDGE_VLAN_ATTR_STATE;
++
 +	return 0;
 +}
 +
 +/** @} */
 +
-+struct rtnl_bvlan_entry *rtnl_bvlan_entry_alloc(void)
-+{
-+	struct rtnl_bvlan_entry *entry;
-+
-+	entry = calloc(1, sizeof(struct rtnl_bvlan_entry));
-+	if (!entry)
-+		return NULL;
-+	return entry;
-+}
-+
 +struct rtnl_bridge_vlan *rtnl_bridge_vlan_alloc(void)
 +{
-+	return (struct rtnl_bridge_vlan *)
-+	    nl_object_alloc(&bridge_vlan_obj_ops);
++	return (struct rtnl_bridge_vlan *) nl_object_alloc(&bridge_vlan_obj_ops);
 +}
 +
 +void rtnl_bridge_vlan_put(struct rtnl_bridge_vlan *bvlan)
 +{
 +	nl_object_put((struct nl_object *) bvlan);
-+
 +}
 +
 +static void __init bridge_vlan_init(void)
@@ -657,10 +555,10 @@ index 71ff2eb..ed3bf34 100644
 +	nl_cli_bridge_vlan_parse_ifindex;
  } libnl_3;
 diff --git a/libnl-route-3.sym b/libnl-route-3.sym
-index 62b44ad..d7bca07 100644
+index 62b44ad..f83f123 100644
 --- a/libnl-route-3.sym
 +++ b/libnl-route-3.sym
-@@ -1172,4 +1172,15 @@ libnl_3_6 {
+@@ -1172,4 +1172,13 @@ libnl_3_6 {
  	rtnl_mdb_entry_get_proto;
  	rtnl_mdb_entry_get_state;
  	rtnl_mdb_entry_get_vid;
@@ -669,13 +567,23 @@ index 62b44ad..d7bca07 100644
 +	rtnl_bridge_vlan_alloc_cache_flags;
 +	rtnl_bridge_vlan_get_ifindex;
 +	rtnl_bridge_vlan_set_ifindex;
-+	rtnl_bridge_vlan_entry_get_vlan_id;
-+	rtnl_bridge_vlan_entry_set_vlan_id;
-+	rtnl_bridge_vlan_entry_get_state;
-+	rtnl_bridge_vlan_add_entry;
-+	rtnl_bridge_vlan_foreach_entry;
-+	rtnl_bridge_vlan_get_entry_head;
++	rtnl_bridge_vlan_get_vlan_id;
++	rtnl_bridge_vlan_set_vlan_id;
++	rtnl_bridge_vlan_get_state;
++	rtnl_bridge_vlan_set_state;
  } libnl_3_5;
+diff --git a/src/.gitignore b/src/.gitignore
+index e53eb3d..31ec86e 100644
+--- a/src/.gitignore
++++ b/src/.gitignore
+@@ -12,6 +12,7 @@ nf-queue
+ nl-addr-add
+ nl-addr-delete
+ nl-addr-list
++nl-bridge
+ nl-class-add
+ nl-class-delete
+ nl-class-list
 diff --git a/src/lib/bridge_vlan.c b/src/lib/bridge_vlan.c
 new file mode 100644
 index 0000000..7f90a7f
