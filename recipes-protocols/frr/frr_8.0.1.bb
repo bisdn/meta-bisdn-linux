@@ -1,8 +1,8 @@
 require frr.inc
 
 GIT_BRANCH = "stable/8.0"
-# commit hash of release tag frr-8.0
-SRCREV = "9931db75f7730381ad4fba16efd39cbb67749470"
+# commit hash of release tag frr-8.0.1
+SRCREV = "5de7dbc1d56cda6ed392e75e145c170178014dd2"
 
 SRC_URI += " \
 	file://0002-vtysh-fix-searching-commands-in-parent-nodes.patch \
