@@ -46,6 +46,6 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL += "\
     vim \
     "
 
-IMAGE_LINGUAS = " "
+IMAGE_LINGUAS = "en-us"
 
 LICENSE = "MIT"
