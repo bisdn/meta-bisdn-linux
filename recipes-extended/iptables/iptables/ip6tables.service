@@ -5,8 +5,8 @@ Wants=network-pre.target
 
 [Service]
 Type=oneshot
-ExecStart=@SBINDIR@/ip6tables-restore /etc/iptables/ip6tables.rules
-ExecReload=@SBINDIR@/ip6tables-restore /etc/iptables/ip6tables.rules
+ExecStart=@SBINDIR@/ip6tables-restore /etc/iptables/ip6tables.rules -w
+ExecReload=@SBINDIR@/ip6tables-restore /etc/iptables/ip6tables.rules -w
 RemainAfterExit=yes
 
 [Install]
