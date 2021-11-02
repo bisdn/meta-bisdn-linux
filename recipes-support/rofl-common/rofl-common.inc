@@ -12,7 +12,7 @@ DEPENDS = " \
 "
 
 SRC_URI = " \
-	git://github.com/bisdn/rofl-common.git \
+	git://github.com/bisdn/rofl-common.git;protocol=https \
 	file://001-fix-configure-glog.patch \
         "
 
