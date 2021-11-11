@@ -53,7 +53,6 @@ FRR_EXTRA_CONF ?= "cumulus datacenter"
 
 PACKAGECONFIG ??= " \
     ${@bb.utils.filter('DISTRO_FEATURES', 'pam', d)} \
-    ${@bb.utils.filter('DISTRO_FEATURES', 'systemd', d)} \
     ${@bb.utils.filter('FRR_DAEMONS', 'zebra', d)} \
     ${@bb.utils.filter('FRR_DAEMONS', 'staticd', d)} \
     ${@bb.utils.filter('FRR_DAEMONS', 'bgpd', d)} \
@@ -76,7 +75,6 @@ PACKAGECONFIG ??= " \
     "
 PACKAGECONFIG[cap] = "--enable-capabilities,--disable-capabilities,libcap"
 PACKAGECONFIG[pam] = "--with-libpam, --without-libpam, libpam"
-PACKAGECONFIG[systemd] = "--enable-systemd,--disable-systemd,systemd"
 PACKAGECONFIG[zebra] = "--enable-zebra,--disable-zebra,"
 PACKAGECONFIG[staticd] = "--enable-staticd,--disable-staticd,"
 PACKAGECONFIG[bgpd] = "--enable-bgpd,--disable-bgpd,"
@@ -107,7 +105,6 @@ EXTRA_OECONF_class-target = "\
   --sbindir=${libdir}/frr \
   --sysconfdir=${sysconfdir}/frr \
   --enable-configfile-mask=0640 \
-  --enable-exampledir=${docdir}/frr/examples/ \
   --enable-group=frr \
   --enable-logfile-mask=0640 \
   --enable-multipath=64 \
