@@ -1,8 +1,8 @@
 require frr.inc
 
-GIT_BRANCH = "stable/8.0"
-# commit hash of release tag frr-8.0.1
-SRCREV = "5de7dbc1d56cda6ed392e75e145c170178014dd2"
+GIT_BRANCH = "stable/8.1"
+# commit hash of release tag frr-8.1
+SRCREV = "1752bfdfc14409c667f10b7ee2c99b9014abb271"
 
 PR = "r1"
 
