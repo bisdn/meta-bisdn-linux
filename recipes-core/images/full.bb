@@ -14,6 +14,7 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL += "\
     ethtool \
     file \
     frr \
+    git \
     ipcalc \
     iproute2-ss \
     iptables \
