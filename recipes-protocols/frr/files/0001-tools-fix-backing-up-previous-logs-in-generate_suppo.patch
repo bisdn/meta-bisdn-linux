@@ -1,0 +1,53 @@
+From b321edc51b6c8c402485b92f0603ce9f41737ee4 Mon Sep 17 00:00:00 2001
+From: Jonas Gorski <jonas.gorski@bisdn.de>
+Date: Wed, 15 Dec 2021 10:33:33 +0100
+Subject: [PATCH] tools: fix backing up previous logs in
+ generate_support_bundle.py
+
+subprocess.check_call needs to be called with shell=True, else it will
+interpret the string as a single path to execute instead of a command
+with arguments:
+
+Fixes the following error:
+
+$ /usr/lib/frr/generate_support_bundle.py
+Making backup of /var/log/frr/bgp_support_bundle.log
+Traceback (most recent call last):
+  File "/usr/lib/frr/generate_support_bundle.py", line 89, in <module>
+    main()
+  File "/usr/lib/frr/generate_support_bundle.py", line 80, in main
+    stdout=open_with_backup(ofn),
+  File "/usr/lib/frr/generate_support_bundle.py", line 32, in open_with_backup
+    subprocess.check_call("mv {0} {0}.prev".format(path))
+  File "/usr/lib/python3.8/subprocess.py", line 359, in check_call
+    retcode = call(*popenargs, **kwargs)
+  File "/usr/lib/python3.8/subprocess.py", line 340, in call
+    with Popen(*popenargs, **kwargs) as p:
+  File "/usr/lib/python3.8/subprocess.py", line 858, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+  File "/usr/lib/python3.8/subprocess.py", line 1704, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+FileNotFoundError: [Errno 2] No such file or directory: 'mv /var/log/frr/bgp_support_bundle.log /var/log/frr/bgp_support_bundle.log.prev'
+
+Fixes: 5417cc2de ("tests: collect support bundle data in parallel, fix bugs")
+Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
+---
+ tools/generate_support_bundle.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/tools/generate_support_bundle.py b/tools/generate_support_bundle.py
+index 56b2872d1..c6b876f5b 100755
+--- a/tools/generate_support_bundle.py
++++ b/tools/generate_support_bundle.py
+@@ -29,7 +29,7 @@ import tempfile
+ def open_with_backup(path):
+     if os.path.exists(path):
+         print("Making backup of " + path)
+-        subprocess.check_call("mv {0} {0}.prev".format(path))
++        subprocess.check_call("mv {0} {0}.prev".format(path), shell=True)
+     return open(path, "w")
+ 
+ def main():
+-- 
+2.34.1
+
