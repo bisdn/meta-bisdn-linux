@@ -1,0 +1,44 @@
+From 57933909d2045e6a64908b46d07441e1c6fd1ef5 Mon Sep 17 00:00:00 2001
+From: Roger Luethi <roger.luethi@bisdn.de>
+Date: Wed, 23 Jun 2021 14:11:11 +0200
+Subject: [PATCH 4/7] Add ryu/ofproto/ofdpa_ext.py
+
+ofdpa action subtypes
+
+Reference:
+- ofdpa-2.02-15-jun-2016.json
+- vpws_test_initiation.py (for external names)
+
+Signed-off-by: Roger Luethi <roger.luethi@bisdn.de>
+---
+ ryu/ofproto/ofdpa_ext.py | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
+ create mode 100644 ryu/ofproto/ofdpa_ext.py
+
+diff --git a/ryu/ofproto/ofdpa_ext.py b/ryu/ofproto/ofdpa_ext.py
+new file mode 100644
+index 00000000..cf9cc144
+--- /dev/null
++++ b/ryu/ofproto/ofdpa_ext.py
+@@ -0,0 +1,18 @@
++# Licensed under the Apache License, Version 2.0 (the "License");
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++#    http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
++# implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
++
++# Action subtypes (from ofdpa-2.02-15-jun-2016.json)
++OFDPA_AST_PUSH_L2_HEADER = 1   # OFDPAActionPushL2Header
++OFDPA_AST_POP_L2_HEADER = 2    # OFDPAActionPopL2Header
++OFDPA_AST_PUSH_CW = 3          # OFDPAActionPushCw
++OFDPA_AST_POP_CW_OR_ACH = 4    # OFDPAActionPopCwOrAch
+-- 
+2.35.1
+

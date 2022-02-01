@@ -1,0 +1,43 @@
+From 54c8a2bd348a6518bd9c898f1c1b7508d33f0762 Mon Sep 17 00:00:00 2001
+From: Roger Luethi <roger.luethi@bisdn.de>
+Date: Wed, 23 Jun 2021 13:33:55 +0200
+Subject: [PATCH 7/7] ryu/ofproto/ofproto_v1_3_parser.py: use ofdpa_actions
+
+Signed-off-by: Roger Luethi <roger.luethi@bisdn.de>
+---
+ ryu/ofproto/ofproto_v1_3_parser.py | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/ryu/ofproto/ofproto_v1_3_parser.py b/ryu/ofproto/ofproto_v1_3_parser.py
+index 0324c82b..167ece80 100644
+--- a/ryu/ofproto/ofproto_v1_3_parser.py
++++ b/ryu/ofproto/ofproto_v1_3_parser.py
+@@ -54,6 +54,7 @@ from ryu import utils
+ from ryu.ofproto.ofproto_parser import StringifyMixin, MsgBase
+ from ryu.ofproto import ether
+ from ryu.ofproto import nx_actions
++from ryu.ofproto import ofdpa_actions
+ from ryu.ofproto import ofproto_parser
+ from ryu.ofproto import ofproto_common
+ from ryu.ofproto import ofproto_v1_3 as ofproto
+@@ -3552,6 +3553,8 @@ class OFPActionExperimenter(OFPAction):
+                     ): offset + len_]
+         if experimenter == ofproto_common.NX_EXPERIMENTER_ID:
+             obj = NXAction.parse(data)  # noqa
++        elif experimenter == ofproto_common.OFDPA_EXPERIMENTER_ID:
++            obj = OFDPAAction.parse(data)  # noqa
+         else:
+             obj = OFPActionExperimenterUnknown(experimenter, data)
+         obj.len = len_
+@@ -6496,3 +6499,8 @@ nx_actions.generate(
+     'ryu.ofproto.ofproto_v1_3',
+     'ryu.ofproto.ofproto_v1_3_parser'
+ )
++
++ofdpa_actions.generate(
++    'ryu.ofproto.ofproto_v1_3',
++    'ryu.ofproto.ofproto_v1_3_parser'
++)
+-- 
+2.35.1
+

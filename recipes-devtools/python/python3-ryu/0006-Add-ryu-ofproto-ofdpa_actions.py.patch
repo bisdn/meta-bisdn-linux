@@ -1,0 +1,246 @@
+From 6d86e7e6932502a73676c75f53554912ca71ec61 Mon Sep 17 00:00:00 2001
+From: Roger Luethi <roger.luethi@bisdn.de>
+Date: Wed, 23 Jun 2021 14:10:27 +0200
+Subject: [PATCH 6/7] Add ryu/ofproto/ofdpa_actions.py
+
+Code based on nx_actions.py.
+---
+ ryu/ofproto/ofdpa_actions.py | 226 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 226 insertions(+)
+ create mode 100644 ryu/ofproto/ofdpa_actions.py
+
+diff --git a/ryu/ofproto/ofdpa_actions.py b/ryu/ofproto/ofdpa_actions.py
+new file mode 100644
+index 00000000..ac80a7a2
+--- /dev/null
++++ b/ryu/ofproto/ofdpa_actions.py
+@@ -0,0 +1,226 @@
++# Copyright (C) 2015 Nippon Telegraph and Telephone Corporation.
++# Copyright (C) 2015 YAMAMOTO Takashi <yamamoto at valinux co jp>
++# Copyright 2021 BISDN GmbH
++#
++# Licensed under the Apache License, Version 2.0 (the "License");
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++#    http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
++# implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
++
++import struct
++
++from ryu import utils
++from ryu.ofproto import ofdpa_ext
++from ryu.ofproto import ofproto_common
++from ryu.lib.pack_utils import msg_pack_into
++
++
++def generate(ofp_name, ofpp_name):
++    import sys
++
++    ofp = sys.modules[ofp_name]
++    ofpp = sys.modules[ofpp_name]
++
++    class OFDPAAction(ofpp.OFPActionExperimenter):
++        _fmt_str = '!HH'  # subtype + sublen
++        _subtypes = {}
++        _experimenter = ofproto_common.OFDPA_EXPERIMENTER_ID
++
++        def __init__(self):
++            super(OFDPAAction, self).__init__(self._experimenter)
++            self.subtype = self._subtype
++            self.sublen = self._sublen
++
++        @classmethod
++        def parse(cls, buf):
++            fmt_str = OFDPAAction._fmt_str
++            (subtype,sublen,) = struct.unpack_from(fmt_str, buf, 0)
++            subtype_cls = cls._subtypes.get(subtype)
++            rest = buf[struct.calcsize(fmt_str):]
++            if subtype_cls is None:
++                return OFDPAActionUnknown(subtype, rest)
++            return subtype_cls.parser(rest)
++
++        def serialize(self, buf, offset):
++            data = self.serialize_body()
++            payload_offset = (
++                ofp.OFP_ACTION_EXPERIMENTER_HEADER_SIZE +
++                struct.calcsize(OFDPAAction._fmt_str)
++            )
++            self.len = utils.round_up(payload_offset + len(data), 8)
++            super(OFDPAAction, self).serialize(buf, offset)
++            msg_pack_into(OFDPAAction._fmt_str,
++                          buf,
++                          offset + ofp.OFP_ACTION_EXPERIMENTER_HEADER_SIZE,
++                          self.subtype, self.sublen)
++            buf += data
++
++        @classmethod
++        def register(cls, subtype_cls):
++            assert subtype_cls._subtype is not cls._subtypes
++            cls._subtypes[subtype_cls._subtype] = subtype_cls
++
++    class OFDPAActionUnknown(OFDPAAction):
++        def __init__(self, subtype, data=None,
++                     type_=None, len_=None, experimenter=None):
++            self._subtype = subtype
++            super(OFDPAActionUnknown, self).__init__()
++            self.data = data
++
++        @classmethod
++        def parser(cls, buf):
++            return cls(data=buf)
++
++        def serialize_body(self):
++            # fixup
++            return bytearray() if self.data is None else self.data
++
++    class OFDPAActionPopCwOrAch(OFDPAAction):
++        """
++        Pop MPLS-TP PW CW or ACH
++
++        From OF-DPA-Specs_v2.pdf:
++        Pop MPLS-TP PW Control Word. Used in MPLS label match actions when
++        bottom of stack.
++
++        Control word expected, pop without checking. Only used in
++        conjunction with popping a bottom of stack pseudo wire label
++        for MPLS-TP termination for data frames.
++
++        Example::
++
++            actions += [parser.OFDPAActionPopCwOrAch()]
++        """
++        _subtype = ofdpa_ext.OFDPA_AST_POP_CW_OR_ACH
++        _sublen = 2
++        _fmt_str = '!6x'
++
++        def __init__(self,
++                     type_=None, len_=None, vendor=None, subtype=None):
++            super(OFDPAActionPopCwOrAch, self).__init__()
++
++        @classmethod
++        def parser(cls, buf):
++            return cls()
++
++        def serialize_body(self):
++            data = bytearray()
++            msg_pack_into(self._fmt_str, data, 0)
++            return data
++
++    class OFDPAActionPushCw(OFDPAAction):
++        """
++        Push MPLS-TP PW CW
++
++        From OF-DPA-Specs_v2.pdf:
++        Used only in MPLS L2 VPN group entries to push a 32-bit Control
++        Word after the PW label. The Control Word is initialized to all
++        zeros and is pushed between the MPLS shim label and the packet
++        payload. This action can only be executed once and only after
++        a Push MPLS Header for the bottom of stack (PW) label.
++
++        Example::
++
++            actions += [parser.OFDPAActionPushCw()]
++        """
++        _subtype = ofdpa_ext.OFDPA_AST_PUSH_CW
++        _sublen = 2
++        _fmt_str = '!6x'
++
++        def __init__(self,
++                     type_=None, len_=None, vendor=None, subtype=None):
++            super(OFDPAActionPushCw, self).__init__()
++
++        @classmethod
++        def parser(cls, buf):
++            return cls()
++
++        def serialize_body(self):
++            data = bytearray()
++            msg_pack_into(self._fmt_str, data, 0)
++            return data
++
++    class OFDPAActionPopL2Header(OFDPAAction):
++        """
++        Pop L2 Header
++
++        From OF-DPA-Specs_v2.pdf:
++        Pop the outermost Ethernet header from the packet.
++
++        Example::
++
++            actions += [parser.OFDPAActionPopL2Header()]
++        """
++        _subtype = ofdpa_ext.OFDPA_AST_POP_L2_HEADER
++        _sublen = 2
++        _fmt_str = '!6x'
++
++        def __init__(self,
++                     type_=None, len_=None, vendor=None, subtype=None):
++            super(OFDPAActionPopL2Header, self).__init__()
++
++        @classmethod
++        def parser(cls, buf):
++            return cls()
++
++        def serialize_body(self):
++            data = bytearray()
++            msg_pack_into(self._fmt_str, data, 0)
++            return data
++
++    class OFDPAActionPushL2Header(OFDPAAction):
++        """
++        Push L2 Header
++
++        From OF-DPA-Specs_v2.pdf:
++        Push a new outermost Ethernet header on the packet.
++
++        Example::
++
++            actions += [parser.OFDPAActionPushL2Header()]
++        """
++        _subtype = ofdpa_ext.OFDPA_AST_PUSH_L2_HEADER
++        _sublen = 2
++        _fmt_str = '!6x'
++
++        def __init__(self,
++                     type_=None, len_=None, vendor=None, subtype=None):
++            super(OFDPAActionPushL2Header, self).__init__()
++
++        @classmethod
++        def parser(cls, buf):
++            return cls()
++
++        def serialize_body(self):
++            data = bytearray()
++            msg_pack_into(self._fmt_str, data, 0)
++            return data
++
++
++    def add_attr(k, v):
++        v.__module__ = ofpp.__name__  # Necessary for stringify stuff
++        setattr(ofpp, k, v)
++
++    add_attr('OFDPAAction', OFDPAAction)
++    add_attr('OFDPAActionUnknown', OFDPAActionUnknown)
++
++    classes = [
++        'OFDPAActionPopCwOrAch',
++        'OFDPAActionPushCw',
++        'OFDPAActionPopL2Header',
++        'OFDPAActionPushL2Header',
++    ]
++    vars = locals()
++    for name in classes:
++        cls = vars[name]
++        add_attr(name, cls)
++        if issubclass(cls, OFDPAAction):
++            OFDPAAction.register(cls)
+-- 
+2.35.1
+

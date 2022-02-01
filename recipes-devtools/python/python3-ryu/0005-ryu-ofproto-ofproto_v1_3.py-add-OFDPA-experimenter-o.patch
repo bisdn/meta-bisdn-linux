@@ -1,0 +1,32 @@
+From f78ab86b6c4d781fd1bf879f6bb4a526124af66b Mon Sep 17 00:00:00 2001
+From: Roger Luethi <roger.luethi@bisdn.de>
+Date: Wed, 23 Jun 2021 13:59:15 +0200
+Subject: [PATCH 5/7] ryu/ofproto/ofproto_v1_3.py: add OFDPA experimenter
+ oxm_fields
+
+Reference: Table Type Paettern ofdpa-2.02-15-jun-2016.json
+in https://github.com/Broadcom-Switch/of-dpa.git
+
+Signed-off-by: Roger Luethi <roger.luethi@bisdn.de>
+---
+ ryu/ofproto/ofproto_v1_3.py | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/ryu/ofproto/ofproto_v1_3.py b/ryu/ofproto/ofproto_v1_3.py
+index d599c1cb..daada05f 100644
+--- a/ryu/ofproto/ofproto_v1_3.py
++++ b/ryu/ofproto/ofproto_v1_3.py
+@@ -1229,6 +1229,10 @@ oxm_types = [
+     # EXT-233 Output match Extension
+     # NOTE(yamamoto): The spec says uint64_t but I assume it's an error.
+     oxm_fields.ONFExperimenter('actset_output', 43, type_desc.Int4),
++    # OFDPA match field extension
++    oxm_fields.OfdpaExperimenter('ofdpa_mpls_l2_port', 8, type_desc.Int4),
++    oxm_fields.OfdpaExperimenter('ofdpa_mpls_type', 23, type_desc.Int2),
++    oxm_fields.OfdpaExperimenter('ofdpa_allow_vlan_translation', 24, type_desc.Int1),
+ ] + nicira_ext.oxm_types
+ 
+ oxm_fields.generate(__name__)
+-- 
+2.35.1
+
