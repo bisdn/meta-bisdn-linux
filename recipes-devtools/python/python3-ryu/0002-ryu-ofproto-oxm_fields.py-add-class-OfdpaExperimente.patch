@@ -1,0 +1,28 @@
+From c0bde1b089606a0a29e63884827c41a8a4574461 Mon Sep 17 00:00:00 2001
+From: Roger Luethi <roger.luethi@bisdn.de>
+Date: Wed, 23 Jun 2021 13:26:04 +0200
+Subject: [PATCH 2/7] ryu/ofproto/oxm_fields.py: add class OfdpaExperimenter
+
+Signed-off-by: Roger Luethi <roger.luethi@bisdn.de>
+---
+ ryu/ofproto/oxm_fields.py | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/ryu/ofproto/oxm_fields.py b/ryu/ofproto/oxm_fields.py
+index f978f5b1..1499853e 100644
+--- a/ryu/ofproto/oxm_fields.py
++++ b/ryu/ofproto/oxm_fields.py
+@@ -128,6 +128,10 @@ class OldONFExperimenter(_Experimenter):
+         self.exp_type = 2560
+ 
+ 
++class OfdpaExperimenter(_Experimenter):
++    experimenter_id = ofproto_common.OFDPA_EXPERIMENTER_ID
++
++
+ class NiciraExperimenter(_Experimenter):
+     experimenter_id = ofproto_common.NX_EXPERIMENTER_ID
+ 
+-- 
+2.35.1
+

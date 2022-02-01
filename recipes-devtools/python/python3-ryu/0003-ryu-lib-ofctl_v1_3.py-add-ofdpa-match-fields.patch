@@ -1,0 +1,40 @@
+From 98e20d8250182ad1266f5d043d5a8e59d2e74d2e Mon Sep 17 00:00:00 2001
+From: Roger Luethi <roger.luethi@bisdn.de>
+Date: Wed, 23 Jun 2021 14:26:13 +0200
+Subject: [PATCH 3/7] ryu/lib/ofctl_v1_3.py: add ofdpa match fields
+
+Use str_to_int to allow passing integer literals such as "0xff".
+
+vpws_test_initiation.py uses a field ofdpa_l2_port which is not in the
+Table Type Pattern (ofdpa-2.02-15-jun-2016.json [1]). It is for table
+TABLE_MPLS_L2_PORT, so the name according to the TTP should be
+ofdpa_mpls_l2_port.
+
+[1] https://github.com/Broadcom-Switch/of-dpa.git
+
+Signed-off-by: Roger Luethi <roger.luethi@bisdn.de>
+
+ryu/lib/ofctl_v1_3.py: rm unused field names, sort by field number
+---
+ ryu/lib/ofctl_v1_3.py | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/ryu/lib/ofctl_v1_3.py b/ryu/lib/ofctl_v1_3.py
+index 91ae9a0f..fd908cd3 100644
+--- a/ryu/lib/ofctl_v1_3.py
++++ b/ryu/lib/ofctl_v1_3.py
+@@ -240,7 +240,10 @@ def to_match(dp, attrs):
+                'mpls_bos': str_to_int,
+                'pbb_isid': ofctl_utils.to_match_masked_int,
+                'tunnel_id': ofctl_utils.to_match_masked_int,
+-               'ipv6_exthdr': ofctl_utils.to_match_masked_int}
++               'ipv6_exthdr': ofctl_utils.to_match_masked_int
++               'ofdpa_mpls_l2_port': str_to_int,
++               'ofdpa_mpls_type': str_to_int,
++               'ofdpa_allow_vlan_translation': str_to_int}
+ 
+     keys = {'dl_dst': 'eth_dst',
+             'dl_src': 'eth_src',
+-- 
+2.35.1
+

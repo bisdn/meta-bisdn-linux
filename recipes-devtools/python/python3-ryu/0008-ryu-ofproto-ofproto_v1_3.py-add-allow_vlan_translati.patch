@@ -1,0 +1,34 @@
+From b2b54e16790666c21a9bd9e014d4ddd7c26e2a3a Mon Sep 17 00:00:00 2001
+From: Roger Luethi <roger.luethi@bisdn.de>
+Date: Fri, 11 Mar 2022 09:25:15 +0100
+Subject: [PATCH 8/8] ryu/ofproto/ofproto_v1_3.py: add allow_vlan_translation
+ field
+
+Older versions of ryu shipped with a field name, allow_vlan_translation.
+Our new ofdpa extensions renamed the field ofdpa_allow_vlan_translation
+according to [1], which breaks code that used the old name.
+
+For compatibility with existing users, keep the old name around.
+
+[1] https://github.com/Broadcom-Switch/of-dpa/blob/master/src/Ryu/OFDPA_TE_2.0/ofdpa/matches.py
+
+Signed-off-by: Roger Luethi <roger.luethi@bisdn.de>
+---
+ ryu/ofproto/ofproto_v1_3.py | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/ryu/ofproto/ofproto_v1_3.py b/ryu/ofproto/ofproto_v1_3.py
+index daada05f..9775c6a1 100644
+--- a/ryu/ofproto/ofproto_v1_3.py
++++ b/ryu/ofproto/ofproto_v1_3.py
+@@ -1233,6 +1233,7 @@ oxm_types = [
+     oxm_fields.OfdpaExperimenter('ofdpa_mpls_l2_port', 8, type_desc.Int4),
+     oxm_fields.OfdpaExperimenter('ofdpa_mpls_type', 23, type_desc.Int2),
+     oxm_fields.OfdpaExperimenter('ofdpa_allow_vlan_translation', 24, type_desc.Int1),
++    oxm_fields.OfdpaExperimenter('allow_vlan_translation', 24, type_desc.Int1),
+ ] + nicira_ext.oxm_types
+ 
+ oxm_fields.generate(__name__)
+-- 
+2.35.1
+

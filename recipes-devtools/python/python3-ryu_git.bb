@@ -38,7 +38,14 @@ RDEPENDS_${PN} += " \
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
 SRC_URI += " \
-  file://ofdpa.patch \
+  file://0001-ryu-ofproto-ofproto_common.py-add-OFDPA_EXPERIMENTER.patch \
+  file://0002-ryu-ofproto-oxm_fields.py-add-class-OfdpaExperimente.patch \
+  file://0003-ryu-lib-ofctl_v1_3.py-add-ofdpa-match-fields.patch \
+  file://0004-Add-ryu-ofproto-ofdpa_ext.py.patch \
+  file://0005-ryu-ofproto-ofproto_v1_3.py-add-OFDPA-experimenter-o.patch \
+  file://0006-Add-ryu-ofproto-ofdpa_actions.py.patch \
+  file://0007-ryu-ofproto-ofproto_v1_3_parser.py-use-ofdpa_actions.patch \
+  file://0008-ryu-ofproto-ofproto_v1_3.py-add-allow_vlan_translati.patch \
   file://0001-pcaplib.py-add-option-to-flush-each-packet.patch \
   file://ryu-manager \
   file://ryu-manager.service \
