@@ -41,6 +41,7 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL += "\
     python3-pip \
     python3-ryu \
     radvd \
+    rsync \
     run-preinsts \
     tcpdump \
     tmux \
