@@ -1,4 +1,4 @@
-From 653c226c95a9f774d5c0072c437c60f7ab115ca0 Mon Sep 17 00:00:00 2001
+From b84f561f4c30bd631894066d701166cae226ff1c Mon Sep 17 00:00:00 2001
 From: Rubens Figueiredo <rubens.figueiredo@bisdn.de>
 Date: Tue, 10 Aug 2021 11:23:39 +0200
 Subject: [PATCH 6/6] bridge-vlan: add per vlan stp state object and cache
@@ -13,12 +13,12 @@ Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
  include/netlink/route/bridge_vlan.h |  42 ++++
  lib/route/bridge_vlan.c             | 361 ++++++++++++++++++++++++++++
  libnl-cli-3.sym                     |   3 +
- libnl-route-3.sym                   |   9 +
+ libnl-route-3.sym                   |  13 +
  src/.gitignore                      |   1 +
  src/lib/bridge_vlan.c               |  42 ++++
  src/nl-bridge.c                     |  38 +++
  src/nl-monitor.c                    |   1 +
- 11 files changed, 538 insertions(+)
+ 11 files changed, 542 insertions(+)
  create mode 100644 include/netlink/cli/bridge_vlan.h
  create mode 100644 include/netlink/route/bridge_vlan.h
  create mode 100644 lib/route/bridge_vlan.c
@@ -177,7 +177,7 @@ index 0000000..62f2994
 +#endif
 diff --git a/lib/route/bridge_vlan.c b/lib/route/bridge_vlan.c
 new file mode 100644
-index 0000000..99719ab
+index 0000000..36c2b49
 --- /dev/null
 +++ b/lib/route/bridge_vlan.c
 @@ -0,0 +1,361 @@
@@ -198,7 +198,7 @@ index 0000000..99719ab
 +#define BRIDGE_VLAN_ATTR_VID             0x000004
 +#define BRIDGE_VLAN_ATTR_STATE           0x000008
 +
-+static struct nl_cache_ops rtnl_bridge_vlan_ops;
++static struct nl_cache_ops bridge_vlan_ops;
 +static struct nl_object_ops bridge_vlan_obj_ops;
 +/** @endcond */
 +
@@ -465,7 +465,7 @@ index 0000000..99719ab
 +{
 +	struct rtnl_bridge_vlan *bvlan_entry;
 +
-+	if (cache->c_ops != &rtnl_bridge_vlan_ops)
++	if (cache->c_ops != &bridge_vlan_ops)
 +		return NULL;
 +
 +	nl_list_for_each_entry(bvlan_entry, &cache->c_items, ce_list) {
@@ -555,22 +555,26 @@ index 71ff2eb..ed3bf34 100644
 +	nl_cli_bridge_vlan_parse_ifindex;
  } libnl_3;
 diff --git a/libnl-route-3.sym b/libnl-route-3.sym
-index 62b44ad..f83f123 100644
+index 62b44ad..21a23a2 100644
 --- a/libnl-route-3.sym
 +++ b/libnl-route-3.sym
-@@ -1172,4 +1172,13 @@ libnl_3_6 {
+@@ -1172,4 +1172,17 @@ libnl_3_6 {
  	rtnl_mdb_entry_get_proto;
  	rtnl_mdb_entry_get_state;
  	rtnl_mdb_entry_get_vid;
 +	rtnl_bridge_vlan_alloc;
 +	rtnl_bridge_vlan_alloc_cache;
 +	rtnl_bridge_vlan_alloc_cache_flags;
++	rtnl_bridge_vlan_build_change_request;
++	rtnl_bridge_vlan_change;
++	rtnl_bridge_vlan_get;
 +	rtnl_bridge_vlan_get_ifindex;
-+	rtnl_bridge_vlan_set_ifindex;
-+	rtnl_bridge_vlan_get_vlan_id;
-+	rtnl_bridge_vlan_set_vlan_id;
 +	rtnl_bridge_vlan_get_state;
++	rtnl_bridge_vlan_get_vlan_id;
++	rtnl_bridge_vlan_put;
++	rtnl_bridge_vlan_set_ifindex;
 +	rtnl_bridge_vlan_set_state;
++	rtnl_bridge_vlan_set_vlan_id;
  } libnl_3_5;
 diff --git a/src/.gitignore b/src/.gitignore
 index e53eb3d..31ec86e 100644
@@ -689,5 +693,5 @@ index 99aa0f4..a9e40c9 100644
  };
  
 -- 
-2.32.0
+2.35.1
 
