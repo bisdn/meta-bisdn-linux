@@ -1,0 +1,50 @@
+From a3044d1f152d32d34d92f602f0ad4657e6a7096f Mon Sep 17 00:00:00 2001
+From: Roger Luethi <roger.luethi@bisdn.de>
+Date: Fri, 23 Jul 2021 10:01:14 +0200
+Subject: [PATCH] pcaplib.py: add option to flush each packet
+
+When using the pcap writer, packets may take a long time to appear in
+the file simply because the write buffer is not full yet. This can be
+quite annoying in test environments where traffic is very low.
+
+This commit addresses the issue by adding an option to ensure that
+packets are written to the pcap file immediately. The option is turned
+off by default.
+
+For testing, use something like:
+
+from ryu.lib import pcaplib
+pcap_writer = pcaplib.Writer(open("/tmp/ryu.pcap", "wb"))
+pcap_writer.write_pkt(msg.data, flush=True)
+
+Signed-off-by: Roger Luethi <roger.luethi@bisdn.de>
+---
+ ryu/lib/pcaplib.py | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/ryu/lib/pcaplib.py b/ryu/lib/pcaplib.py
+index 8b7400bf..a3231b94 100644
+--- a/ryu/lib/pcaplib.py
++++ b/ryu/lib/pcaplib.py
+@@ -305,7 +305,7 @@ class Writer(object):
+ 
+         self._f.write(pc_pkt_hdr.serialize())
+ 
+-    def write_pkt(self, buf, ts=None):
++    def write_pkt(self, buf, ts=None, flush=False):
+         ts = time.time() if ts is None else ts
+ 
+         # Check the max length of captured packets
+@@ -317,6 +317,9 @@ class Writer(object):
+         self._write_pkt_hdr(ts, buf_len)
+ 
+         self._f.write(buf)
++        if flush:
++            # Slower, but keeps the file always up-to-date
++            self._f.flush()
+ 
+     def __del__(self):
+         self._f.close()
+-- 
+2.35.1
+
