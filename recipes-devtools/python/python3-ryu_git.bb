@@ -39,6 +39,7 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
 SRC_URI += " \
   file://ofdpa.patch \
+  file://0001-pcaplib.py-add-option-to-flush-each-packet.patch \
   file://ryu-manager \
   file://ryu-manager.service \
 "
