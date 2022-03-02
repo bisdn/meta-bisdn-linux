@@ -1,7 +1,7 @@
 From c7592e59fb7a46c1c7330275495ed364d0221e9a Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Tue, 6 Oct 2020 16:53:36 +0200
-Subject: [PATCH 4/6] link/bonding: expose state on enslaved interfaces
+Subject: [PATCH 4/7] link/bonding: expose state on enslaved interfaces
 
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
@@ -250,5 +250,5 @@ index 37ad514..62b44ad 100644
  	rtnl_mdb_alloc_cache_flags;
  	rtnl_mdb_foreach_entry;
 -- 
-2.32.0
+2.35.1
 

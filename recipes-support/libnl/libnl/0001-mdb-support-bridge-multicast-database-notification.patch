@@ -1,7 +1,7 @@
 From 97a91bd7169701e17465d6672581c4d6ee6df12c Mon Sep 17 00:00:00 2001
 From: Rubens Figueiredo <rubens.figueiredo@bisdn.de>
 Date: Mon, 20 Jul 2020 10:44:39 +0200
-Subject: [PATCH 1/6] mdb: support bridge multicast database notification
+Subject: [PATCH 1/7] mdb: support bridge multicast database notification
 
 The Linux kernel has a notification system via Netlink that reports the
 changes in the multicast database over the RTNLGRP_MDB multicast socket.
@@ -645,5 +645,5 @@ index a6f21b4..99aa0f4 100644
  };
  
 -- 
-2.32.0
+2.35.1
 

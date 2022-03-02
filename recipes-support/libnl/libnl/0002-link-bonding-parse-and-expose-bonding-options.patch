@@ -1,7 +1,7 @@
 From 7fd781e1dda943c6324402fd2771ee17cf23e322 Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Tue, 6 Oct 2020 10:00:37 +0200
-Subject: [PATCH 2/6] link/bonding: parse and expose bonding options
+Subject: [PATCH 2/7] link/bonding: parse and expose bonding options
 
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
@@ -405,5 +405,5 @@ index 900b5e6..37ad514 100644
  	rtnl_mdb_alloc_cache_flags;
  	rtnl_mdb_foreach_entry;
 -- 
-2.32.0
+2.35.1
 
