@@ -3,7 +3,7 @@ HOMEPAGE = "http://www.infradead.org/~tgr/libnl/"
 SECTION = "libs/network"
 
 PE = "1"
-PR = "r3"
+PR = "r4"
 
 LICENSE = "LGPLv2.1"
 LIC_FILES_CHKSUM = "file://COPYING;md5=4fbd65380cdd255951079008b364516c"
@@ -20,6 +20,7 @@ SRC_URI = " \
     file://0004-link-bonding-expose-state-on-enslaved-interfaces.patch \
     file://0005-sync-linux-headers-with-5.11.patch \
     file://0006-bridge-vlan-add-per-vlan-stp-state-object-and-cache.patch \
+    file://0007-route-route_obj-treat-each-IPv6-link-local-route-as-.patch \
 "
 
 # this is actually master:
