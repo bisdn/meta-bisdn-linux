@@ -1,10 +1,10 @@
 require frr.inc
 
-GIT_BRANCH = "stable/8.1"
-# commit hash of release tag frr-8.1
-SRCREV = "1752bfdfc14409c667f10b7ee2c99b9014abb271"
+GIT_BRANCH = "stable/8.2"
+# commit hash of release tag frr-8.2.2
+SRCREV = "79188bf710e92acf42fb5b9b0a2e9593a5ee9b05"
 
-PR = "r1"
+PR = "r0"
 
 inherit native
 
