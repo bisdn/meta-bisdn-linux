@@ -141,11 +141,7 @@ function get_network_state() {
   log_cmd_output ip a
   log_cmd_output ip route list table all
   log_cmd_output ip neigh
-  log_cmd_output bridge -c vlan
-  # Only our own patched bridge command responds to "database".
-  if exe_in_path bridge && grep -q database "$(which bridge)"; then
-    log_cmd_output bridge vlan database
-  fi
+  log_cmd_output bridge -d vlan
   log_cmd_output bridge fdb
   if grep -q bridge.ko "/lib/modules/$(uname -r)/modules.builtin" ||
       grep "^bridge " /proc/modules; then
