@@ -48,6 +48,7 @@ SRC_URI += " \
   file://0008-ryu-ofproto-ofproto_v1_3.py-add-allow_vlan_translati.patch \
   file://0001-pcaplib.py-add-option-to-flush-each-packet.patch \
   file://0001-Add-ofdpa_vpws.py-sample-code-for-MPLS-pseudowires.patch \
+  file://0002-Add-ryu-app-bisdn-__init__.py-to-help-python-recogni.patch \
   file://ryu-manager \
   file://ryu-manager.service \
 "
