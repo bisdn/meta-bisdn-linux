@@ -1,0 +1,21 @@
+From 6a2144bd5fcdff40f61c6deca4a22fff0625689f Mon Sep 17 00:00:00 2001
+From: Roger Luethi <roger.luethi@bisdn.de>
+Date: Mon, 21 Mar 2022 09:25:52 +0100
+Subject: [PATCH 2/2] Add ryu/app/bisdn/__init__.py to help python recognize
+ package
+
+Our yocto/ryu setup requires a __init__.py or the python module,
+ofdpa_vpws.py, doesn't get installed.
+
+Signed-off-by: Roger Luethi <roger.luethi@bisdn.de>
+---
+ ryu/app/bisdn/__init__.py | 0
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+ create mode 100644 ryu/app/bisdn/__init__.py
+
+diff --git a/ryu/app/bisdn/__init__.py b/ryu/app/bisdn/__init__.py
+new file mode 100644
+index 00000000..e69de29b
+-- 
+2.35.1
+
