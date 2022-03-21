@@ -5,6 +5,7 @@ LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=3b83ef96387f14655fc854ddc3c6bd57"
 
 PV = "4.34+git${SRCPV}"
+PR = "r1"
 SRCREV = "c776e4cb68600b2ee0a4f38364f4a355502777f1"
 
 SRCNAME = "ryu"
