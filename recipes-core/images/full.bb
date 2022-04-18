@@ -6,7 +6,6 @@ require minimal.bb
 IMAGE_FEATURES += " package-management"
 
 BISDN_SWITCH_IMAGE_EXTRA_INSTALL += "\
-    baseboxd \
     baseboxd-tools \
     bridge-utils  \
     curl \
@@ -20,8 +19,6 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL += "\
     iptables \
     jq \
     keepalived \
-    kernel-module-linux-kernel-bde \
-    kernel-module-linux-user-bde \
     less \
     lmsensors-fancontrol \
     lmsensors-pwmconfig \
@@ -31,13 +28,8 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL += "\
     man-db \
     man-pages \
     mstpd \
-    ofagent \
-    ofdpa \
-    ofdpa-grpc \
-    ofdpa-tools \
     procps \
     python3 \
-    python3-ofdpa \
     python3-pip \
     python3-ryu \
     radvd \
