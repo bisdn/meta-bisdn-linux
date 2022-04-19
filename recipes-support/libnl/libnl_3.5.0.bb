@@ -13,7 +13,7 @@ DEPENDS = "flex-native bison-native"
 ##https://github.com/thom311/${BPN}/releases/download/${BPN}${@d.getVar('PV').replace('.','_')}/${BP}.tar.gz
 
 SRC_URI = " \
-    git://github.com/thom311/${BPN}.git;protocol=https \
+    git://github.com/thom311/${BPN}.git;protocol=https;branch=main \
     file://0001-mdb-support-bridge-multicast-database-notification.patch \
     file://0002-link-bonding-parse-and-expose-bonding-options.patch \
     file://0003-WIP-add-info-slave-data-support.patch \
