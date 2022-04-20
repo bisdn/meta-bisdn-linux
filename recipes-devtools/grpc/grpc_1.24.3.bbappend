@@ -5,7 +5,7 @@
 FILESEXTRAPATHS_append := "${THISDIR}/files:"
 
 SRC_URI += " \
-           git://github.com/google/googletest.git;protocol=https;name=gtest;tag=release-1.8.0;destsuffix=git/third_party/googletest \
+           git://github.com/google/googletest.git;protocol=https;name=gtest;tag=release-1.8.0;destsuffix=git/third_party/googletest;branch=main \
            git://github.com/google/benchmark.git;protocol=https;name=benchmark;tag=v1.5.0;destsuffix=git/third_party/benchmark \
            file://1.24.3/force_gflags_libname.patch \
            file://1.24.3/add_grpc_cli_build_option.patch \
