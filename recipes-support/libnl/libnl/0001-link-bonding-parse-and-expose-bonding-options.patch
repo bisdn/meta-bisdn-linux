@@ -1,20 +1,20 @@
-From 7fd781e1dda943c6324402fd2771ee17cf23e322 Mon Sep 17 00:00:00 2001
+From 4a6e93c84ce9866fe14b5700d3fef50351b241e3 Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Tue, 6 Oct 2020 10:00:37 +0200
-Subject: [PATCH 2/7] link/bonding: parse and expose bonding options
+Subject: [PATCH 1/6] link/bonding: parse and expose bonding options
 
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
  include/netlink/route/link/bonding.h |  12 +
  lib/route/link/bonding.c             | 323 +++++++++++++++++++++++++++
- libnl-route-3.sym                    |  10 +-
- 3 files changed, 344 insertions(+), 1 deletion(-)
+ libnl-route-3.sym                    |  14 +-
+ 3 files changed, 348 insertions(+), 1 deletion(-)
 
 diff --git a/include/netlink/route/link/bonding.h b/include/netlink/route/link/bonding.h
-index 5c34662..a68cf1e 100644
+index 09d495e..56de595 100644
 --- a/include/netlink/route/link/bonding.h
 +++ b/include/netlink/route/link/bonding.h
-@@ -31,6 +31,18 @@ extern int	rtnl_link_bond_enslave(struct nl_sock *, struct rtnl_link *,
+@@ -25,6 +25,18 @@ extern int	rtnl_link_bond_enslave(struct nl_sock *, struct rtnl_link *,
  extern int	rtnl_link_bond_release_ifindex(struct nl_sock *, int);
  extern int	rtnl_link_bond_release(struct nl_sock *, struct rtnl_link *);
  
@@ -34,10 +34,10 @@ index 5c34662..a68cf1e 100644
  }
  #endif
 diff --git a/lib/route/link/bonding.c b/lib/route/link/bonding.c
-index 11b6d3d..0774223 100644
+index 1d8f89b..2b792bd 100644
 --- a/lib/route/link/bonding.c
 +++ b/lib/route/link/bonding.c
-@@ -25,6 +25,153 @@
+@@ -19,6 +19,153 @@
  #include <netlink/route/link/bonding.h>
  #include <netlink-private/route/link/api.h>
  
@@ -191,7 +191,7 @@ index 11b6d3d..0774223 100644
  /**
   * Allocate link object of type bond
   *
-@@ -213,8 +360,184 @@ int rtnl_link_bond_release(struct nl_sock *sock, struct rtnl_link *slave)
+@@ -207,8 +354,184 @@ int rtnl_link_bond_release(struct nl_sock *sock, struct rtnl_link *slave)
  
  static struct rtnl_link_info_ops bonding_info_ops = {
  	.io_name		= "bond",
@@ -377,7 +377,7 @@ index 11b6d3d..0774223 100644
  {
  	rtnl_link_register_info(&bonding_info_ops);
 diff --git a/libnl-route-3.sym b/libnl-route-3.sym
-index 900b5e6..37ad514 100644
+index 8561705..3737494 100644
 --- a/libnl-route-3.sym
 +++ b/libnl-route-3.sym
 @@ -232,7 +232,6 @@ global:
@@ -388,10 +388,13 @@ index 900b5e6..37ad514 100644
  	rtnl_link_bond_release;
  	rtnl_link_bond_release_ifindex;
  	rtnl_link_bridge_add;
-@@ -1152,6 +1151,15 @@ global:
- } libnl_3_4;
- 
- libnl_3_6 {
+@@ -1250,3 +1249,16 @@ global:
+ 	rtnl_route_nh_get_encap_mpls_dst;
+ 	rtnl_route_nh_get_encap_mpls_ttl;
+ } libnl_3_5;
++
++libnl_3_7 {
++global:
 +	rtnl_link_bond_enslave_ifindex;
 +	rtnl_link_bond_get_active_slave;
 +	rtnl_link_bond_get_mode;
@@ -401,9 +404,7 @@ index 900b5e6..37ad514 100644
 +	rtnl_link_bond_set_mode;
 +	rtnl_link_bond_set_primary;
 +	rtnl_link_bond_set_xmit_hash_policy;
- 	rtnl_mdb_add_entry;
- 	rtnl_mdb_alloc_cache_flags;
- 	rtnl_mdb_foreach_entry;
++} libnl_3_6;
 -- 
 2.35.1
 
