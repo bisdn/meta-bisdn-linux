@@ -1,7 +1,7 @@
-From 38d8c7608eea311d111b245e6ef89bbb988923aa Mon Sep 17 00:00:00 2001
+From d6b11a3dde7c2eb749b16ca3019e4b3b55cbe3b4 Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Tue, 6 Oct 2020 15:25:38 +0200
-Subject: [PATCH 3/7] WIP: add info slave data support
+Subject: [PATCH 2/6] WIP: add info slave data support
 
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
@@ -12,10 +12,10 @@ Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
  4 files changed, 127 insertions(+)
 
 diff --git a/include/netlink-private/route/link/api.h b/include/netlink-private/route/link/api.h
-index 6d30bf7..48eec75 100644
+index 189f361..0d9b687 100644
 --- a/include/netlink-private/route/link/api.h
 +++ b/include/netlink-private/route/link/api.h
-@@ -64,6 +64,39 @@ struct rtnl_link_info_ops
+@@ -58,6 +58,39 @@ struct rtnl_link_info_ops
  	int	      (*io_compare)(struct rtnl_link *, struct rtnl_link *,
  				    int flags);
  
@@ -55,7 +55,7 @@ index 6d30bf7..48eec75 100644
  	struct nl_list_head		io_list;
  };
  
-@@ -192,6 +225,10 @@ extern int			rtnl_link_info_data_compare(struct rtnl_link *a,
+@@ -187,6 +220,10 @@ extern int			rtnl_link_info_data_compare(struct rtnl_link *a,
  							    struct rtnl_link *b,
  							    int flags);
  
@@ -67,10 +67,10 @@ index 6d30bf7..48eec75 100644
  }
  #endif
 diff --git a/include/netlink-private/types.h b/include/netlink-private/types.h
-index c2f28d4..eec2e83 100644
+index 750f191..75617ce 100644
 --- a/include/netlink-private/types.h
 +++ b/include/netlink-private/types.h
-@@ -217,8 +217,10 @@ struct rtnl_link
+@@ -212,8 +212,10 @@ struct rtnl_link
  	char *				l_info_kind;
  	char *				l_info_slave_kind;
  	struct rtnl_link_info_ops *	l_info_ops;
@@ -82,10 +82,10 @@ index c2f28d4..eec2e83 100644
  	uint32_t			l_promiscuity;
  	uint32_t			l_num_tx_queues;
 diff --git a/lib/route/link.c b/lib/route/link.c
-index df01a71..211573d 100644
+index 3202600..d246f91 100644
 --- a/lib/route/link.c
 +++ b/lib/route/link.c
-@@ -263,12 +263,29 @@ static void release_link_info(struct rtnl_link *link)
+@@ -253,12 +253,29 @@ static void release_link_info(struct rtnl_link *link)
  	}
  }
  
@@ -115,8 +115,8 @@ index df01a71..211573d 100644
  
  		/* proto info af reference */
  		rtnl_link_af_ops_put(link->l_af_ops);
-@@ -322,6 +339,12 @@ static int link_clone(struct nl_object *_dst, struct nl_object *_src)
- 			return err;
+@@ -331,6 +348,12 @@ static int link_clone(struct nl_object *_dst, struct nl_object *_src)
+ 		}
  	}
  
 +	if (src->l_info_slave_ops && src->l_info_ops->io_slave_clone) {
@@ -128,7 +128,7 @@ index df01a71..211573d 100644
  	if ((err = do_foreach_af(src, af_clone, dst)) < 0)
  		return err;
  
-@@ -379,6 +402,8 @@ static struct nla_policy link_info_policy[IFLA_INFO_MAX+1] = {
+@@ -388,6 +411,8 @@ static struct nla_policy link_info_policy[IFLA_INFO_MAX+1] = {
  	[IFLA_INFO_KIND]	= { .type = NLA_STRING },
  	[IFLA_INFO_DATA]	= { .type = NLA_NESTED },
  	[IFLA_INFO_XSTATS]	= { .type = NLA_NESTED },
@@ -137,7 +137,7 @@ index df01a71..211573d 100644
  };
  
  int rtnl_link_info_parse(struct rtnl_link *link, struct nlattr **tb)
-@@ -688,12 +713,27 @@ static int link_msg_parser(struct nl_cache_ops *ops, struct sockaddr_nl *who,
+@@ -694,12 +719,27 @@ static int link_msg_parser(struct nl_cache_ops *ops, struct sockaddr_nl *who,
  		}
  
  		if (li[IFLA_INFO_SLAVE_KIND]) {
@@ -146,7 +146,7 @@ index df01a71..211573d 100644
  
  			err = rtnl_link_set_slave_type(link, kind);
  			if (err < 0)
- 				goto errout;
+ 				return err;
  
 +			ops = link->l_info_slave_ops;
 +
@@ -156,7 +156,7 @@ index df01a71..211573d 100644
 +					err = ops->io_slave_parse(link, li[IFLA_INFO_SLAVE_DATA],
 +								  li[IFLA_INFO_XSTATS]);
 +					if (err < 0)
-+						goto errout;
++						return err;
 +				} else {
 +					/* XXX: Warn about unparsed info? */
 +				}
@@ -165,7 +165,7 @@ index df01a71..211573d 100644
  			link->ce_mask |= LINK_ATTR_LINKINFO_SLAVE_KIND;
  		}
  	}
-@@ -891,6 +931,9 @@ static void link_dump_line(struct nl_object *obj, struct nl_dump_params *p)
+@@ -889,6 +929,9 @@ static void link_dump_line(struct nl_object *obj, struct nl_dump_params *p)
  	if (link->l_info_ops && link->l_info_ops->io_dump[NL_DUMP_LINE])
  		link->l_info_ops->io_dump[NL_DUMP_LINE](link, p);
  
@@ -175,7 +175,7 @@ index df01a71..211573d 100644
  	do_foreach_af(link, af_dump_line, p);
  
  	nl_dump(p, "\n");
-@@ -1149,6 +1192,7 @@ static uint64_t link_compare(struct nl_object *_a, struct nl_object *_b,
+@@ -1147,6 +1190,7 @@ static uint64_t link_compare(struct nl_object *_a, struct nl_object *_b,
  	}
  
  	diff |= LINK_DIFF(LINKINFO, rtnl_link_info_data_compare(a, b, flags) != 0);
@@ -183,7 +183,7 @@ index df01a71..211573d 100644
  out:
  	return diff;
  
-@@ -1616,6 +1660,12 @@ static int build_link_msg(int cmd, struct ifinfomsg *hdr,
+@@ -1600,6 +1644,12 @@ static int build_link_msg(int cmd, struct ifinfomsg *hdr,
  
  		if (link->ce_mask & LINK_ATTR_LINKINFO_SLAVE_KIND) {
  			NLA_PUT_STRING(msg, IFLA_INFO_SLAVE_KIND, link->l_info_slave_kind);
@@ -196,7 +196,7 @@ index df01a71..211573d 100644
  		}
  
  		nla_nest_end(msg, info);
-@@ -2625,6 +2675,8 @@ char *rtnl_link_get_type(struct rtnl_link *link)
+@@ -2599,6 +2649,8 @@ char *rtnl_link_get_type(struct rtnl_link *link)
  int rtnl_link_set_slave_type(struct rtnl_link *link, const char *type)
  {
  	char *kind = NULL;
@@ -205,7 +205,7 @@ index df01a71..211573d 100644
  
  	if (type) {
  		kind = strdup(type);
-@@ -2634,12 +2686,26 @@ int rtnl_link_set_slave_type(struct rtnl_link *link, const char *type)
+@@ -2608,12 +2660,26 @@ int rtnl_link_set_slave_type(struct rtnl_link *link, const char *type)
  
  	free(link->l_info_slave_kind);
  	link->l_info_slave_kind = kind;
@@ -233,10 +233,10 @@ index df01a71..211573d 100644
  
  /**
 diff --git a/lib/route/link/api.c b/lib/route/link/api.c
-index d406783..7b66a75 100644
+index 12ddee9..7e1543e 100644
 --- a/lib/route/link/api.c
 +++ b/lib/route/link/api.c
-@@ -413,6 +413,28 @@ int rtnl_link_info_data_compare(struct rtnl_link *a, struct rtnl_link *b, int fl
+@@ -427,6 +427,28 @@ int rtnl_link_info_data_compare(struct rtnl_link *a, struct rtnl_link *b, int fl
  	return a->l_info_ops->io_compare(a, b, flags);
  }
  

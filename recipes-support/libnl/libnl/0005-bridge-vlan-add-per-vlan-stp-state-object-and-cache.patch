@@ -1,12 +1,13 @@
-From b84f561f4c30bd631894066d701166cae226ff1c Mon Sep 17 00:00:00 2001
+From 4e294d053a0d97d952778866ba70b2ef463bfe46 Mon Sep 17 00:00:00 2001
 From: Rubens Figueiredo <rubens.figueiredo@bisdn.de>
 Date: Tue, 10 Aug 2021 11:23:39 +0200
-Subject: [PATCH 6/7] bridge-vlan: add per vlan stp state object and cache
+Subject: [PATCH 5/6] bridge-vlan: add per vlan stp state object and cache
 
 Signed-off-by: Rubens Figueiredo <rubens.figueiredo@bisdn.de>
 Co-authored-by: Jonas Gorski <jonas.gorski@bisdn.de>
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
+ .gitignore                          |   1 +
  Makefile.am                         |   7 +
  include/netlink-private/types.h     |  11 +
  include/netlink/cli/bridge_vlan.h   |  23 ++
@@ -14,7 +15,6 @@ Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
  lib/route/bridge_vlan.c             | 361 ++++++++++++++++++++++++++++
  libnl-cli-3.sym                     |   3 +
  libnl-route-3.sym                   |  13 +
- src/.gitignore                      |   1 +
  src/lib/bridge_vlan.c               |  42 ++++
  src/nl-bridge.c                     |  38 +++
  src/nl-monitor.c                    |   1 +
@@ -25,8 +25,20 @@ Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
  create mode 100644 src/lib/bridge_vlan.c
  create mode 100644 src/nl-bridge.c
 
+diff --git a/.gitignore b/.gitignore
+index da3eb81..576bc05 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -74,6 +74,7 @@ test-suite.log
+ /src/nl-addr-add
+ /src/nl-addr-delete
+ /src/nl-addr-list
++/src/nl-bridge
+ /src/nl-class-add
+ /src/nl-class-delete
+ /src/nl-class-list
 diff --git a/Makefile.am b/Makefile.am
-index 1d70059..77d796c 100644
+index a6bcf55..684016c 100644
 --- a/Makefile.am
 +++ b/Makefile.am
 @@ -102,6 +102,7 @@ libnlinclude_netlink_routedir = $(libnlincludedir)/netlink/route
@@ -37,7 +49,7 @@ index 1d70059..77d796c 100644
  	include/netlink/route/class.h \
  	include/netlink/route/classifier.h \
  	include/netlink/route/link.h \
-@@ -199,6 +200,7 @@ if ENABLE_CLI
+@@ -203,6 +204,7 @@ if ENABLE_CLI
  libnlinclude_netlink_clidir = $(libnlincludedir)/netlink/cli
  libnlinclude_netlink_cli_HEADERS = \
  	include/netlink/cli/addr.h \
@@ -45,7 +57,7 @@ index 1d70059..77d796c 100644
  	include/netlink/cli/class.h \
  	include/netlink/cli/cls.h \
  	include/netlink/cli/ct.h \
-@@ -376,6 +378,7 @@ lib_libnl_route_3_la_SOURCES = \
+@@ -382,6 +384,7 @@ lib_libnl_route_3_la_SOURCES = \
  	lib/route/act/skbedit.c \
  	lib/route/act/vlan.c \
  	lib/route/addr.c \
@@ -53,7 +65,7 @@ index 1d70059..77d796c 100644
  	lib/route/class.c \
  	lib/route/classid.c \
  	lib/route/cls.c \
-@@ -610,6 +613,7 @@ endif
+@@ -620,6 +623,7 @@ endif
  
  src_lib_libnl_cli_3_la_SOURCES = \
  	src/lib/addr.c \
@@ -61,7 +73,7 @@ index 1d70059..77d796c 100644
  	src/lib/class.c \
  	src/lib/cls.c \
  	src/lib/ct.c \
-@@ -677,6 +681,7 @@ cli_programs = \
+@@ -687,6 +691,7 @@ cli_programs = \
  	src/nl-addr-add \
  	src/nl-addr-delete \
  	src/nl-addr-list \
@@ -69,7 +81,7 @@ index 1d70059..77d796c 100644
  	src/nl-class-add \
  	src/nl-class-delete \
  	src/nl-class-list \
-@@ -754,6 +759,8 @@ src_nl_addr_delete_CPPFLAGS =       $(src_cppflags)
+@@ -764,6 +769,8 @@ src_nl_addr_delete_CPPFLAGS =       $(src_cppflags)
  src_nl_addr_delete_LDADD =          $(src_ldadd)
  src_nl_addr_list_CPPFLAGS =         $(src_cppflags)
  src_nl_addr_list_LDADD =            $(src_ldadd)
@@ -79,12 +91,12 @@ index 1d70059..77d796c 100644
  src_nl_class_add_LDADD =            $(src_ldadd)
  src_nl_class_delete_CPPFLAGS =      $(src_cppflags)
 diff --git a/include/netlink-private/types.h b/include/netlink-private/types.h
-index eec2e83..ad50032 100644
+index 75617ce..83d64c1 100644
 --- a/include/netlink-private/types.h
 +++ b/include/netlink-private/types.h
-@@ -1358,4 +1358,15 @@ struct rtnl_mdb_entry {
- 
- 	struct nl_list_head mdb_list;
+@@ -1381,4 +1381,15 @@ struct rtnl_mdb_entry {
+ 	uint16_t proto;
+ 	uint8_t state;
  };
 +
 +struct rtnl_bridge_vlan {
@@ -555,13 +567,13 @@ index 71ff2eb..ed3bf34 100644
 +	nl_cli_bridge_vlan_parse_ifindex;
  } libnl_3;
 diff --git a/libnl-route-3.sym b/libnl-route-3.sym
-index 62b44ad..21a23a2 100644
+index 866b69c..6e96305 100644
 --- a/libnl-route-3.sym
 +++ b/libnl-route-3.sym
-@@ -1172,4 +1172,17 @@ libnl_3_6 {
- 	rtnl_mdb_entry_get_proto;
- 	rtnl_mdb_entry_get_state;
- 	rtnl_mdb_entry_get_vid;
+@@ -1252,6 +1252,19 @@ global:
+ 
+ libnl_3_7 {
+ global:
 +	rtnl_bridge_vlan_alloc;
 +	rtnl_bridge_vlan_alloc_cache;
 +	rtnl_bridge_vlan_alloc_cache_flags;
@@ -575,19 +587,9 @@ index 62b44ad..21a23a2 100644
 +	rtnl_bridge_vlan_set_ifindex;
 +	rtnl_bridge_vlan_set_state;
 +	rtnl_bridge_vlan_set_vlan_id;
- } libnl_3_5;
-diff --git a/src/.gitignore b/src/.gitignore
-index e53eb3d..31ec86e 100644
---- a/src/.gitignore
-+++ b/src/.gitignore
-@@ -12,6 +12,7 @@ nf-queue
- nl-addr-add
- nl-addr-delete
- nl-addr-list
-+nl-bridge
- nl-class-add
- nl-class-delete
- nl-class-list
+ 	rtnl_link_bond_enslave_ifindex;
+ 	rtnl_link_bond_get_active_slave;
+ 	rtnl_link_bond_get_mode;
 diff --git a/src/lib/bridge_vlan.c b/src/lib/bridge_vlan.c
 new file mode 100644
 index 0000000..7f90a7f
@@ -681,10 +683,10 @@ index 0000000..32530fe
 +	return 0;
 +}
 diff --git a/src/nl-monitor.c b/src/nl-monitor.c
-index 99aa0f4..a9e40c9 100644
+index 86294fb..17225aa 100644
 --- a/src/nl-monitor.c
 +++ b/src/nl-monitor.c
-@@ -38,6 +38,7 @@ static const struct {
+@@ -31,6 +31,7 @@ static const struct {
  	{ RTNLGRP_IPV6_NETCONF, "ipv6-netconf" },
  	{ RTNLGRP_MPLS_NETCONF, "mpls-netconf" },
  	{ RTNLGRP_MDB, "mdb" },

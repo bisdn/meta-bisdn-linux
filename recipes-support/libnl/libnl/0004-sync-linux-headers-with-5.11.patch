@@ -1,16 +1,16 @@
-From 8591d75aacbf3e2859373d4aa39f94d19edeba57 Mon Sep 17 00:00:00 2001
+From bef6dddb5671e14f8f307a9d74adfc0b24afcb7f Mon Sep 17 00:00:00 2001
 From: Rubens Figueiredo <rubens.figueiredo@bisdn.de>
 Date: Tue, 10 Aug 2021 11:22:23 +0200
-Subject: [PATCH 5/7] sync linux headers with 5.11?
+Subject: [PATCH 4/6] sync linux headers with 5.11?
 
 Signed-off-by: Rubens Figueiredo <rubens.figueiredo@bisdn.de>
 ---
- include/linux-private/linux/if_bridge.h | 444 ++++++++++++++++++++++++
+ include/linux-private/linux/if_bridge.h | 443 ++++++++++++++++++++++++
  include/linux-private/linux/rtnetlink.h | 102 ++++--
- 2 files changed, 519 insertions(+), 27 deletions(-)
+ 2 files changed, 518 insertions(+), 27 deletions(-)
 
 diff --git a/include/linux-private/linux/if_bridge.h b/include/linux-private/linux/if_bridge.h
-index bdfecf9..fee6e45 100644
+index e206aa8..fee6e45 100644
 --- a/include/linux-private/linux/if_bridge.h
 +++ b/include/linux-private/linux/if_bridge.h
 @@ -120,6 +120,8 @@ enum {
@@ -450,7 +450,7 @@ index bdfecf9..fee6e45 100644
  /* multicast router types */
  enum {
  	MDB_RTR_TYPE_DISABLED,
-@@ -237,12 +642,16 @@ struct br_mdb_entry {
+@@ -237,6 +642,9 @@ struct br_mdb_entry {
  #define MDB_PERMANENT 1
  	__u8 state;
  #define MDB_FLAGS_OFFLOAD	(1 << 0)
@@ -460,14 +460,7 @@ index bdfecf9..fee6e45 100644
  	__u8 flags;
  	__u16 vid;
  	struct {
- 		union {
- 			__be32	ip4;
- 			struct in6_addr ip6;
-+			unsigned char mac_addr[ETH_ALEN];
- 		} u;
- 		__be16		proto;
- 	} addr;
-@@ -251,16 +660,30 @@ struct br_mdb_entry {
+@@ -252,16 +660,30 @@ struct br_mdb_entry {
  enum {
  	MDBA_SET_ENTRY_UNSPEC,
  	MDBA_SET_ENTRY,
@@ -498,7 +491,7 @@ index bdfecf9..fee6e45 100644
  	__BRIDGE_XSTATS_MAX
  };
  #define BRIDGE_XSTATS_MAX (__BRIDGE_XSTATS_MAX - 1)
-@@ -292,4 +715,25 @@ struct br_mcast_stats {
+@@ -293,4 +715,25 @@ struct br_mcast_stats {
  	__u64 mcast_bytes[BR_MCAST_DIR_SIZE];
  	__u64 mcast_packets[BR_MCAST_DIR_SIZE];
  };
