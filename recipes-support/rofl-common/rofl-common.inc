@@ -3,7 +3,7 @@
 
 DESCRIPTION = "OpenFlow protocol endpoint written in C++"
 HOMEPAGE = "https://github.com/bisdn/rofl-common"
-LICENSE = "MPLv2"
+LICENSE = "MPL-2.0"
 LIC_FILES_CHKSUM = "file://COPYRIGHT;md5=5d425c8f3157dbf212db2ec53d9e5132"
 
 DEPENDS = " \
