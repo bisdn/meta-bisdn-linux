@@ -3,7 +3,7 @@
 
 DESCRIPTION = "A tiny OpenFlow controller for OF-DPA switches"
 HOMEPAGE = "https://github.com/bisdn/basebox"
-LICENSE = "MPLv2"
+LICENSE = "MPL-2.0"
 LIC_FILES_CHKSUM = "file://COPYING;md5=815ca599c9df247a0c7f619bab123dad"
 
 DEPENDS = "\
