@@ -3,7 +3,7 @@
 
 DESCRIPTION = "Convenience library to interact with Broadcom OF-DPA based switches"
 HOMEPAGE = "https://github.com/bisdn/rofl-ofdpa"
-LICENSE = "MPLv2"
+LICENSE = "MPL-2.0"
 LIC_FILES_CHKSUM = "file://COPYING;md5=815ca599c9df247a0c7f619bab123dad"
 
 DEPENDS = "rofl-common"
