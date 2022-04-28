@@ -141,12 +141,12 @@ function get_network_state() {
   log_cmd_output ip a
   log_cmd_output ip route list table all
   log_cmd_output ip neigh
-  log_cmd_output bridge -d vlan
   log_cmd_output bridge fdb
   if grep -q bridge.ko "/lib/modules/$(uname -r)/modules.builtin" ||
       grep "^bridge " /proc/modules; then
-    # bridge kernel module is available, we can go ahead with bridge mdb
+    # bridge kernel module is available, we can go ahead
     log_cmd_output bridge mdb
+    log_cmd_output bridge -d vlan
   fi
 }
 
