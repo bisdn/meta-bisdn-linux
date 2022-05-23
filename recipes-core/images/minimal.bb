@@ -19,6 +19,8 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL = "\
     less \
     onie-tools \
     onl \
+    openssh-sftp \
+    openssh-sftp-server \
     parted \
     strace \
     util-linux \
