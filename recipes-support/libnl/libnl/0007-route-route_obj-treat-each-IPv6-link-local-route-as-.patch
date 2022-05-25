@@ -1,7 +1,7 @@
 From fc6ed472edd6bb4d8cd74c0f2f547ac26c153411 Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Tue, 1 Mar 2022 12:59:50 +0100
-Subject: [PATCH 7/7] route/route_obj: treat each IPv6 link-local route as
+Subject: [PATCH 7/8] route/route_obj: treat each IPv6 link-local route as
  different
 
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
@@ -10,7 +10,7 @@ Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
  1 file changed, 29 insertions(+)
 
 diff --git a/lib/route/route_obj.c b/lib/route/route_obj.c
-index bacabe8..f1292d7 100644
+index bacabe85d6df..f1292d7e0b90 100644
 --- a/lib/route/route_obj.c
 +++ b/lib/route/route_obj.c
 @@ -363,6 +363,35 @@ static uint32_t route_id_attrs_get(struct nl_object *obj)
@@ -50,5 +50,5 @@ index bacabe8..f1292d7 100644
  }
  
 -- 
-2.35.1
+2.36.1
 

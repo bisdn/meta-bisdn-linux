@@ -1,0 +1,59 @@
+From a8e0510db8a4d10a0fc8868d8965f1442f6ee069 Mon Sep 17 00:00:00 2001
+From: Jonas Gorski <jonas.gorski@bisdn.de>
+Date: Wed, 25 May 2022 12:42:13 +0200
+Subject: [PATCH 8/8] lib: handle default route destinations in nla_put_addr()
+
+Default routes (0.0.0.0/0 and ::/0) won't have any data allocated, so
+their data length is zero. This causes nla_put_addr() to generate a
+zero-length address attribute, which is rightfully rejected by the
+kernel.
+
+So in case we we get an address with a zero-length prefix, just allocate
+an appropriate sized attribute for the address family. Since nla_reserve
+initializes the attribute, we don't need to do anything with it.
+
+Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
+---
+ lib/attr.c | 26 ++++++++++++++++++++++++--
+ 1 file changed, 24 insertions(+), 2 deletions(-)
+
+diff --git a/lib/attr.c b/lib/attr.c
+index a4f585275f1c..4ebe4b130982 100644
+--- a/lib/attr.c
++++ b/lib/attr.c
+@@ -549,8 +549,30 @@ int nla_put_data(struct nl_msg *msg, int attrtype, const struct nl_data *data)
+  */
+ int nla_put_addr(struct nl_msg *msg, int attrtype, struct nl_addr *addr)
+ {
+-	return nla_put(msg, attrtype, nl_addr_get_len(addr),
+-		       nl_addr_get_binary_addr(addr));
++	int addrlen = 0;
++
++	if (nl_addr_get_prefixlen(addr) > 0)
++		return nla_put(msg, attrtype, nl_addr_get_len(addr),
++			       nl_addr_get_binary_addr(addr));
++
++	switch (nl_addr_get_family(addr)) {
++		case AF_INET:
++			addrlen = 4;
++			break;
++		case AF_INET6:
++			addrlen = 16;
++			break;
++		default:
++			return -NLE_INVAL;
++	}
++
++	/* memory will be set to 0 already, so we don't need to do anything
++	 * with it.
++	 */
++	if (nla_reserve(msg, attrtype, addrlen) == NULL)
++		return -NLE_NOMEM;
++
++	return 0;
+ }
+ 
+ /** @} */
+-- 
+2.36.1
+

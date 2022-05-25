@@ -1,7 +1,7 @@
 From c7592e59fb7a46c1c7330275495ed364d0221e9a Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Tue, 6 Oct 2020 16:53:36 +0200
-Subject: [PATCH 4/7] link/bonding: expose state on enslaved interfaces
+Subject: [PATCH 4/8] link/bonding: expose state on enslaved interfaces
 
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
@@ -11,7 +11,7 @@ Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
  3 files changed, 185 insertions(+)
 
 diff --git a/include/netlink/route/link/bonding.h b/include/netlink/route/link/bonding.h
-index a68cf1e..1719e36 100644
+index a68cf1e28e9b..1719e3674b5f 100644
 --- a/include/netlink/route/link/bonding.h
 +++ b/include/netlink/route/link/bonding.h
 @@ -43,6 +43,9 @@ extern int	rtnl_link_bond_get_primary(struct rtnl_link *, uint32_t *);
@@ -25,7 +25,7 @@ index a68cf1e..1719e36 100644
  }
  #endif
 diff --git a/lib/route/link/bonding.c b/lib/route/link/bonding.c
-index 0774223..65d54af 100644
+index 0774223b1917..65d54afd7362 100644
 --- a/lib/route/link/bonding.c
 +++ b/lib/route/link/bonding.c
 @@ -172,6 +172,120 @@ static int bond_compare(struct rtnl_link *link_a, struct rtnl_link *link_b,
@@ -237,7 +237,7 @@ index 0774223..65d54af 100644
  {
  	rtnl_link_register_info(&bonding_info_ops);
 diff --git a/libnl-route-3.sym b/libnl-route-3.sym
-index 37ad514..62b44ad 100644
+index 37ad514a5d21..62b44ad1c9d8 100644
 --- a/libnl-route-3.sym
 +++ b/libnl-route-3.sym
 @@ -1160,6 +1160,8 @@ libnl_3_6 {
@@ -250,5 +250,5 @@ index 37ad514..62b44ad 100644
  	rtnl_mdb_alloc_cache_flags;
  	rtnl_mdb_foreach_entry;
 -- 
-2.35.1
+2.36.1
 

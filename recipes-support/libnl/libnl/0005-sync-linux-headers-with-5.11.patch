@@ -1,7 +1,7 @@
 From 8591d75aacbf3e2859373d4aa39f94d19edeba57 Mon Sep 17 00:00:00 2001
 From: Rubens Figueiredo <rubens.figueiredo@bisdn.de>
 Date: Tue, 10 Aug 2021 11:22:23 +0200
-Subject: [PATCH 5/7] sync linux headers with 5.11?
+Subject: [PATCH 5/8] sync linux headers with 5.11?
 
 Signed-off-by: Rubens Figueiredo <rubens.figueiredo@bisdn.de>
 ---
@@ -10,7 +10,7 @@ Signed-off-by: Rubens Figueiredo <rubens.figueiredo@bisdn.de>
  2 files changed, 519 insertions(+), 27 deletions(-)
 
 diff --git a/include/linux-private/linux/if_bridge.h b/include/linux-private/linux/if_bridge.h
-index bdfecf9..fee6e45 100644
+index bdfecf941132..fee6e4563e9b 100644
 --- a/include/linux-private/linux/if_bridge.h
 +++ b/include/linux-private/linux/if_bridge.h
 @@ -120,6 +120,8 @@ enum {
@@ -525,7 +525,7 @@ index bdfecf9..fee6e45 100644
 +};
  #endif /* _LINUX_IF_BRIDGE_H */
 diff --git a/include/linux-private/linux/rtnetlink.h b/include/linux-private/linux/rtnetlink.h
-index 8c1d600..98ee2db 100644
+index 8c1d600bfa33..98ee2db01962 100644
 --- a/include/linux-private/linux/rtnetlink.h
 +++ b/include/linux-private/linux/rtnetlink.h
 @@ -157,6 +157,27 @@ enum {
@@ -725,5 +725,5 @@ index 8c1d600..98ee2db 100644
  /* End of information exported to user level */
  
 -- 
-2.35.1
+2.36.1
 

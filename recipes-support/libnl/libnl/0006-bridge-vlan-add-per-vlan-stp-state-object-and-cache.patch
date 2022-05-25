@@ -1,7 +1,7 @@
 From b84f561f4c30bd631894066d701166cae226ff1c Mon Sep 17 00:00:00 2001
 From: Rubens Figueiredo <rubens.figueiredo@bisdn.de>
 Date: Tue, 10 Aug 2021 11:23:39 +0200
-Subject: [PATCH 6/7] bridge-vlan: add per vlan stp state object and cache
+Subject: [PATCH 6/8] bridge-vlan: add per vlan stp state object and cache
 
 Signed-off-by: Rubens Figueiredo <rubens.figueiredo@bisdn.de>
 Co-authored-by: Jonas Gorski <jonas.gorski@bisdn.de>
@@ -26,7 +26,7 @@ Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
  create mode 100644 src/nl-bridge.c
 
 diff --git a/Makefile.am b/Makefile.am
-index 1d70059..77d796c 100644
+index 1d7005974b62..77d796c906af 100644
 --- a/Makefile.am
 +++ b/Makefile.am
 @@ -102,6 +102,7 @@ libnlinclude_netlink_routedir = $(libnlincludedir)/netlink/route
@@ -79,7 +79,7 @@ index 1d70059..77d796c 100644
  src_nl_class_add_LDADD =            $(src_ldadd)
  src_nl_class_delete_CPPFLAGS =      $(src_cppflags)
 diff --git a/include/netlink-private/types.h b/include/netlink-private/types.h
-index eec2e83..ad50032 100644
+index eec2e83882ae..ad500324a822 100644
 --- a/include/netlink-private/types.h
 +++ b/include/netlink-private/types.h
 @@ -1358,4 +1358,15 @@ struct rtnl_mdb_entry {
@@ -100,7 +100,7 @@ index eec2e83..ad50032 100644
  #endif
 diff --git a/include/netlink/cli/bridge_vlan.h b/include/netlink/cli/bridge_vlan.h
 new file mode 100644
-index 0000000..8d3adbd
+index 000000000000..8d3adbd8cf1f
 --- /dev/null
 +++ b/include/netlink/cli/bridge_vlan.h
 @@ -0,0 +1,23 @@
@@ -129,7 +129,7 @@ index 0000000..8d3adbd
 +#endif
 diff --git a/include/netlink/route/bridge_vlan.h b/include/netlink/route/bridge_vlan.h
 new file mode 100644
-index 0000000..62f2994
+index 000000000000..62f2994c7d85
 --- /dev/null
 +++ b/include/netlink/route/bridge_vlan.h
 @@ -0,0 +1,42 @@
@@ -177,7 +177,7 @@ index 0000000..62f2994
 +#endif
 diff --git a/lib/route/bridge_vlan.c b/lib/route/bridge_vlan.c
 new file mode 100644
-index 0000000..36c2b49
+index 000000000000..36c2b490732f
 --- /dev/null
 +++ b/lib/route/bridge_vlan.c
 @@ -0,0 +1,361 @@
@@ -543,7 +543,7 @@ index 0000000..36c2b49
 +
 +/** @} */
 diff --git a/libnl-cli-3.sym b/libnl-cli-3.sym
-index 71ff2eb..ed3bf34 100644
+index 71ff2ebebaa2..ed3bf3437bb9 100644
 --- a/libnl-cli-3.sym
 +++ b/libnl-cli-3.sym
 @@ -114,4 +114,7 @@ global:
@@ -555,7 +555,7 @@ index 71ff2eb..ed3bf34 100644
 +	nl_cli_bridge_vlan_parse_ifindex;
  } libnl_3;
 diff --git a/libnl-route-3.sym b/libnl-route-3.sym
-index 62b44ad..21a23a2 100644
+index 62b44ad1c9d8..21a23a27c15b 100644
 --- a/libnl-route-3.sym
 +++ b/libnl-route-3.sym
 @@ -1172,4 +1172,17 @@ libnl_3_6 {
@@ -577,7 +577,7 @@ index 62b44ad..21a23a2 100644
 +	rtnl_bridge_vlan_set_vlan_id;
  } libnl_3_5;
 diff --git a/src/.gitignore b/src/.gitignore
-index e53eb3d..31ec86e 100644
+index e53eb3d10b73..31ec86e0c097 100644
 --- a/src/.gitignore
 +++ b/src/.gitignore
 @@ -12,6 +12,7 @@ nf-queue
@@ -590,7 +590,7 @@ index e53eb3d..31ec86e 100644
  nl-class-list
 diff --git a/src/lib/bridge_vlan.c b/src/lib/bridge_vlan.c
 new file mode 100644
-index 0000000..7f90a7f
+index 000000000000..7f90a7f997bd
 --- /dev/null
 +++ b/src/lib/bridge_vlan.c
 @@ -0,0 +1,42 @@
@@ -638,7 +638,7 @@ index 0000000..7f90a7f
 +}
 diff --git a/src/nl-bridge.c b/src/nl-bridge.c
 new file mode 100644
-index 0000000..32530fe
+index 000000000000..32530fe9d3ca
 --- /dev/null
 +++ b/src/nl-bridge.c
 @@ -0,0 +1,38 @@
@@ -681,7 +681,7 @@ index 0000000..32530fe
 +	return 0;
 +}
 diff --git a/src/nl-monitor.c b/src/nl-monitor.c
-index 99aa0f4..a9e40c9 100644
+index 99aa0f43cc83..a9e40c9f647a 100644
 --- a/src/nl-monitor.c
 +++ b/src/nl-monitor.c
 @@ -38,6 +38,7 @@ static const struct {
@@ -693,5 +693,5 @@ index 99aa0f4..a9e40c9 100644
  };
  
 -- 
-2.35.1
+2.36.1
 

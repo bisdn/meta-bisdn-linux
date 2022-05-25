@@ -1,7 +1,7 @@
 From 7fd781e1dda943c6324402fd2771ee17cf23e322 Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Tue, 6 Oct 2020 10:00:37 +0200
-Subject: [PATCH 2/7] link/bonding: parse and expose bonding options
+Subject: [PATCH 2/8] link/bonding: parse and expose bonding options
 
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
@@ -11,7 +11,7 @@ Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
  3 files changed, 344 insertions(+), 1 deletion(-)
 
 diff --git a/include/netlink/route/link/bonding.h b/include/netlink/route/link/bonding.h
-index 5c34662..a68cf1e 100644
+index 5c34662df7b3..a68cf1e28e9b 100644
 --- a/include/netlink/route/link/bonding.h
 +++ b/include/netlink/route/link/bonding.h
 @@ -31,6 +31,18 @@ extern int	rtnl_link_bond_enslave(struct nl_sock *, struct rtnl_link *,
@@ -34,7 +34,7 @@ index 5c34662..a68cf1e 100644
  }
  #endif
 diff --git a/lib/route/link/bonding.c b/lib/route/link/bonding.c
-index 11b6d3d..0774223 100644
+index 11b6d3d12e2b..0774223b1917 100644
 --- a/lib/route/link/bonding.c
 +++ b/lib/route/link/bonding.c
 @@ -25,6 +25,153 @@
@@ -377,7 +377,7 @@ index 11b6d3d..0774223 100644
  {
  	rtnl_link_register_info(&bonding_info_ops);
 diff --git a/libnl-route-3.sym b/libnl-route-3.sym
-index 900b5e6..37ad514 100644
+index 900b5e66ddee..37ad514a5d21 100644
 --- a/libnl-route-3.sym
 +++ b/libnl-route-3.sym
 @@ -232,7 +232,6 @@ global:
@@ -405,5 +405,5 @@ index 900b5e6..37ad514 100644
  	rtnl_mdb_alloc_cache_flags;
  	rtnl_mdb_foreach_entry;
 -- 
-2.35.1
+2.36.1
 

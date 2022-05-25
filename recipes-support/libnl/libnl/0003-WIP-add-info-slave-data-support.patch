@@ -1,7 +1,7 @@
 From 38d8c7608eea311d111b245e6ef89bbb988923aa Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Tue, 6 Oct 2020 15:25:38 +0200
-Subject: [PATCH 3/7] WIP: add info slave data support
+Subject: [PATCH 3/8] WIP: add info slave data support
 
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
@@ -12,7 +12,7 @@ Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
  4 files changed, 127 insertions(+)
 
 diff --git a/include/netlink-private/route/link/api.h b/include/netlink-private/route/link/api.h
-index 6d30bf7..48eec75 100644
+index 6d30bf7c4798..48eec7553819 100644
 --- a/include/netlink-private/route/link/api.h
 +++ b/include/netlink-private/route/link/api.h
 @@ -64,6 +64,39 @@ struct rtnl_link_info_ops
@@ -67,7 +67,7 @@ index 6d30bf7..48eec75 100644
  }
  #endif
 diff --git a/include/netlink-private/types.h b/include/netlink-private/types.h
-index c2f28d4..eec2e83 100644
+index c2f28d4ae463..eec2e83882ae 100644
 --- a/include/netlink-private/types.h
 +++ b/include/netlink-private/types.h
 @@ -217,8 +217,10 @@ struct rtnl_link
@@ -82,7 +82,7 @@ index c2f28d4..eec2e83 100644
  	uint32_t			l_promiscuity;
  	uint32_t			l_num_tx_queues;
 diff --git a/lib/route/link.c b/lib/route/link.c
-index df01a71..211573d 100644
+index df01a71a35f4..211573d819bc 100644
 --- a/lib/route/link.c
 +++ b/lib/route/link.c
 @@ -263,12 +263,29 @@ static void release_link_info(struct rtnl_link *link)
@@ -233,7 +233,7 @@ index df01a71..211573d 100644
  
  /**
 diff --git a/lib/route/link/api.c b/lib/route/link/api.c
-index d406783..7b66a75 100644
+index d406783e2ea6..7b66a75af1ed 100644
 --- a/lib/route/link/api.c
 +++ b/lib/route/link/api.c
 @@ -413,6 +413,28 @@ int rtnl_link_info_data_compare(struct rtnl_link *a, struct rtnl_link *b, int fl
@@ -266,5 +266,5 @@ index d406783..7b66a75 100644
  
  /** @} */
 -- 
-2.35.1
+2.36.1
 
