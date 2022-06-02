@@ -12,6 +12,7 @@ ONIEIMAGE_DIR_INSTALL = "${ONIEIMAGE_DIR}/installer/"
 
 BISDN_ONIE_ADDITIONS ?= "${COREBASE}/bisdn-onie-additions/bisdn"
 BISDN_ARCH ?= "x86_64"
+BISDN_ONIE_PLATFORM ?= "${@'${ONIE_PLATFORM}'.replace('_','-')}"
 
 ONIEIMAGE_SHELL_ARCHIVE_BODY ?= "${BISDN_ONIE_ADDITIONS}/installer/sharch_body.sh"
 ONIEIMAGE_CONF_DIR ?= "${BISDN_ONIE_ADDITIONS}/machine"
