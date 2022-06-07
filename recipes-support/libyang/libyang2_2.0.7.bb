@@ -17,7 +17,7 @@ DEBIAN_NOAUTONAME_${PN}-utils = "1"
 DEBIAN_NOAUTONAME_${PN}-dbg = "1"
 
 SRC_URI = " \
-    git://github.com/CESNET/libyang.git;protocol=https \
+    git://github.com/CESNET/libyang.git;protocol=https;branch=master \
     file://0001-cmake-use-pkg-config-for-extracting-pcre2-version.patch \
 "
 
