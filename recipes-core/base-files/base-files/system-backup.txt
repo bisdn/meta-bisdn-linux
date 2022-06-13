@@ -3,6 +3,7 @@
 /etc/passwd
 /etc/shadow
 /etc/group
+/etc/gshadow
 /etc/sudoers.d
 /etc/systemd/network/
 /etc/ofdpa-grpc.conf
