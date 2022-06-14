@@ -4,14 +4,14 @@
 SUMMARY = "basebox user"
 LICENSE = "MIT"
 SECTION = "core"
-RDEPENDS_${PN} = "sudo"
+RDEPENDS:${PN} = "sudo"
 
 inherit useradd
 
 USER = "basebox"
 # generated with openssl passwd -6 b-isdn
 PASSWORD = "\$6\$2zTHd7.l2MZBTq5j\$LAwBkh6ILoFcqQyKhwzWe/jm.y/R3Mv0tsOhEbssq.ZLNiXivGpQUmKUWJSvoncQMj/jboLCQAH689wRfUy18."
-USERADD_PARAM_${PN} = "-p '${PASSWORD}' ${USER}"
+USERADD_PARAM:${PN} = "-p '${PASSWORD}' ${USER}"
 USERADD_PACKAGES = "${PN}"
 
 do_install () {

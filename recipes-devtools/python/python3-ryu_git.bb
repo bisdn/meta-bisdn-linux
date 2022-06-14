@@ -15,14 +15,14 @@ S = "${WORKDIR}/git"
 
 inherit setuptools3
 
-FILES_${PN} += "${datadir}/etc/${SRCNAME}/*"
+FILES:${PN} += "${datadir}/etc/${SRCNAME}/*"
 
 DEPENDS += " \
         python3-pip \
         python3-pbr-native \
         "
 
-RDEPENDS_${PN} += " \
+RDEPENDS:${PN} += " \
         python3-eventlet \
         python3-msgpack \
         python3-netaddr \
@@ -36,7 +36,7 @@ RDEPENDS_${PN} += " \
 	python3-greenlet \
 	python3-stevedore (>=1.20) \
         "
-FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
 
 SRC_URI += " \
   file://0001-ryu-ofproto-ofproto_common.py-add-OFDPA_EXPERIMENTER.patch \
@@ -56,7 +56,7 @@ SRC_URI += " \
 
 inherit systemd
 
-do_install_append() {
+do_install:append() {
     # add directories
     install -d ${D}${sysconfdir}/default \
                ${D}${systemd_unitdir}/system
@@ -67,8 +67,8 @@ do_install_append() {
 
 }
 
-FILES_${PN} += " \
+FILES:${PN} += " \
     ${sysconfdir}/default \
     ${systemd_unitdir}/system \
 "
-CONFFILES_${PN} += " ${sysconfdir}/default/ryu-manager"
+CONFFILES:${PN} += " ${sysconfdir}/default/ryu-manager"

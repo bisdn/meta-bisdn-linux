@@ -6,7 +6,7 @@ HOMEPAGE = "https://www.bisdn.de/"
 LICENSE = "MPL-2.0"
 LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/MPL-2.0;md5=815ca599c9df247a0c7f619bab123dad"
 SECTION = "base"
-RDEPENDS_baseboxd-tools = "bash"
+RDEPENDS:baseboxd-tools = "bash"
 
 SRC_URI = " \
   file://basebox-change-config \
@@ -23,4 +23,4 @@ do_install () {
   ln -s bundle-debug-info ${D}${bindir}/basebox-support
 }
 
-FILES_${PN} = "/"
+FILES:${PN} = "/"

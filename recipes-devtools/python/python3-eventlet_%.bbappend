@@ -1,1 +1,1 @@
-RDEPENDS_${PN} += "${PYTHON_PN}-monotonic ${PYTHON_PN}-dnspython"
+RDEPENDS:${PN} += "${PYTHON_PN}-monotonic ${PYTHON_PN}-dnspython"

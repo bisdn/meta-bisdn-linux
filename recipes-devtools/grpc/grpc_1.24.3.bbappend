@@ -2,7 +2,7 @@
 # we need to use the submodule way. For some reason, this hangs on
 # checkout so do the checkout manually. Luckily we only need googletest.
 
-FILESEXTRAPATHS_append := "${THISDIR}/files:"
+FILESEXTRAPATHS:append := "${THISDIR}/files:"
 
 SRC_URI += " \
            git://github.com/google/googletest.git;protocol=https;name=gtest;tag=release-1.8.0;destsuffix=git/third_party/googletest;branch=main \
@@ -13,13 +13,13 @@ SRC_URI += " \
 "
 
 # build grpc_cli as well
-EXTRA_OECMAKE_append = " \
+EXTRA_OECMAKE:append = " \
     -DgRPC_BUILD_CLI=ON \
 "
 
 # gRPC_BUILD_CODEGEN
 
 # remove grpc_cli from -dev and move it to the main package
-FILES_${PN}-dev_remove = "${bindir}"
-FILES_${PN}-dev += "${bindir}/*plugin"
-FILES_${PN} += "${bindir}/grpc_cli"
+FILES:${PN}-dev:remove = "${bindir}"
+FILES:${PN}-dev += "${bindir}/*plugin"
+FILES:${PN} += "${bindir}/grpc_cli"
