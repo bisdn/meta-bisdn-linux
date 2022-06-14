@@ -18,10 +18,9 @@ DEBIAN_NOAUTONAME_${PN}-dbg = "1"
 
 SRC_URI = " \
     git://github.com/CESNET/libyang.git;protocol=https;branch=master \
-    file://0001-cmake-use-pkg-config-for-extracting-pcre2-version.patch \
 "
 
-SRCREV = "69d9fff65abb58beb0bb6aa9ecacd572ca1dfc56"
+SRCREV = "87375f15159545a87a1e0de200f5d9d67e9091d7"
 
 EXTRA_OECMAKE += " \
     -DENABLE_LYD_PRIV=ON \
