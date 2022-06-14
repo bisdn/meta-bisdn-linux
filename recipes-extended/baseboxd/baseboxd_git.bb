@@ -4,19 +4,19 @@
 require baseboxd.inc
 inherit meson
 
-TARGET_LDFLAGS_remove = "-Wl,--as-needed"
-TARGET_LDFLAGS_append = " -Wl,--no-as-needed"
+TARGET_LDFLAGS:remove = "-Wl,--as-needed"
+TARGET_LDFLAGS:append = " -Wl,--no-as-needed"
 
 SRCREV = "${AUTOREV}"
 PV = "git+${SRCPV}"
 DEFAULT_PREFERENCE = "-1"
 
 # may happen for git hashes
-INSANE_SKIP_${PN} += "version-going-backwards"
+INSANE_SKIP:${PN} += "version-going-backwards"
 
 
 # install service and sysconfig
-do_install_append() {
+do_install:append() {
    # add directories
    install -d ${D}${sysconfdir}/default \
               ${D}${systemd_unitdir}/system

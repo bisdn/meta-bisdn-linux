@@ -10,10 +10,10 @@ DEPENDS += " \
         clippy-native \
         libyang2 \
 "
-do_compile_prepend_class-target () {
+do_compile:prepend:class-target () {
         export PYTHONHOME=${RECIPE_SYSROOT_NATIVE}/usr
 }
 
-FILES_${PN} += " \
+FILES:${PN} += " \
   ${datadir}/yang \
 "

@@ -40,8 +40,8 @@ do_install () {
 	install -m 0644  ${S}/${sysconfdir}/opkg/* ${D}${sysconfdir}/opkg/
 }
 
-FILES_${PN} = "${sysconfdir}/opkg/ "
+FILES:${PN} = "${sysconfdir}/opkg/ "
 
-CONFFILES_${PN} += "${sysconfdir}/opkg/base-feeds.conf \
+CONFFILES:${PN} += "${sysconfdir}/opkg/base-feeds.conf \
                     ${sysconfdir}/opkg/arch.conf"
 

@@ -34,7 +34,7 @@ EXTRA_OECONF  = " \
 	       --enable-clippy-only \
 	       "
 
-do_compile_prepend_class-native () {
+do_compile:prepend:class-native () {
        export PYTHONHOME=${RECIPE_SYSROOT_NATIVE}/usr
        install -m 0755 -d ${WORKDIR}/build/tests/isisd
 }

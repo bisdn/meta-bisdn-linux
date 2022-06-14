@@ -1,4 +1,4 @@
-FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
 
 SRC_URI += " \
    file://system-backup.txt \
@@ -7,7 +7,7 @@ SRC_URI += " \
 
 dirs755 += "/mnt/onie-boot"
 
-do_install_append () {
+do_install:append () {
   cat >> ${D}${sysconfdir}/fstab <<EOF
 # onie
 LABEL=ONIE-BOOT      /mnt/onie-boot       auto       defaults,noauto       0  2
@@ -18,8 +18,8 @@ EOF
 }
 
 # /lib64 is required by tibit-poncntl
-FILES_${PN}_append_x86-64 = " /lib64"
+FILES:${PN}:append:x86-64 = " /lib64"
 
-do_install_append_x86-64() {
+do_install:append:x86-64() {
     ln -sf lib ${D}/lib64
 }

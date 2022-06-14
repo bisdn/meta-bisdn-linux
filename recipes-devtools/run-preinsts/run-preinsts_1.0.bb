@@ -19,13 +19,13 @@ INITSCRIPT_NAME = "run-preinsts"
 inherit systemd
 
 # Runtime dependency on systemd
-RDEPENDS_${PN} += "systemd"
+RDEPENDS:${PN} += "systemd"
 
 # Install service on system
-SYSTEMD_SERVICE_$target{PN} = "run-preinsts.service"
+SYSTEMD_SERVICE:$target{PN} = "run-preinsts.service"
 
 # Enable service on system
-SYSTEMD_AUTO_ENABLE_${PN} = "enable"
+SYSTEMD_AUTO_ENABLE:${PN} = "enable"
 
 do_install() {
 	install -d ${D}${sbindir}
@@ -44,6 +44,6 @@ do_install() {
 
 # Tell yocto you are adding all files to the package, or else it will see the
 # files as not belonging to any package and give an error.
-FILES_${PN} += "${WORKDIR}/run-preinsts.service"
-FILES_${PN} += "${sbindir}/run-preinsts"
-SYSTEMD_SERVICE_${PN} = "run-preinsts.service"
+FILES:${PN} += "${WORKDIR}/run-preinsts.service"
+FILES:${PN} += "${sbindir}/run-preinsts"
+SYSTEMD_SERVICE:${PN} = "run-preinsts.service"

@@ -26,12 +26,12 @@ CFLAGS += " -DPRTSM_ENABLE_LOG"
 # Packets (printf, always active):
 CFLAGS += " -DPACKET_DEBUG"
 
-FILES_${PN} += "${systemd_system_unitdir}/mstpd.service"
+FILES:${PN} += "${systemd_system_unitdir}/mstpd.service"
 
-SYSTEMD_SERVICE_${PN} = "mstpd.service"
-SYSTEMD_AUTO_ENABLE_${PN} = "disable"
+SYSTEMD_SERVICE:${PN} = "mstpd.service"
+SYSTEMD_AUTO_ENABLE:${PN} = "disable"
 
-do_install_append() {
+do_install:append() {
    # we do not use it nor can we use it, and shipping it will add a unnecessary
    # depdency on python (2)
    rm ${D}${libexecdir}/mstpctl-utils/ifquery

@@ -10,7 +10,7 @@ SRC_URI[sha256sum] = "b4d64227f023f1f0736ef137bd4c901c7652563e62c7a20329222c3a0b
 
 inherit setuptools3 pypi
 
-RDEPENDS_${PN} += " \
+RDEPENDS:${PN} += " \
         python3-six \
         python3-gevent \
         python3-requests \

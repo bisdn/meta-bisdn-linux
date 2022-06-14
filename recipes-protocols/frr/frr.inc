@@ -24,7 +24,7 @@ DEPENDS = " \
            readline \
        "
 
-do_compile_prepend_class-target () {
+do_compile:prepend:class-target () {
        export PYTHONHOME=${RECIPE_SYSROOT_NATIVE}/usr
        install -m 0755 -d ${WORKDIR}/build/tests/isisd
 }
@@ -33,7 +33,7 @@ DEPENDS += "${@bb.utils.contains('DISTRO_FEATURES', 'snmp', 'net-snmp', '', d)}"
 SNMP_CONF="${@bb.utils.contains('DISTRO_FEATURES', 'snmp', '--enable-snmp', '', d)}"
 
 # the "ip" command from busybox is not sufficient (flush by protocol flushes all routes)
-RDEPENDS_${PN}_class-target += " \
+RDEPENDS:${PN}:class-target += " \
 			    iproute2 \
 			    python3-core \
 			    bash \
@@ -98,9 +98,9 @@ PACKAGECONFIG[datacenter] = "--enable-datacenter,--disable-datacenter,"
 inherit autotools useradd systemd pkgconfig python3native
 
 SYSTEMD_PACKAGES = "${PN}"
-SYSTEMD_SERVICE_${PN} = "frr.service"
+SYSTEMD_SERVICE:${PN} = "frr.service"
 
-EXTRA_OECONF_class-target = "\
+EXTRA_OECONF:class-target = "\
   --localstatedir=${localstatedir}/run/frr \
   --sbindir=${libdir}/frr \
   --sysconfdir=${sysconfdir}/frr \
@@ -166,8 +166,8 @@ do_install () {
     chown frr:frr ${D}/var/log/frr
 }
 
-DEPENDS_append = " ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'systemd-systemctl-native', '', d)}"
-pkg_postinst_${PN}_append () {
+DEPENDS:append = " ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'systemd-systemctl-native', '', d)}"
+pkg_postinst:${PN}:append () {
     if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'false', 'true', d)}; then
         if [ -n "$D" ]; then
             OPTS="--root=$D"
@@ -177,35 +177,35 @@ pkg_postinst_${PN}_append () {
 }
 
 # Indicate that the default files are configuration files
-CONFFILES_${PN} = "${sysconfdir}/frr/vtysh.conf ${sysconfdir}/frr/frr.conf"
-CONFFILES_${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'staticd', '${sysconfdir}/frr/staticd.conf', '', d)}"
-CONFFILES_${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'bgpd', '${sysconfdir}/frr/bgpd.conf', '', d)}"
-CONFFILES_${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'ospfd', '${sysconfdir}/frr/ospfd.conf', '', d)}"
-CONFFILES_${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'ospf6d', '${sysconfdir}/frr/ospf6d.conf', '', d)}"
-CONFFILES_${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'ripd', '${sysconfdir}/frr/ripd.conf', '', d)}"
-CONFFILES_${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'ripngd', '${sysconfdir}/frr/ripngd.conf', '', d)}"
-CONFFILES_${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'isisd', '${sysconfdir}/frr/isisd.conf', '', d)}"
-CONFFILES_${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'pimd', '${sysconfdir}/frr/pimd.conf', '', d)}"
-CONFFILES_${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'ldpd', '${sysconfdir}/frr/ldpd.conf', '', d)}"
-CONFFILES_${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'nhrpd', '${sysconfdir}/frr/nhrpd.conf', '', d)}"
-CONFFILES_${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'eigrpd', '${sysconfdir}/frr/eigrpd.conf', '', d)}"
-CONFFILES_${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'babeld', '${sysconfdir}/frr/babeld.conf', '', d)}"
-CONFFILES_${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'sharpd', '${sysconfdir}/frr/sharpd.conf', '', d)}"
-CONFFILES_${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'pbrd', '${sysconfdir}/frr/pbrd.conf', '', d)}"
-CONFFILES_${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'bfdd', '${sysconfdir}/frr/bfdd.conf', '', d)}"
-CONFFILES_${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'pathd', '${sysconfdir}/frr/pathd.conf', '', d)}"
-CONFFILES_${PN}-watchfrr = "${sysconfdir}/default/watchfrr"
+CONFFILES:${PN} = "${sysconfdir}/frr/vtysh.conf ${sysconfdir}/frr/frr.conf"
+CONFFILES:${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'staticd', '${sysconfdir}/frr/staticd.conf', '', d)}"
+CONFFILES:${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'bgpd', '${sysconfdir}/frr/bgpd.conf', '', d)}"
+CONFFILES:${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'ospfd', '${sysconfdir}/frr/ospfd.conf', '', d)}"
+CONFFILES:${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'ospf6d', '${sysconfdir}/frr/ospf6d.conf', '', d)}"
+CONFFILES:${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'ripd', '${sysconfdir}/frr/ripd.conf', '', d)}"
+CONFFILES:${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'ripngd', '${sysconfdir}/frr/ripngd.conf', '', d)}"
+CONFFILES:${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'isisd', '${sysconfdir}/frr/isisd.conf', '', d)}"
+CONFFILES:${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'pimd', '${sysconfdir}/frr/pimd.conf', '', d)}"
+CONFFILES:${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'ldpd', '${sysconfdir}/frr/ldpd.conf', '', d)}"
+CONFFILES:${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'nhrpd', '${sysconfdir}/frr/nhrpd.conf', '', d)}"
+CONFFILES:${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'eigrpd', '${sysconfdir}/frr/eigrpd.conf', '', d)}"
+CONFFILES:${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'babeld', '${sysconfdir}/frr/babeld.conf', '', d)}"
+CONFFILES:${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'sharpd', '${sysconfdir}/frr/sharpd.conf', '', d)}"
+CONFFILES:${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'pbrd', '${sysconfdir}/frr/pbrd.conf', '', d)}"
+CONFFILES:${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'bfdd', '${sysconfdir}/frr/bfdd.conf', '', d)}"
+CONFFILES:${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'pathd', '${sysconfdir}/frr/pathd.conf', '', d)}"
+CONFFILES:${PN}-watchfrr = "${sysconfdir}/default/watchfrr"
 
 # Stop the names being rewritten due to the internal shared libraries
-DEBIAN_NOAUTONAME_${PN}-ospfd = "1"
-DEBIAN_NOAUTONAME_${PN}-ospfclient = "1"
+DEBIAN_NOAUTONAME:${PN}-ospfd = "1"
+DEBIAN_NOAUTONAME:${PN}-ospfclient = "1"
 
 # Add frr's user and group
 USERADD_PACKAGES = "${PN}"
-GROUPADD_PARAM_${PN} = "--system frr ; --system frrvty"
-USERADD_PARAM_${PN} = "--system --home ${localstatedir}/run/frr/ -M -g frr -G frrvty --shell /bin/false frr"
+GROUPADD_PARAM:${PN} = "--system frr ; --system frrvty"
+USERADD_PARAM:${PN} = "--system --home ${localstatedir}/run/frr/ -M -g frr -G frrvty --shell /bin/false frr"
 
 # Stop apps before uninstall
-pkg_prerm_${PN} () {
+pkg_prerm:${PN} () {
     systemctl stop frr
 }

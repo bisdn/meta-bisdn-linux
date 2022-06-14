@@ -1,13 +1,13 @@
 require baseboxd.inc
 inherit meson
 
-TARGET_LDFLAGS_remove = "-Wl,--as-needed"
-TARGET_LDFLAGS_append = " -Wl,--no-as-needed"
+TARGET_LDFLAGS:remove = "-Wl,--as-needed"
+TARGET_LDFLAGS:append = " -Wl,--no-as-needed"
 
 SRCREV = "1580d8f3db949e83379e5e3c0f9611479119c544"
 
 # install service and sysconfig
-do_install_append() {
+do_install:append() {
    # add directories
    install -d ${D}${sysconfdir}/default \
               ${D}${systemd_unitdir}/system

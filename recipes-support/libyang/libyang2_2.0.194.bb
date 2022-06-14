@@ -9,12 +9,12 @@ LIC_FILES_CHKSUM = "file://LICENSE;md5=f3916d7d8d42a6508d0ea418cfff10ad"
 
 # Prevent Yocto from being "helpful" and renaming it to libyang because the
 # .so is only named libyang, to have separate packages for both libyang libs
-DEBIAN_NOAUTONAME_${PN} = "1"
-DEBIAN_NOAUTONAME_${PN}-doc = "1"
-DEBIAN_NOAUTONAME_${PN}-src = "1"
-DEBIAN_NOAUTONAME_${PN}-dev = "1"
-DEBIAN_NOAUTONAME_${PN}-utils = "1"
-DEBIAN_NOAUTONAME_${PN}-dbg = "1"
+DEBIAN_NOAUTONAME:${PN} = "1"
+DEBIAN_NOAUTONAME:${PN}-doc = "1"
+DEBIAN_NOAUTONAME:${PN}-src = "1"
+DEBIAN_NOAUTONAME:${PN}-dev = "1"
+DEBIAN_NOAUTONAME:${PN}-utils = "1"
+DEBIAN_NOAUTONAME:${PN}-dbg = "1"
 
 SRC_URI = " \
     git://github.com/CESNET/libyang.git;protocol=https;branch=master \
@@ -30,12 +30,12 @@ S = "${WORKDIR}/git"
 
 PACKAGES += "${PN}-utils"
 
-FILES_${PN} = " \
+FILES:${PN} = " \
   ${libdir}/libyang.so.2* \
   ${libdir}/libyang2 \
 "
 
-FILES_${PN}-utils = " \
+FILES:${PN}-utils = " \
   ${bindir}/yanglint \
   ${bindir}/yangre \
 "

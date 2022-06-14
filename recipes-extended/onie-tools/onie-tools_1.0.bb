@@ -6,7 +6,7 @@ HOMEPAGE = "https://www.bisdn.de/"
 LICENSE = "MPL-2.0"
 LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/MPL-2.0;md5=815ca599c9df247a0c7f619bab123dad"
 SECTION = "base"
-RDEPENDS_onie-tools = "bash ${@oe.utils.conditional('BISDN_ARCH', 'u-boot-arch', 'libubootenv-bin', '', d)}"
+RDEPENDS:onie-tools = "bash ${@oe.utils.conditional('BISDN_ARCH', 'u-boot-arch', 'libubootenv-bin', '', d)}"
 
 SRC_URI = " \
   file://onie-bisdn-uninstall \
@@ -24,4 +24,4 @@ do_install () {
   install -m 0755 onie-bisdn-rescue ${D}${bindir}
 }
 
-FILES_${PN} = "/"
+FILES:${PN} = "/"

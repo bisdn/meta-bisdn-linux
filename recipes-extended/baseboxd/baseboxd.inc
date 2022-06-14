@@ -26,10 +26,10 @@ S = "${WORKDIR}/git"
 inherit pkgconfig systemd
 
 # should come from rofl...
-TARGET_LDFLAGS_append = " -lssl"
-TARGET_LDFLAGS_append = " -lcrypto"
+TARGET_LDFLAGS:append = " -lssl"
+TARGET_LDFLAGS:append = " -lcrypto"
 
-FILES_${PN} += "/lib/systemd/system/baseboxd.service"
-CONFFILES_${PN} += "${sysconfdir}/default/baseboxd"
+FILES:${PN} += "/lib/systemd/system/baseboxd.service"
+CONFFILES:${PN} += "${sysconfdir}/default/baseboxd"
 # Enable baseboxd service (SYSTEMD_AUTO_ENABLE default is enable)
-SYSTEMD_SERVICE_${PN} = "baseboxd.service"
+SYSTEMD_SERVICE:${PN} = "baseboxd.service"
