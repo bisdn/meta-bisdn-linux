@@ -40,4 +40,4 @@ FILES_${PN}-utils = " \
   ${bindir}/yangre \
 "
 
-inherit cmake
+inherit cmake pkgconfig
