@@ -15,6 +15,7 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL += "\
     file \
     frr \
     git \
+    grpc-cli \
     ipcalc \
     iproute2-ss \
     iptables \

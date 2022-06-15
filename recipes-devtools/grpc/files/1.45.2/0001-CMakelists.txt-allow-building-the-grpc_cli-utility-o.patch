@@ -1,0 +1,64 @@
+From 4127c47221cd13ae9462957b4f8396cdd36b2ff4 Mon Sep 17 00:00:00 2001
+From: Jonas Gorski <jonas.gorski@bisdn.de>
+Date: Wed, 15 Jun 2022 17:45:38 +0200
+Subject: [PATCH] CMakelists.txt: allow building the grpc_cli utility only
+
+Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
+---
+ CMakeLists.txt | 19 +++++++++++++++++--
+ 1 file changed, 17 insertions(+), 2 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index f3b66c074f1d..2c22ee898427 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -3553,7 +3553,7 @@ foreach(_hdr
+ endforeach()
+ 
+ endif()
+-if(gRPC_BUILD_TESTS)
++if(gRPC_BUILD_TESTS OR gRPC_BUILD_CLI)
+ 
+ add_library(grpc++_test_config
+   test/cpp/util/test_config_cc.cc
+@@ -3600,6 +3600,14 @@ target_link_libraries(grpc++_test_config
+   gpr
+ )
+ 
++if(gRPC_INSTALL)
++  install(TARGETS grpc++_test_config EXPORT gRPCTargets
++    RUNTIME DESTINATION ${gRPC_INSTALL_BINDIR}
++    BUNDLE DESTINATION  ${gRPC_INSTALL_BINDIR}
++    LIBRARY DESTINATION ${gRPC_INSTALL_LIBDIR}
++    ARCHIVE DESTINATION ${gRPC_INSTALL_LIBDIR}
++  )
++endif()
+ 
+ endif()
+ if(gRPC_BUILD_TESTS)
+@@ -10968,7 +10976,7 @@ target_link_libraries(grpc_authz_end2end_test
+ 
+ 
+ endif()
+-if(gRPC_BUILD_TESTS)
++if(gRPC_BUILD_TESTS OR gRPC_BUILD_CLI)
+ 
+ add_executable(grpc_cli
+   ${_gRPC_PROTO_GENS_DIR}/src/proto/grpc/reflection/v1alpha/reflection.pb.cc
+@@ -11013,6 +11021,13 @@ target_link_libraries(grpc_cli
+   grpc++_test_config
+ )
+ 
++if(gRPC_INSTALL)
++  install(TARGETS grpc_cli EXPORT gRPCTargets
++    RUNTIME DESTINATION ${gRPC_INSTALL_BINDIR}
++    LIBRARY DESTINATION ${gRPC_INSTALL_LIBDIR}
++    ARCHIVE DESTINATION ${gRPC_INSTALL_LIBDIR}
++  )
++endif()
+ 
+ endif()
+ if(gRPC_BUILD_CODEGEN AND gRPC_BUILD_GRPC_CPP_PLUGIN)
+-- 
+2.36.1
+
