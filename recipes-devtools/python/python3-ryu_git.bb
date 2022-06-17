@@ -13,7 +13,7 @@ SRC_URI = "git://github.com/osrg/${SRCNAME}.git;protocol=https;branch=master"
 
 S = "${WORKDIR}/git"
 
-inherit setuptools3
+inherit setuptools3_legacy
 
 FILES:${PN} += "${datadir}/etc/${SRCNAME}/*"
 
