@@ -2,4 +2,4 @@
 # Released under the MIT license (see COPYING.MIT for the terms)
 
 require rofl-common.inc
-SRCREV = "2a4ea705af2bb0cc27f558e9e6fbd67573727208"
+SRCREV = "3d994f58709a4aab30d6481793ae98c4f8cdfc03"
