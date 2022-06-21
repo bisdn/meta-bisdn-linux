@@ -1,0 +1,36 @@
+Upstream-Status: backport [https://github.com/faucetsdn/ryu/commit/dfe583bd837902af0276b31eedbc340adc695815]
+
+From dfe583bd837902af0276b31eedbc340adc695815 Mon Sep 17 00:00:00 2001
+From: Josh Bailey <josh@vandervecken.com>
+Date: Tue, 1 Jun 2021 08:02:07 +1200
+Subject: [PATCH] Upgrade eventlet.
+
+---
+ ryu/app/wsgi.py | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/ryu/app/wsgi.py b/ryu/app/wsgi.py
+index 0b98df94f789..9c171e4f9e87 100644
+--- a/ryu/app/wsgi.py
++++ b/ryu/app/wsgi.py
+@@ -108,8 +108,15 @@ class WebSocketRegistrationWrapper(object):
+ 
+ class _AlreadyHandledResponse(Response):
+     # XXX: Eventlet API should not be used directly.
+-    from eventlet.wsgi import ALREADY_HANDLED
+-    _ALREADY_HANDLED = ALREADY_HANDLED
++    # https://github.com/benoitc/gunicorn/pull/2581
++    from packaging import version
++    import eventlet
++    if version.parse(eventlet.__version__) >= version.parse("0.30.3"):
++        import eventlet.wsgi
++        _ALREADY_HANDLED = getattr(eventlet.wsgi, "ALREADY_HANDLED", None)
++    else:
++        from eventlet.wsgi import ALREADY_HANDLED
++        _ALREADY_HANDLED = ALREADY_HANDLED
+ 
+     def __call__(self, environ, start_response):
+         return self._ALREADY_HANDLED
+-- 
+2.36.1
+
