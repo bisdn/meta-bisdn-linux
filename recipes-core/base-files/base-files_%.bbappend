@@ -18,7 +18,7 @@ EOF
 }
 
 # /lib64 is required by tibit-poncntl
-FILES_${PN}_append_x86-64 += "/lib64"
+FILES_${PN}_append_x86-64 = " /lib64"
 
 do_install_append_x86-64() {
     ln -sf lib ${D}/lib64
