@@ -1,1 +1,1 @@
-KERNEL_FEATURES_append += "features/vrf/vrf.scc"
+KERNEL_FEATURES_append = " features/vrf/vrf.scc"
