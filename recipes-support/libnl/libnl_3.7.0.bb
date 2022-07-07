@@ -22,8 +22,8 @@ SRC_URI = " \
     file://0006-route-route_obj-treat-each-IPv6-link-local-route-as-.patch \
 "
 
-# commit hash of release tag libnl3_6_0
-SRCREV = "cacaa5fd2f583e3c3fd2bc7f6439948cf056c9a2"
+# commit hash of release tag libnl3_7_0
+SRCREV = "1bb416213c7038d0da9a6f5141c611f6dbcefedc"
 
 S = "${WORKDIR}/git"
 
