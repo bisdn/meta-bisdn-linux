@@ -37,6 +37,7 @@ Arguments:
     ofdpa               : add switch configuration (client_*)
     frr                 : add FRR configuration
     port                : add SFP info
+    mstpd               : add MSTPD state
     all                 : all of the above [default]
 Example: $name pkg net ofdpa
 EOF
@@ -194,6 +195,46 @@ function get_port_list() {
   log_cmd_output onlpdump -S
 }
 
+function get_mstpd_state() {
+  title "Retrieving MSTPD state"
+  OUTPUT_FILE="$TMPDIR/mstpd_state"
+  IGNORE_ERRORS=1 LST="Service State" log_cmd_output /bin/systemctl status mstpd
+
+  if ! /bin/systemctl is-active --quiet mstpd; then
+    return 0
+  fi
+
+  for interface in /sys/class/net/*; do
+    # skip non-bridges
+    [ -d "$interface/bridge" ] || continue
+    # check that userspace stp (=2) is active
+    [ "$(cat $interface/bridge/stp_state)" = "2" ] || continue
+    # get the interface name
+    ifname="$(basename $interface)"
+
+    LST="Bridge State" log_cmd_output /sbin/mstpctl showbridge $ifname
+    LST="Port Detail" log_cmd_output /sbin/mstpctl showportdetail $ifname
+
+    LST="MST Config ID" log_cmd_output /sbin/mstpctl showmstconfid $ifname
+    LST="MSTIs" log_cmd_output /sbin/mstpctl showmstilist $ifname
+    LST="VID-to-FID" log_cmd_output /sbin/mstpctl showvid2fid $ifname
+    LST="FID-to-MSTID" log_cmd_output /sbin/mstpctl showfid2mstid $ifname
+
+    # will always contain at least the CIST (MSTI 0)
+    mstis="$(/sbin/mstpctl showmstilist $ifname | tail -n +2)"
+
+    for msti in $mstis; do
+      LST="MSTI $msti Tree State" log_cmd_output /sbin/mstpctl showtree $ifname $msti
+
+      for port in $interface/brif/*; do
+        portname="$(basename $port)"
+        LST="MSTI $msti Port $portname State" log_cmd_output /sbin/mstpctl showtreeport $ifname $portname $msti
+      done
+    done
+
+  done
+}
+
 ###############################################################################
 # Main
 ###############################################################################
@@ -207,8 +248,9 @@ COLLECT_NET=0x4
 COLLECT_OFDPA=0x8
 COLLECT_FRR=0x10
 COLLECT_PORT=0x20
+COLLECT_MSTPD=0x40
 
-COLLECT_DEFAULT=$((COLLECT_PKG | COLLECT_LOG | COLLECT_NET | COLLECT_OFDPA | COLLECT_FRR | COLLECT_PORT))
+COLLECT_DEFAULT=$((COLLECT_PKG | COLLECT_LOG | COLLECT_NET | COLLECT_OFDPA | COLLECT_FRR | COLLECT_PORT | COLLECT_MSTPD))
 
 COLLECT_MASK=0
 
@@ -239,6 +281,9 @@ while [ $# -gt 0 ]; do
       ;;
     port)
       COLLECT_MASK=$((COLLECT_MASK | COLLECT_PORT))
+      ;;
+    mstpd)
+      COLLECT_MASK=$((COLLECT_MASK | COLLECT_MSTPD))
       ;;
     all)
       COLLECT_MASK=$COLLECT_DEFAULT
@@ -283,6 +328,10 @@ fi
 
 if [ $((COLLECT_MASK & COLLECT_PORT)) -gt 0 ]; then
   get_port_list
+fi
+
+if [ $((COLLECT_MASK & COLLECT_MSTPD)) -gt 0 ]; then
+  get_mstpd_state
 fi
 
 title "Creating tarball"
