@@ -28,14 +28,16 @@ Gathers system debug information and creates a tarball for the
 ISDN Linux support.
 Usage: $name [arg...]
 Arguments:
-    -h, --help: print this message
-    pkg       : add software package list
-    log       : add systemd-journald system log since last reboot
-    net       : add network configuration (live and systemd-networkd files)
-    ofdpa     : add switch configuration (client_*)
-    frr       : add FRR configuration
-    port      : add SFP info
-    all       : all of the above [default]
+    -i, --ignore-errors : ignore failing commands
+    -h, --help          : print this message
+    pkg                 : add software package list
+    log                 : add systemd-journald system log since last reboot
+    net                 : add network configuration (live and systemd-networkd
+                          files)
+    ofdpa               : add switch configuration (client_*)
+    frr                 : add FRR configuration
+    port                : add SFP info
+    all                 : all of the above [default]
 Example: $name pkg net ofdpa
 EOF
 }
@@ -62,6 +64,8 @@ function report_result() {
   local exit_status=$1
   if [ "$exit_status" -eq 0 ]; then
     echo "Done."
+  elif [ "$IGNORE_ERRORS" -eq 1 ]; then
+    echo >&2 "Failed. Ignoring."
   else
     echo >&2 "Failed. Aborting."
     # Kill this process
@@ -195,6 +199,7 @@ function get_port_list() {
 ###############################################################################
 
 TMPDIR=$(mktemp -d)
+IGNORE_ERRORS=0
 
 COLLECT_PKG=0x1
 COLLECT_LOG=0x2
@@ -210,6 +215,9 @@ COLLECT_MASK=0
 while [ $# -gt 0 ]; do
   _cli_argument=$1
   case $_cli_argument in
+    -i | --ignore-errors)
+      IGNORE_ERRORS=1
+      ;;
     -h | --help)
       print_help
       exit 0
