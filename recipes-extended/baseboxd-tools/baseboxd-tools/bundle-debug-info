@@ -190,30 +190,22 @@ function get_port_list() {
   log_cmd_output onlpdump -S
 }
 
-function get_all() {
-  get_package_data
-  get_logs
-  get_network_state
-  # The client tools write a lot of log entries; make sure to call get_logs
-  # before get_client_tools_info.
-  get_client_tools_info
-  get_frr_support_bundle
-  get_port_list
-  copy_path /etc/systemd/network
-  copy_path /etc/frr
-  copy_path /usr/lib/os-release
-}
-
 ###############################################################################
 # Main
 ###############################################################################
 
 TMPDIR=$(mktemp -d)
 
-# Handling command line arguments
-if [ $# -eq 0 ]; then
-  get_all
-fi
+COLLECT_PKG=0x1
+COLLECT_LOG=0x2
+COLLECT_NET=0x4
+COLLECT_OFDPA=0x8
+COLLECT_FRR=0x10
+COLLECT_PORT=0x20
+
+COLLECT_DEFAULT=$((COLLECT_PKG | COLLECT_LOG | COLLECT_NET | COLLECT_OFDPA | COLLECT_FRR | COLLECT_PORT))
+
+COLLECT_MASK=0
 
 while [ $# -gt 0 ]; do
   _cli_argument=$1
@@ -223,28 +215,25 @@ while [ $# -gt 0 ]; do
       exit 0
       ;;
     pkg)
-      copy_path /usr/lib/os-release
-      get_package_data
+      COLLECT_MASK=$((COLLECT_MASK | COLLECT_PKG))
       ;;
     log)
-      get_logs
+      COLLECT_MASK=$((COLLECT_MASK | COLLECT_LOG))
       ;;
     net)
-      get_network_state
-      copy_path /etc/systemd/network
+      COLLECT_MASK=$((COLLECT_MASK | COLLECT_NET))
       ;;
     ofdpa)
-      get_client_tools_info
+      COLLECT_MASK=$((COLLECT_MASK | COLLECT_OFDPA))
       ;;
     frr)
-      get_frr_support_bundle
-      copy_path /etc/frr
+      COLLECT_MASK=$((COLLECT_MASK | COLLECT_FRR))
       ;;
     port)
-      get_port_list
+      COLLECT_MASK=$((COLLECT_MASK | COLLECT_PORT))
       ;;
     all)
-      get_all
+      COLLECT_MASK=$COLLECT_DEFAULT
       ;;
     *)
       echo "Unknown parameter passed: $1"
@@ -254,6 +243,39 @@ while [ $# -gt 0 ]; do
   esac
   shift
 done
+
+if [ $COLLECT_MASK -eq 0 ]; then
+  COLLECT_MASK=$COLLECT_DEFAULT
+fi
+
+if [ $((COLLECT_MASK & COLLECT_PKG)) -gt 0 ]; then
+  copy_path /usr/lib/os-release
+  get_package_data
+fi
+
+# The client tools write a lot of log entries; make sure to call get_logs
+# before get_client_tools_info.
+if [ $((COLLECT_MASK & COLLECT_LOG)) -gt 0 ]; then
+  get_logs
+fi
+
+if [ $((COLLECT_MASK & COLLECT_NET)) -gt 0 ]; then
+  get_network_state
+  copy_path /etc/systemd/network
+fi
+
+if [ $((COLLECT_MASK & COLLECT_OFDPA)) -gt 0 ]; then
+  get_client_tools_info
+fi
+
+if [ $((COLLECT_MASK & COLLECT_FRR)) -gt 0 ]; then
+  get_frr_support_bundle
+  copy_path /etc/frr
+fi
+
+if [ $((COLLECT_MASK & COLLECT_PORT)) -gt 0 ]; then
+  get_port_list
+fi
 
 title "Creating tarball"
 FILE="/tmp/support-data_$(date "+%Y%m%d-%H%M%S").tgz"
