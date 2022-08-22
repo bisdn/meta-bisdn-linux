@@ -35,6 +35,7 @@ Arguments:
     net                 : add network configuration (live and systemd-networkd
                           files)
     ofdpa               : add switch configuration (client_*)
+    switch              : add detailed switch configuration
     frr                 : add FRR configuration
     port                : add SFP info
     mstpd               : add MSTPD state
@@ -172,7 +173,9 @@ function get_client_tools_info() {
   LST="Client Ports" log_cmd_output /usr/sbin/client_drivshell ports
   LST="STG State" log_cmd_output /usr/sbin/client_drivshell stg show
   LST="Trunk Group State" log_cmd_output /usr/sbin/client_drivshell trunk show
+}
 
+function get_switch_state() {
   title "Retrieving basic techsupport from SDK"
 
   OUTPUT_FILE="$TMPDIR/tech_support"
@@ -249,8 +252,9 @@ COLLECT_OFDPA=0x8
 COLLECT_FRR=0x10
 COLLECT_PORT=0x20
 COLLECT_MSTPD=0x40
+COLLECT_SWITCH=0x80
 
-COLLECT_DEFAULT=$((COLLECT_PKG | COLLECT_LOG | COLLECT_NET | COLLECT_OFDPA | COLLECT_FRR | COLLECT_PORT | COLLECT_MSTPD))
+COLLECT_DEFAULT=$((COLLECT_PKG | COLLECT_LOG | COLLECT_NET | COLLECT_OFDPA | COLLECT_FRR | COLLECT_PORT | COLLECT_MSTPD | COLLECT_SWITCH))
 
 COLLECT_MASK=0
 
@@ -275,6 +279,9 @@ while [ $# -gt 0 ]; do
       ;;
     ofdpa)
       COLLECT_MASK=$((COLLECT_MASK | COLLECT_OFDPA))
+      ;;
+    switch)
+      COLLECT_MASK=$((COLLECT_MASK | COLLECT_SWITCH))
       ;;
     frr)
       COLLECT_MASK=$((COLLECT_MASK | COLLECT_FRR))
@@ -332,6 +339,10 @@ fi
 
 if [ $((COLLECT_MASK & COLLECT_MSTPD)) -gt 0 ]; then
   get_mstpd_state
+fi
+
+if [ $((COLLECT_MASK & COLLECT_SWITCH)) -gt 0 ]; then
+  get_switch_state
 fi
 
 title "Creating tarball"
