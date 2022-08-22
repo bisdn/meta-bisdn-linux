@@ -35,11 +35,13 @@ Arguments:
     net                 : add network configuration (live and systemd-networkd
                           files)
     ofdpa               : add switch configuration (client_*)
-    switch              : add detailed switch configuration
     frr                 : add FRR configuration
     port                : add SFP info
     mstpd               : add MSTPD state
     all                 : all of the above [default]
+extra targets:
+    switch              : add detailed switch configuration (may reset port
+                          interfaces)
 Example: $name pkg net ofdpa
 EOF
 }
@@ -254,7 +256,8 @@ COLLECT_PORT=0x20
 COLLECT_MSTPD=0x40
 COLLECT_SWITCH=0x80
 
-COLLECT_DEFAULT=$((COLLECT_PKG | COLLECT_LOG | COLLECT_NET | COLLECT_OFDPA | COLLECT_FRR | COLLECT_PORT | COLLECT_MSTPD | COLLECT_SWITCH))
+# COLLECT_SWITCH intentionally skipped due to potential issues
+COLLECT_DEFAULT=$((COLLECT_PKG | COLLECT_LOG | COLLECT_NET | COLLECT_OFDPA | COLLECT_FRR | COLLECT_PORT | COLLECT_MSTPD))
 
 COLLECT_MASK=0
 
