@@ -25,7 +25,7 @@ function print_help() {
   cat << EOF
 BISDN-Linux support script
 Gathers system debug information and creates a tarball for the
-ISDN Linux support.
+BISDN Linux support.
 Usage: $name [arg...]
 Arguments:
     -i, --ignore-errors : ignore failing commands
