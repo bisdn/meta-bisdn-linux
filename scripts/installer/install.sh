@@ -401,6 +401,15 @@ if [ -n "$onl_platformlib" ]; then
     ln -s "$onl_platformlib" "$bisdn_linux_mnt/usr/lib/libonlp-platform.so.1"
 fi
 
+# setup hostname
+if [ ! -f "$bisdn_linux_mnt/etc/hostname" ]; then
+    # use ONIE machine name and replace underscores with dashes, as
+    # underscores are not allowed
+    hostname="$(onie-sysinfo -m | tr '_' '-')"
+    echo $hostname > "$bisdn_linux_mnt/etc/hostname"
+    echo "127.0.1.1 $hostname" >> "$bisdn_linux_mnt/etc/hosts"
+fi
+
 # Restore the network configuration from previous installation
 if [ "${DO_RESTORE}" = true ]; then
     restore_cfg $backup_tmp_dir $bisdn_linux_mnt
