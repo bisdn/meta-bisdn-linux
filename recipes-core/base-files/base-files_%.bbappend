@@ -23,3 +23,6 @@ FILES:${PN}:append:x86-64 = " /lib64"
 do_install:append:x86-64() {
     ln -sf lib ${D}/lib64
 }
+
+# hostname will be set by installer
+hostname = ""
