@@ -253,7 +253,19 @@ create_bisdn_linux_msdos_partition()
 
 platform_check()
 {
-    /bin/true
+    onie_platform=$(onie-sysinfo -p)
+
+    if [ ! -d "./machine/${onie_platform}" ]; then
+      echo "ERROR: Unknown or unsupported platform: $onie_platform" >&2
+      echo "This image only supports the following platforms:" >&2
+      platforms="$(ls -1 ./machine)"
+      for plat in $platforms; do
+         echo "    $plat" >&2
+      done
+      exit 1
+    fi
+
+    return 0
 }
 
 platform_detect_boot_device()
