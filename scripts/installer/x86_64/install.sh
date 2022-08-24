@@ -16,12 +16,12 @@ BISDN_ENABLE_NOS_MODE=
 # Install legacy BIOS GRUB for BISDN Linux OS
 bisdn_linux_install_grub()
 {
-    local bisdn_linux_mnt="$1"
+    local bisdn_linux_mnt_boot="$1"
     local blk_dev="$2"
 
     # Pretend we are a major distro and install GRUB into the MBR of
     # $blk_dev.
-    grub-install --boot-directory="$bisdn_linux_mnt" --recheck "$blk_dev" || {
+    grub-install --boot-directory="$bisdn_linux_mnt_boot" --recheck "$blk_dev" || {
         echo "ERROR: grub-install failed on: $blk_dev"
         exit 1
     }
@@ -30,7 +30,7 @@ bisdn_linux_install_grub()
 # Install UEFI BIOS GRUB for BISDN Linux OS
 bisdn_linux_install_uefi_grub()
 {
-    local bisdn_linux_mnt="$1"
+    local bisdn_linux_mnt_boot="$1"
     local blk_dev="$2"
 
     # Look for the EFI system partition UUID on the same block device as
@@ -53,7 +53,7 @@ bisdn_linux_install_uefi_grub()
         --no-nvram \
         --bootloader-id="$BISDN_LINUX_VOLUME_LABEL" \
         --efi-directory="/boot/efi" \
-        --boot-directory="$bisdn_linux_mnt" \
+        --boot-directory="$bisdn_linux_mnt_boot" \
         --recheck \
         "$blk_dev" > /$grub_install_log 2>&1 || {
         echo "ERROR: grub-install failed on: $blk_dev"
