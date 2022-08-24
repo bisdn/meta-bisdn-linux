@@ -143,7 +143,9 @@ platform_install_bootloader_entry()
     # GRUB_SERIAL_COMMAND
     # GRUB_CMDLINE_LINUX
 
-    [ -r ./platform.conf ] && . ./platform.conf
+    onie_platform="$(onie-sysinfo -p)"
+
+    . ./machine/${onie_platform}/platform.conf
 
     export GRUB_SERIAL_COMMAND
     export GRUB_CMDLINE_LINUX

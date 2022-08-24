@@ -16,7 +16,6 @@ BISDN_ONIE_PLATFORM ?= "${@'${ONIE_PLATFORM}'.replace('_','-')}"
 
 ONIEIMAGE_SHELL_ARCHIVE_BODY ?= "${BISDN_ONIE_ADDITIONS}/installer/sharch_body.sh"
 ONIEIMAGE_CONF_DIR ?= "${BISDN_ONIE_ADDITIONS}/installer/machine"
-ONIEIMAGE_PLATFORM_CONF ?= "${ONIEIMAGE_CONF_DIR}/${ONIE_PLATFORM}/platform.conf"
 
 ONIEIMAGE_PAYLOAD_FILE = "${ONIEIMAGE_DIR}/onie_install.tar"
 ONIEIMAGE_OUTPUT_FILE = "${ONIEIMAGE_DIR}/onie-installer.bin"
@@ -33,8 +32,11 @@ do_onie_bundle () {
 
     cp "${BISDN_ONIE_ADDITIONS}/installer/${BISDN_ARCH}/install.sh" "${ONIEIMAGE_DIR_INSTALL}/platform.sh"
     cp "${BISDN_ONIE_ADDITIONS}/installer/install.sh" "${ONIEIMAGE_DIR_INSTALL}"
-    cp "${ONIEIMAGE_PLATFORM_CONF}" "${ONIEIMAGE_DIR_INSTALL}"
     cp -r "${BISDN_ONIE_ADDITIONS}/installer/lib" "${ONIEIMAGE_DIR_INSTALL}"
+    mkdir -p "${ONIEIMAGE_DIR_INSTALL}/machine"
+    for platform in ${ONL_PLATFORM_SUPPORT}; do
+        cp -r -L "${ONIEIMAGE_CONF_DIR}/${platform}" "${ONIEIMAGE_DIR_INSTALL}/machine"
+    done
     echo "platform=${BISDN_ONIE_PLATFORM}" >> "${ONIEIMAGE_DIR_INSTALL}/machine.conf"
     # Generate the payload tar file
     tar -C "${ONIEIMAGE_DIR}" -cf "${ONIEIMAGE_PAYLOAD_FILE}" "installer"

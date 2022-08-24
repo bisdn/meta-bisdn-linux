@@ -50,7 +50,9 @@ platform_get_firmware_type()
 	echo "u-boot"
 }
 
-. ./platform.conf
+onie_platform="$(onie-sysinfo -p)"
+
+. ./machine/${onie_platform}/platform.conf
 
 platform_install_bootloader_entry()
 {
