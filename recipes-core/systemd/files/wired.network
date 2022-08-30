@@ -6,6 +6,7 @@ KernelCommandLine=!ip
 
 [Network]
 DHCP=yes
+IgnoreCarrierLoss=1
 
 [DHCP]
 UseMTU=yes
