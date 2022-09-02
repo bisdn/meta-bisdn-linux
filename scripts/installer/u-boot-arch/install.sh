@@ -12,7 +12,7 @@ set -e
 
 BISDN_ENABLE_NOS_MODE=1
 
-hw_load() {
+create_hw_load_str() {
     echo "cp.b $img_start \$loadaddr $img_sz"
 }
 
@@ -82,7 +82,7 @@ platform_install_bootloader_entry()
 
     # Find GUID of BISDN Linux partition and FIT configuration unit name, then
     # build a u-boot command string for loading and booting the kernel.
-    hw_load_str="$(hw_load $blk_dev $bisdn_linux_part $separator)"
+    hw_load_str="$(create_hw_load_str $blk_dev $bisdn_linux_part $separator)"
 
     echo "Updating U-Boot environment variables"
     (cat <<EOF
