@@ -301,7 +301,7 @@ echo "BISDN Linux Installer"
 
 # part_size: BISDN Linux partition in MB
 part_size=6144
-fs_type="${BISDN_FS_TYPE:-ext4}"
+fs_type="ext4"
 
 # platform_check, if implemented, aborts with an error if the hardware platform
 # is not supported by our image
