@@ -87,7 +87,7 @@ platform_install_bootloader_entry()
     echo "Updating U-Boot environment variables"
     (cat <<EOF
 hw_load $hw_load_str
-copy_img echo "Loading BISDN Linux $platform image..." && run hw_load
+copy_img echo "Loading BISDN Linux image..." && run hw_load
 nos_bootcmd run copy_img && setenv bootargs quiet console=\$consoledev,\$baudrate && bootm \$loadaddr
 EOF
     ) > /tmp/env.txt

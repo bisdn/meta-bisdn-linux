@@ -284,11 +284,11 @@ platform_install_bootloader_entry()
 }
 
 cd $(dirname $0)
-. ./machine.conf
+
 # platform.sh may override dummy functions above (e.g., platform_check)
 . ./platform.sh
 
-echo "BISDN Linux Installer: platform: $platform"
+echo "BISDN Linux Installer"
 
 # part_size: BISDN Linux partition in MB
 part_size=6144

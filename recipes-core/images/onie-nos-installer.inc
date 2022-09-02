@@ -37,7 +37,7 @@ do_onie_bundle () {
     for platform in ${ONL_PLATFORM_SUPPORT}; do
         cp -r -L "${ONIEIMAGE_CONF_DIR}/${platform}" "${ONIEIMAGE_DIR_INSTALL}/machine"
     done
-    echo "platform=${BISDN_ONIE_PLATFORM}" >> "${ONIEIMAGE_DIR_INSTALL}/machine.conf"
+
     # Generate the payload tar file
     tar -C "${ONIEIMAGE_DIR}" -cf "${ONIEIMAGE_PAYLOAD_FILE}" "installer"
 
