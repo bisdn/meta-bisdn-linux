@@ -283,6 +283,15 @@ platform_install_bootloader_entry()
 
 onie_platform=$(onie-sysinfo -p)
 
+# <arch>-<vendor>-<platform>-<revision>
+onl_platform="$(onie-sysinfo -p | tr '_' '-')"
+
+# <arch>-<vendor>-<platform>
+onl_baseplatform="${onl_platform%-r*}"
+
+[ -n $DEBUG ] && echo "DEBUG: onl_platform=${onl_platform}"
+[ -n $DEBUG ] && echo "DEBUG: onl_baseplatform=${onl_baseplatform}"
+
 cd $(dirname $0)
 
 # platform.sh may override dummy functions above (e.g., platform_check)
@@ -384,14 +393,6 @@ onie-support $bisdn_linux_mnt
 
 # point bootloader to kernel image (for u-boot: also copy the kernel to /boot)
 platform_install_bootloader_entry $boot_dev $bisdn_linux_part $bisdn_linux_mnt $fs_type
-
-# <arch>-<vendor>-<platform>-<revision>
-onl_platform="$(onie-sysinfo -p | tr '_' '-')"
-# <arch>-<vendor>-<platform>
-onl_baseplatform="${onl_platform%-r*}"
-
-[ -n $DEBUG ] && echo "DEBUG: onl_platform=${onl_platform}"
-[ -n $DEBUG ] && echo "DEBUG: onl_baseplatform=${onl_baseplatform}"
 
 # setup ONL platform info
 mkdir -p "$bisdn_linux_mnt/etc/onl"
