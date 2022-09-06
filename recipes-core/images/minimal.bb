@@ -11,7 +11,6 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL = "\
     bash \
     e2fsprogs-resize2fs \
     e2fsprogs-tune2fs \
-    grub \
     haveged \
     i2c-tools \
     iproute2 \
@@ -26,6 +25,8 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL = "\
     util-linux \
     util-linux-blkid \
     "
+
+BISDN_SWITCH_IMAGE_EXTRA_INSTALL:append:x86-64 = " grub"
 
 IMAGE_FEATURES += "ssh-server-openssh"
 
