@@ -298,6 +298,9 @@ fi
 # platform.sh may override dummy functions above (e.g., platform_check)
 . ./platform.sh
 
+# set up variables for the running platform
+. ./machine/${onie_platform}/platform.conf
+
 echo "BISDN Linux Installer"
 
 # part_size: BISDN Linux partition in MB
