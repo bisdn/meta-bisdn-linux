@@ -253,17 +253,7 @@ create_bisdn_linux_msdos_partition()
 
 platform_check()
 {
-    if [ ! -d "./machine/${onie_platform}" ]; then
-      echo "ERROR: Unknown or unsupported platform: $onie_platform" >&2
-      echo "This image only supports the following platforms:" >&2
-      platforms="$(ls -1 ./machine)"
-      for plat in $platforms; do
-         echo "    $plat" >&2
-      done
-      exit 1
-    fi
-
-    return 0
+   /bin/true
 }
 
 platform_detect_boot_device()
@@ -293,6 +283,17 @@ onl_baseplatform="${onl_platform%-r*}"
 [ -n $DEBUG ] && echo "DEBUG: onl_baseplatform=${onl_baseplatform}"
 
 cd $(dirname $0)
+
+# check that we support the running platform
+if [ ! -d "./machine/${onie_platform}" ]; then
+    echo "ERROR: Unknown or unsupported platform: $onie_platform" >&2
+    echo "This image only supports the following platforms:" >&2
+    platforms="$(ls -1 ./machine)"
+    for plat in $platforms; do
+        echo "    $plat" >&2
+    done
+    exit 1
+fi
 
 # platform.sh may override dummy functions above (e.g., platform_check)
 . ./platform.sh
