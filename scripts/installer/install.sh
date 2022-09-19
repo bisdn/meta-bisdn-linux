@@ -273,15 +273,6 @@ platform_install_bootloader_entry()
 
 onie_platform=$(onie-sysinfo -p)
 
-# <arch>-<vendor>-<platform>-<revision>
-onl_platform="$(onie-sysinfo -p | tr '_' '-')"
-
-# <arch>-<vendor>-<platform>
-onl_baseplatform="${onl_platform%-r*}"
-
-[ -n $DEBUG ] && echo "DEBUG: onl_platform=${onl_platform}"
-[ -n $DEBUG ] && echo "DEBUG: onl_baseplatform=${onl_baseplatform}"
-
 cd $(dirname $0)
 
 # check that we support the running platform
@@ -300,6 +291,21 @@ fi
 
 # set up variables for the running platform
 . ./machine/${onie_platform}/platform.conf
+
+# check if platform forces a certain ONL platform, else calculate from
+# onie platform
+if [ -n "$FORCE_ONL_PLATFORM" ]; then
+    onl_platform="$FORCE_ONL_PLATFORM"
+else
+    # <arch>-<vendor>-<platform>-<revision>
+    onl_platform="$(onie-sysinfo -p | tr '_' '-')"
+fi
+
+# <arch>-<vendor>-<platform>
+onl_baseplatform="${onl_platform%-r*}"
+
+[ -n $DEBUG ] && echo "DEBUG: onl_platform=${onl_platform}"
+[ -n $DEBUG ] && echo "DEBUG: onl_baseplatform=${onl_baseplatform}"
 
 echo "BISDN Linux Installer"
 
