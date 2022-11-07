@@ -424,6 +424,17 @@ if [ -n "$onl_platformlib" ]; then
     ln -s "$onl_platformlib" "$bisdn_linux_mnt/usr/lib/libonlp-platform.so.1"
 fi
 
+# Setup Management Port
+if [ -n "$MANAGEMENT_PORT_PATH" ]; then
+    (cat <<EOF
+[Match]
+Path=$MANAGEMENT_PORT_PATH
+[Link]
+Name=enp0
+EOF
+    ) > "$bisdn_linux_mnt/lib/systemd/network/90-enp.link"
+fi
+
 # setup hostname
 if [ ! -f "$bisdn_linux_mnt/etc/hostname" ]; then
     # use ONIE machine name and replace underscores with dashes, as
