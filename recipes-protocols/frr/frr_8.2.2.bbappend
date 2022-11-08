@@ -1,54 +1,14 @@
-SUMMARY = "BGP/OSPF/RIP routing daemon"
-DESCRIPTION = "FRRouting is free software that implements and manages various IPv4 and IPv6 \
-routing protocols. \
-\
-Currently FRRouting supports BGP4, BGP4+, OSPFv2, OSPFv3, RIPv1, RIPv2, RIPng, \
-IS-IS, PIM-SM/MSDP, LDP and Babel as well as very early support for EIGRP and \
-NHRP."
+FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
-HOMEPAGE = "https://frrouting.org/"
-SECTION = "net"
-
-LICENSE = "GPL-2.0-or-later & LGPL-2.1-or-later"
-LIC_FILES_CHKSUM = "file://COPYING;md5=b234ee4d69f5fce4486a80fdaf4a4263 \
-                    file://COPYING-LGPLv2.1;md5=4fbd65380cdd255951079008b364516c"
-
-DEPENDS = " \
-           bison-native \
-           c-ares \
-           elfutils-native \
-           flex-native \
-           json-c \
-           ncurses \
-           perl-native \
-           readline \
-       "
-
-do_compile:prepend:class-target () {
-       export PYTHONHOME=${RECIPE_SYSROOT_NATIVE}/usr
-       install -m 0755 -d ${WORKDIR}/build/tests/isisd
-}
-
-DEPENDS += "${@bb.utils.contains('DISTRO_FEATURES', 'snmp', 'net-snmp', '', d)}"
-SNMP_CONF="${@bb.utils.contains('DISTRO_FEATURES', 'snmp', '--enable-snmp', '', d)}"
-
-# the "ip" command from busybox is not sufficient (flush by protocol flushes all routes)
-RDEPENDS:${PN}:class-target += " \
-			    iproute2 \
-			    python3-core \
-			    bash \
-			    "
-
-GIT_BRANCH ?= "master"
-SRC_URI = "git://github.com/FRRouting/frr.git;protocol=https;branch=${GIT_BRANCH} \
-           file://CVE-2022-37035.patch \
-           file://CVE-2022-37032.patch \
-           file://frr.pam \
+SRC_URI:append = " \
            file://frr.service \
+           file://frr@.service \
            file://support_bundle_commands.conf;subdir=git/tools/etc/frr \
            "
 
-S = "${WORKDIR}/git"
+PR = "r2"
+
+SYSTEMD_AUTO_ENABLE = "enable"
 
 FRR_DAEMONS ?= "zebra staticd bgpd ospfd ospf6d ripd ripngd isisd pimd ldpd nhrpd eigrpd babeld sharpd pbrd bfdd pathd"
 FRR_EXTRA_CONF ?= "cumulus datacenter"
@@ -74,9 +34,10 @@ PACKAGECONFIG ??= " \
     ${@bb.utils.filter('FRR_DAEMONS', 'pathd', d)} \
     ${@bb.utils.filter('FRR_EXTRA_CONF', 'cumulus', d)} \
     ${@bb.utils.filter('FRR_EXTRA_CONF', 'datacenter', d)} \
+    ${@bb.utils.filter('DISTRO_FEATURES', 'snmp', d)} \
+    ospfclient \
     "
-PACKAGECONFIG[cap] = "--enable-capabilities,--disable-capabilities,libcap"
-PACKAGECONFIG[pam] = "--with-libpam, --without-libpam, libpam"
+
 PACKAGECONFIG[zebra] = "--enable-zebra,--disable-zebra,"
 PACKAGECONFIG[staticd] = "--enable-staticd,--disable-staticd,"
 PACKAGECONFIG[bgpd] = "--enable-bgpd,--disable-bgpd,"
@@ -94,34 +55,14 @@ PACKAGECONFIG[sharpd] = "--enable-sharpd,--disable-sharpd,"
 PACKAGECONFIG[pbrd] = "--enable-pbrd,--disable-pbrd,"
 PACKAGECONFIG[bfdd] = "--enable-bfdd,--disable-bfdd,"
 PACKAGECONFIG[pathd] = "--enable-pathd,--disable-pathd,"
-PACKAGECONFIG[cumulus] = "--enable-cumulus,--disable-cumulus,"
-PACKAGECONFIG[datacenter] = "--enable-datacenter,--disable-datacenter,"
 
-inherit autotools useradd systemd pkgconfig python3native
+do_install:append:class-target () {
+    # remove the global config
+    rm ${D}${sysconfdir}/frr/frr.conf
 
-SYSTEMD_PACKAGES = "${PN}"
-SYSTEMD_SERVICE:${PN} = "frr.service"
+    # remove the integrated config
+    rm ${D}${sysconfdir}/frr/vtysh.conf
 
-EXTRA_OECONF:class-target = "\
-  --localstatedir=${localstatedir}/run/frr \
-  --sbindir=${libdir}/frr \
-  --sysconfdir=${sysconfdir}/frr \
-  --enable-configfile-mask=0640 \
-  --enable-group=frr \
-  --enable-logfile-mask=0640 \
-  --enable-multipath=64 \
-  --enable-user=frr \
-  --enable-vty-group=frrvty \
-  --enable-vtysh \
-  --disable-doc \
-  --with-clippy=${RECIPE_SYSROOT_NATIVE}/usr/lib/clippy \
-  ap_cv_cc_pie=no \
-  ${SNMP_CONF} \
-  "
-
-CACHED_CONFIGUREVARS += "ac_cv_path_PERL='/usr/bin/env perl'"
-
-do_install () {
     # Install configurations for the daemons
     install -m 0755 -d ${D}${sysconfdir}/default ${D}${sysconfdir}/frr
     for f in vtysh ${FRR_DAEMONS}; do
@@ -130,9 +71,7 @@ do_install () {
         fi
         touch ${D}${sysconfdir}/frr/$f.conf
     done
-    install -m 0640 ${S}/tools/etc/frr/support_bundle_commands.conf ${D}/${sysconfdir}/frr/support_bundle_commands.conf
 
-    install -m 0640 ${S}/tools/etc/frr/daemons* ${D}${sysconfdir}/frr/
     sed -i '/_options/s/-A/--daemon -A/g' ${D}${sysconfdir}/frr/daemons
 
     chown frr:frrvty ${D}${sysconfdir}/frr
@@ -140,28 +79,9 @@ do_install () {
     chmod 750 ${D}${sysconfdir}/frr
     chmod 640 ${D}${sysconfdir}/frr/*.conf
 
-    # Install frr
-    oe_runmake install DESTDIR=${D} prefix=${prefix} \
-            sbindir=${libdir}/frr \
-            sysconfdir=${sysconfdir}/frr \
-            localstatedir=${localstatedir}/run/frr
-
-    # For PAM
-    for feature in ${DISTRO_FEATURES}; do
-        if [ "$feature" = "pam" ]; then
-            install -D -m 644 ${WORKDIR}/frr.pam ${D}/${sysconfdir}/pam.d/frr
-            break
-        fi
-    done
-
     if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'true', 'false', d)}; then
-        install -d ${D}${sysconfdir}/tmpfiles.d
-        echo "d /var/run/frr 0755 frr frr -" \
-        > ${D}${sysconfdir}/tmpfiles.d/${BPN}.conf
+        install -m 0644 ${WORKDIR}/frr*.service ${D}${systemd_system_unitdir}
     fi
-
-    install -d ${D}${systemd_unitdir}/system
-    install -m 0644 ${WORKDIR}/frr.service ${D}${systemd_unitdir}/system
 
     # create default log directory for frr
     install -m 0755 -d ${D}/var/log/frr
@@ -201,11 +121,6 @@ CONFFILES:${PN}-watchfrr = "${sysconfdir}/default/watchfrr"
 # Stop the names being rewritten due to the internal shared libraries
 DEBIAN_NOAUTONAME:${PN}-ospfd = "1"
 DEBIAN_NOAUTONAME:${PN}-ospfclient = "1"
-
-# Add frr's user and group
-USERADD_PACKAGES = "${PN}"
-GROUPADD_PARAM:${PN} = "--system frr ; --system frrvty"
-USERADD_PARAM:${PN} = "--system --home ${localstatedir}/run/frr/ -M -g frr -G frrvty --shell /bin/false frr"
 
 # Stop apps before uninstall
 pkg_prerm:${PN} () {
