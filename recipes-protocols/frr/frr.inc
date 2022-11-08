@@ -41,6 +41,8 @@ RDEPENDS:${PN}:class-target += " \
 
 GIT_BRANCH ?= "master"
 SRC_URI = "git://github.com/FRRouting/frr.git;protocol=https;branch=${GIT_BRANCH} \
+           file://CVE-2022-37035.patch \
+           file://CVE-2022-37032.patch \
            file://frr.pam \
            file://frr.service \
            file://support_bundle_commands.conf;subdir=git/tools/etc/frr \
