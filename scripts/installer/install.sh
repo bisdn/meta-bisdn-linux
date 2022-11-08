@@ -435,6 +435,15 @@ EOF
     ) > "$bisdn_linux_mnt/lib/systemd/network/90-enp.link"
 fi
 
+# Setup fw_env.config
+if [ -n "$UBOOT_ENV_CONFIG" ]; then
+    (cat <<EOF
+# MTD device name       Device offset   Env. size       Flash sector size
+$UBOOT_ENV_CONFIG
+EOF
+    ) > "$bisdn_linux_mnt/etc/fw_env.config"
+fi
+
 # setup hostname
 if [ ! -f "$bisdn_linux_mnt/etc/hostname" ]; then
     # use ONIE machine name and replace underscores with dashes, as
