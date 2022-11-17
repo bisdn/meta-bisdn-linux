@@ -66,9 +66,6 @@ do_install:append:class-target () {
     # Install configurations for the daemons
     install -m 0755 -d ${D}${sysconfdir}/default ${D}${sysconfdir}/frr
     for f in vtysh ${FRR_DAEMONS}; do
-        if [ -f ${S}/$f/$f.conf.sample ]; then
-            install -m 0640 ${S}/$f/$f.conf.sample ${D}${sysconfdir}/frr/$f.conf.sample
-        fi
         touch ${D}${sysconfdir}/frr/$f.conf
     done
 
