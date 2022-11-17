@@ -27,6 +27,11 @@ while getopts "hy" o; do
   esac
 done
 
+if [[ $EUID -ne 0 ]]; then
+   echo -e "Please run this program as root\nExiting" 1>&2
+   exit 1
+fi
+
 if [ "${NEED_CONFIRM}" = true ]
 then
   read -p "Booting into ONIE rescue mode? [y/N] " yn
