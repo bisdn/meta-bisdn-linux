@@ -88,16 +88,6 @@ do_install:append:class-target () {
     chown frr:frr ${D}/var/log/frr
 }
 
-DEPENDS:append = " ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'systemd-systemctl-native', '', d)}"
-pkg_postinst:${PN}:append () {
-    if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'false', 'true', d)}; then
-        if [ -n "$D" ]; then
-            OPTS="--root=$D"
-        fi
-        systemctl $OPTS mask frr.service
-    fi
-}
-
 # Indicate that the default files are configuration files
 CONFFILES:${PN} = "${sysconfdir}/frr/vtysh.conf ${sysconfdir}/frr/frr.conf"
 CONFFILES:${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'staticd', '${sysconfdir}/frr/staticd.conf', '', d)}"
