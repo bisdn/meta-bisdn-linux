@@ -121,8 +121,3 @@ CONFFILES:${PN}-watchfrr = "${sysconfdir}/default/watchfrr"
 # Stop the names being rewritten due to the internal shared libraries
 DEBIAN_NOAUTONAME:${PN}-ospfd = "1"
 DEBIAN_NOAUTONAME:${PN}-ospfclient = "1"
-
-# Stop apps before uninstall
-pkg_prerm:${PN} () {
-    systemctl stop frr
-}
