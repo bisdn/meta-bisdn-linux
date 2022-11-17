@@ -116,8 +116,3 @@ CONFFILES:${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'sharpd', '${sysconfdir
 CONFFILES:${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'pbrd', '${sysconfdir}/frr/pbrd.conf', '', d)}"
 CONFFILES:${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'bfdd', '${sysconfdir}/frr/bfdd.conf', '', d)}"
 CONFFILES:${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'pathd', '${sysconfdir}/frr/pathd.conf', '', d)}"
-CONFFILES:${PN}-watchfrr = "${sysconfdir}/default/watchfrr"
-
-# Stop the names being rewritten due to the internal shared libraries
-DEBIAN_NOAUTONAME:${PN}-ospfd = "1"
-DEBIAN_NOAUTONAME:${PN}-ospfclient = "1"
