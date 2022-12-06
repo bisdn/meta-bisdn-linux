@@ -271,6 +271,11 @@ platform_install_bootloader_entry()
     /bin/true
 }
 
+platform_setup()
+{
+    /bin/true
+}
+
 onie_platform=$(onie-sysinfo -p)
 
 cd $(dirname $0)
@@ -452,6 +457,8 @@ if [ ! -f "$bisdn_linux_mnt/etc/hostname" ]; then
     echo $hostname > "$bisdn_linux_mnt/etc/hostname"
     echo "127.0.1.1 $hostname" >> "$bisdn_linux_mnt/etc/hosts"
 fi
+
+platform_setup
 
 # Restore the network configuration from previous installation
 if [ "${DO_RESTORE}" = true ]; then
