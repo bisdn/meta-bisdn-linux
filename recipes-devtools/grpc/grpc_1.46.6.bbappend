@@ -8,7 +8,7 @@ SRCREV_gtest = "0e402173c97aea7a00749e825b194bfede4f2e45"
 
 SRC_URI:append = " \
            git://github.com/google/googletest.git;protocol=https;name=gtest;destsuffix=git/third_party/googletest;branch=main \
-           file://1.45.2/0001-CMakelists.txt-allow-building-the-grpc_cli-utility-o.patch \
+           file://1.46.6/0001-CMakelists.txt-allow-building-the-grpc_cli-utility-o.patch \
 "
 
 # build grpc_cli as well
