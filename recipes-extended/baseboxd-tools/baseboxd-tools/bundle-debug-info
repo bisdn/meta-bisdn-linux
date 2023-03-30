@@ -350,7 +350,7 @@ fi
 
 title "Creating tarball"
 FILE="/tmp/support-data_$(date "+%Y%m%d-%H%M%S").tgz"
-tar czf "$FILE" -C "$TMPDIR" .
+tar czhf "$FILE" -C "$TMPDIR" .
 
 echo "Tarball created: $FILE"
 echo "Please send the tarball to support@bisdn.freshdesk.com"
