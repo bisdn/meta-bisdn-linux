@@ -21,8 +21,6 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL += "\
     iptables \
     jq \
     keepalived \
-    kernel-module-linux-kernel-bde \
-    kernel-module-linux-user-bde \
     less \
     lmsensors-fancontrol \
     lmsensors-pwmconfig \
