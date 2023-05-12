@@ -4,7 +4,7 @@ LICENSE = "GPL-2.0-only"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=4325afd396febcb659c36b49533135d4"
 
 SRC_URI = "\
-  git://github.com/bisdn/mstpd.git;branch=0.1.0+bisdn4;protocol=https \
+  git://github.com/bisdn/mstpd.git;branch=${PV};protocol=https \
   file://bridge-stp.conf"
 
 PV:append = "+bisdn4"
