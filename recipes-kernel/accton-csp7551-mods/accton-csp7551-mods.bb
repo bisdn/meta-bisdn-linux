@@ -11,6 +11,8 @@ SRC_URI = " \
           file://fpga_driver.c \
           file://accton_i2c_cpld.c \
           file://x86-64-accton-csp7551-sfp.c \
+          file://0001-accton-csp7551-sfp-update-for-Linux-6.1.patch;striplevel=4 \
+          file://0002-accton-csp7551-cpld-update-for-Linux-6.1.patch;striplevel=4 \
           file://COPYING \
           "
 
