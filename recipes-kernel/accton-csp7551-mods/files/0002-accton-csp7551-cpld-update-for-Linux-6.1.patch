@@ -1,0 +1,59 @@
+From cf3ae1c3c897b6d684c7422d04ea848b5509a70b Mon Sep 17 00:00:00 2001
+From: Roger Luethi <roger.luethi@bisdn.de>
+Date: Tue, 13 Dec 2022 14:42:29 +0100
+Subject: [PATCH] accton-csp7551-cpld: update for Linux 6.1
+
+This commit updates the accton_i2c_cpld driver for Linux 6.1. It was
+created by applying the coccinelle patch [1]:
+
+spatch --sp-file ./scripts/coccinelle/modules/6.1-i2c_remove_sig.cocci \
+  --in-place \
+  --dir recipes-kernel/accton-csp7551-cpld-mod/files/accton_i2c_cpld.c
+
+[1] https://github.com/bisdn/meta-open-network-linux/blob/main/scripts/coccinelle/modules/6.1-i2c_remove_sig.cocci
+
+Signed-off-by: Roger Luethi <roger.luethi@bisdn.de>
+---
+ .../accton-csp7551-mods/files/accton_i2c_cpld.c       | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/recipes-kernel/accton-csp7551-mods/files/accton_i2c_cpld.c b/recipes-kernel/accton-csp7551-mods/files/accton_i2c_cpld.c
+index 623e458..a7ea7a4 100755
+--- a/recipes-kernel/accton-csp7551-mods/files/accton_i2c_cpld.c
++++ b/recipes-kernel/accton-csp7551-mods/files/accton_i2c_cpld.c
+@@ -34,6 +34,7 @@
+ #include <linux/mutex.h>
+ #include <linux/delay.h>
+ #include <linux/list.h>
++#include <linux/version.h>
+ 
+ 
+ #define MAX_PORT_NUM				    64
+@@ -802,6 +803,11 @@ static int accton_i2c_cpld_remove(struct i2c_client *client)
+     accton_i2c_cpld_remove_client(client);
+     return 0;
+ }
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6,1,0)
++static void accton_i2c_cpld_remove_6_1(struct i2c_client *client){
++    accton_i2c_cpld_remove(client);
++}
++#endif
+ 
+ int accton_i2c_cpld_read(u8 cpld_addr, u8 reg)
+ {
+@@ -866,7 +872,12 @@ static struct i2c_driver accton_i2c_cpld_driver = {
+         .name = "accton_i2c_cpld",
+     },
+     .probe		= accton_i2c_cpld_probe,
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6,1,0)
++    .remove = accton_i2c_cpld_remove_6_1,
++#else
++
+     .remove	   	= accton_i2c_cpld_remove,
++#endif
+     .id_table     = accton_i2c_cpld_id,
+     .address_list = normal_i2c,
+ };
+-- 
+2.40.1
+
