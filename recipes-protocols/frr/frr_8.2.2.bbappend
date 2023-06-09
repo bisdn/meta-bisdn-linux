@@ -4,9 +4,6 @@ SRC_URI:append = " \
            file://frr.service \
            file://frr@.service \
            file://support_bundle_commands.conf;subdir=git/tools/etc/frr \
-           file://CVE-2022-36440.patch \
-           file://CVE-2022-40318.patch \
-           file://CVE-2022-43681.patch \
            "
 
 PR = "r2"
