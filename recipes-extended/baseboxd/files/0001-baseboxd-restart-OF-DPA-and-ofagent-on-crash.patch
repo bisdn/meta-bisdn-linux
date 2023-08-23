@@ -1,0 +1,33 @@
+From 9ff4839c856b36a83f53924a63ce44e819637497 Mon Sep 17 00:00:00 2001
+From: Jonas Gorski <jonas.gorski@bisdn.de>
+Date: Wed, 23 Aug 2023 14:05:20 +0200
+Subject: [PATCH] baseboxd: restart OF-DPA and ofagent on crash
+
+Make sure that OF-DPA and ofagent are restarted on a crash to reset
+their state.
+
+This is not an ideal solution as this will interrupt the service, but
+the vanishing of the port interfaces will likely already have disrupted
+the services.
+
+Upstream-Status: Inappropriate
+Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
+---
+ pkg/systemd/baseboxd.service.in | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/pkg/systemd/baseboxd.service.in b/pkg/systemd/baseboxd.service.in
+index 0c2659b2bf1d..9c776bd8f0e3 100644
+--- a/pkg/systemd/baseboxd.service.in
++++ b/pkg/systemd/baseboxd.service.in
+@@ -6,6 +6,7 @@ After=network.target
+ Type=notify
+ ExecStart=@bindir@/baseboxd
+ ExecStopPost=@bindir@/baseboxd-knet-reset.py
++ExecStopPost=/bin/sh -c 'if [ "$$EXIT_STATUS" != 0 ]; then /bin/systemctl restart ofdpa ofagent; fi'
+ EnvironmentFile=-@sysconfdir@/sysconfig/baseboxd
+ Restart=always
+ NotifyAccess=main
+-- 
+2.41.0
+

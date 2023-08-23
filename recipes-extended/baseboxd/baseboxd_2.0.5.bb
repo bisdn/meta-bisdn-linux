@@ -6,6 +6,8 @@ TARGET_LDFLAGS:append = " -Wl,--no-as-needed"
 
 SRCREV = "53b78203118d2248e2721d23821f60b8a38f8fbd"
 
+SRC_URI += "file://0001-baseboxd-restart-OF-DPA-and-ofagent-on-crash.patch"
+
 # install service and sysconfig
 do_install:append() {
    # add directories
