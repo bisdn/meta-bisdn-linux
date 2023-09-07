@@ -1,4 +1,4 @@
-From 02f023bb1b37f66746707697048d47aabe4f534e Mon Sep 17 00:00:00 2001
+From 72a75773b65fe0c151c236ddc60793efc3b88613 Mon Sep 17 00:00:00 2001
 From: Rubens Figueiredo <rubens.figueiredo@bisdn.de>
 Date: Tue, 10 Aug 2021 11:23:39 +0200
 Subject: [PATCH 5/6] bridge-vlan: add per vlan stp state object and cache
@@ -12,13 +12,13 @@ Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
  include/netlink-private/types.h     |  11 +
  include/netlink/cli/bridge_vlan.h   |  23 ++
  include/netlink/route/bridge_vlan.h |  42 ++++
- lib/route/bridge_vlan.c             | 361 ++++++++++++++++++++++++++++
+ lib/route/bridge_vlan.c             | 362 ++++++++++++++++++++++++++++
  libnl-cli-3.sym                     |   7 +
  libnl-route-3.sym                   |  13 +
  src/lib/bridge_vlan.c               |  42 ++++
  src/nl-bridge.c                     |  38 +++
  src/nl-monitor.c                    |   1 +
- 11 files changed, 546 insertions(+)
+ 11 files changed, 547 insertions(+)
  create mode 100644 include/netlink/cli/bridge_vlan.h
  create mode 100644 include/netlink/route/bridge_vlan.h
  create mode 100644 lib/route/bridge_vlan.c
@@ -189,10 +189,10 @@ index 000000000000..62f2994c7d85
 +#endif
 diff --git a/lib/route/bridge_vlan.c b/lib/route/bridge_vlan.c
 new file mode 100644
-index 000000000000..36c2b490732f
+index 000000000000..929c67af67b2
 --- /dev/null
 +++ b/lib/route/bridge_vlan.c
-@@ -0,0 +1,361 @@
+@@ -0,0 +1,362 @@
 +/* SPDX-License-Identifier: LGPL-2.1-only */
 +/*
 + * lib/route/bridge_vlan.c		Bridge VLAN database
@@ -283,9 +283,10 @@ index 000000000000..36c2b490732f
 +		return err;
 +
 +	struct nlattr *pos;
-+	int rem = nlh->nlmsg_len;
++	int rem = nlh->nlmsg_len - NLMSG_LENGTH(sizeof(*bmsg));
 +
-+	for (pos = nlmsg_data(nlh); nla_ok(pos, rem); pos = nla_next(pos, &rem)) {
++	for (pos = nlmsg_data(nlh) + NLMSG_ALIGN(sizeof(*bmsg));
++	     nla_ok(pos, rem); pos = nla_next(pos, &rem)) {
 +		struct bridge_vlan_info *bvlan_info = NULL;
 +		uint16_t range = 0;
 +		uint8_t state = 0;
@@ -698,5 +699,5 @@ index 86294fbe317d..17225aa2c0a5 100644
  };
  
 -- 
-2.37.0
+2.42.0
 
