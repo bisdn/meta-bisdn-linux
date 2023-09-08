@@ -7,8 +7,8 @@ SRC_URI = "\
   git://github.com/bisdn/mstpd.git;branch=${PV};protocol=https \
   file://bridge-stp.conf"
 
-PV:append = "+bisdn4"
-SRCREV = "79402ba4763c99d4ccbae0406930bf4f979662c6"
+PV:append = "+bisdn5"
+SRCREV = "ab12e96c5e459f976f7c86051792af735e4dde0f"
 
 S = "${WORKDIR}/git"
 
