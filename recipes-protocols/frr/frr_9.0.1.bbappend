@@ -6,11 +6,11 @@ SRC_URI:append = " \
            file://support_bundle_commands.conf;subdir=git/tools/etc/frr \
            "
 
-PR = "r2"
+PR = "r1"
 
 SYSTEMD_AUTO_ENABLE = "enable"
 
-FRR_DAEMONS ?= "zebra staticd bgpd ospfd ospf6d ripd ripngd isisd pimd ldpd nhrpd eigrpd babeld sharpd pbrd bfdd pathd"
+FRR_DAEMONS ?= "zebra staticd bgpd ospfd ospf6d ripd ripngd isisd pimd ldpd nhrpd eigrpd babeld sharpd pbrd bfdd pathd mgmtd"
 FRR_EXTRA_CONF ?= "cumulus datacenter"
 
 PACKAGECONFIG ??= " \
@@ -32,6 +32,7 @@ PACKAGECONFIG ??= " \
     ${@bb.utils.filter('FRR_DAEMONS', 'pbrd', d)} \
     ${@bb.utils.filter('FRR_DAEMONS', 'bfdd', d)} \
     ${@bb.utils.filter('FRR_DAEMONS', 'pathd', d)} \
+    ${@bb.utils.filter('FRR_DAEMONS', 'mgmtd', d)} \
     ${@bb.utils.filter('FRR_EXTRA_CONF', 'cumulus', d)} \
     ${@bb.utils.filter('FRR_EXTRA_CONF', 'datacenter', d)} \
     ${@bb.utils.filter('DISTRO_FEATURES', 'snmp', d)} \
@@ -55,6 +56,7 @@ PACKAGECONFIG[sharpd] = "--enable-sharpd,--disable-sharpd,"
 PACKAGECONFIG[pbrd] = "--enable-pbrd,--disable-pbrd,"
 PACKAGECONFIG[bfdd] = "--enable-bfdd,--disable-bfdd,"
 PACKAGECONFIG[pathd] = "--enable-pathd,--disable-pathd,"
+PACKAGECONFIG[mgmtd] = "--enable-mgmtd,--disable-mgmtd,"
 
 do_install:append:class-target () {
     # remove the global config
@@ -103,3 +105,4 @@ CONFFILES:${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'sharpd', '${sysconfdir
 CONFFILES:${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'pbrd', '${sysconfdir}/frr/pbrd.conf', '', d)}"
 CONFFILES:${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'bfdd', '${sysconfdir}/frr/bfdd.conf', '', d)}"
 CONFFILES:${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'pathd', '${sysconfdir}/frr/pathd.conf', '', d)}"
+CONFFILES:${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'mgmtd', '${sysconfdir}/frr/mgmtd.conf', '', d)}"
