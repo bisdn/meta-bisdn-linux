@@ -1,0 +1,191 @@
+From 0c0aee829c1d2d468d89eda75d38e7490e4de575 Mon Sep 17 00:00:00 2001
+From: Jonas Gorski <jonas.gorski@bisdn.de>
+Date: Fri, 24 Jun 2022 14:07:21 +0200
+Subject: [PATCH 1/4] addr: create an all-zero addresses when parsing "any" or
+ "default"
+
+When calling nl_addr_parse() is called with "any" or "default", the
+constructed address will have zero-length address data. This has the
+side effect that a comparison with e.g. an address contructed from
+"0.0.0.0/0" will fail, since their address has different lengths, even
+if they should be equal.
+
+Fix this by allocating an appropriate zeroed address for "any" and
+"default", but do not for "none", since "none" implies no address.
+
+Upstream-Status: Accepted [https://github.com/thom311/libnl/pull/320]
+Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
+---
+ lib/addr.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/lib/addr.c b/lib/addr.c
+index fae129343ec7..ab4bf2210cf1 100644
+--- a/lib/addr.c
++++ b/lib/addr.c
+@@ -325,14 +325,17 @@ int nl_addr_parse(const char *addrstr, int hint, struct nl_addr **result)
+ 				 * no hint given the user wants to have a IPv4
+ 				 * address given back. */
+ 				family = AF_INET;
++				len = 4;
+ 				goto prefix;
+ 
+ 			case AF_INET6:
+ 				family = AF_INET6;
++				len = 16;
+ 				goto prefix;
+ 
+ 			case AF_LLC:
+ 				family = AF_LLC;
++				len = 6;
+ 				goto prefix;
+ 
+ 			default:
+@@ -449,6 +452,8 @@ prefix:
+ 
+ 	if (copy)
+ 		nl_addr_set_binary_addr(addr, buf, len);
++	else
++		addr->a_len = len;
+ 
+ 	if (prefix) {
+ 		char *p;
+@@ -460,7 +465,7 @@ prefix:
+ 		}
+ 		nl_addr_set_prefixlen(addr, pl);
+ 	} else {
+-		if (!plen)
++		if (copy && !plen)
+ 			plen = len * 8;
+ 		nl_addr_set_prefixlen(addr, plen);
+ 	}
+-- 
+2.42.0
+
+
+From 25d42a4f3c7daa5e14f174a31f14c4e1f2289e46 Mon Sep 17 00:00:00 2001
+From: Jonas Gorski <jonas.gorski@bisdn.de>
+Date: Fri, 24 Jun 2022 14:27:40 +0200
+Subject: [PATCH 2/4] addr: allow constructing all-zero addresses
+
+Allow easy contruction of all-zero addresses by not passing a buf to
+copy. Since the object is allocated with calloc, the address data will
+default to all-zero, and only the length needs to be set.
+
+Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
+---
+ lib/addr.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/lib/addr.c b/lib/addr.c
+index ab4bf2210cf1..d0b5f3379a25 100644
+--- a/lib/addr.c
++++ b/lib/addr.c
+@@ -226,7 +226,7 @@ struct nl_addr *nl_addr_build(int family, const void *buf, size_t size)
+ 		addr->a_prefixlen = size*8;
+ 	}
+ 
+-	if (size)
++	if (size && buf)
+ 		memcpy(addr->a_addr, buf, size);
+ 
+ 	return addr;
+-- 
+2.42.0
+
+
+From 8d40d9eb3360ec1f4c2ca8df8c0f87ca8334889e Mon Sep 17 00:00:00 2001
+From: Jonas Gorski <jonas.gorski@bisdn.de>
+Date: Fri, 24 Jun 2022 14:34:30 +0200
+Subject: [PATCH 3/4] route: construct all-zero addresses for default route
+ destination
+
+A default route is equivalent to a 0.0.0.0/0 or ::/0 route, so we should
+construct the dst as such with a all-zero address.
+
+Since this breaks the assumption that a dst with a 0 address length is a
+default route, switch to checking the prefix length being 0, and make
+sure that there is an address part that is all-zero.
+
+This ensures we will print the actual dst in case the address is not
+zero, or does not exist.
+
+Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
+---
+ lib/route/route_obj.c | 21 ++++++++++++++++++---
+ 1 file changed, 18 insertions(+), 3 deletions(-)
+
+diff --git a/lib/route/route_obj.c b/lib/route/route_obj.c
+index 9441b77a76e5..cd61fd595df0 100644
+--- a/lib/route/route_obj.c
++++ b/lib/route/route_obj.c
+@@ -145,7 +145,8 @@ static void route_dump_line(struct nl_object *a, struct nl_dump_params *p)
+ 		nl_dump(p, "cache ");
+ 
+ 	if (!(r->ce_mask & ROUTE_ATTR_DST) ||
+-	    nl_addr_get_len(r->rt_dst) == 0)
++	    (nl_addr_get_prefixlen(r->rt_dst) == 0 &&
++	     nl_addr_get_len(r->rt_dst) > 0 && nl_addr_iszero(r->rt_dst)))
+ 		nl_dump(p, "default ");
+ 	else
+ 		nl_dump(p, "%s ", nl_addr2str(r->rt_dst, buf, sizeof(buf)));
+@@ -1156,9 +1157,23 @@ int rtnl_route_parse(struct nlmsghdr *nlh, struct rtnl_route **result)
+ 		if (!(dst = nl_addr_alloc_attr(tb[RTA_DST], family)))
+ 			return -NLE_NOMEM;
+ 	} else {
+-		if (!(dst = nl_addr_alloc(0)))
++		int len;
++
++		switch (family) {
++			case AF_INET:
++				len = 4;
++				break;
++
++			case AF_INET6:
++				len = 16;
++				break;
++			default:
++				len = 0;
++				break;
++		}
++
++		if (!(dst = nl_addr_build(family, NULL, len)))
+ 			return -NLE_NOMEM;
+-		nl_addr_set_family(dst, rtm->rtm_family);
+ 	}
+ 
+ 	nl_addr_set_prefixlen(dst, rtm->rtm_dst_len);
+-- 
+2.42.0
+
+
+From 0461a425b31722eded615c75a4dd681cf8bddd62 Mon Sep 17 00:00:00 2001
+From: Jonas Gorski <jonas.gorski@bisdn.de>
+Date: Fri, 24 Jun 2022 14:47:16 +0200
+Subject: [PATCH 4/4] attr: reject zero length addresses
+
+A zero length address is not a valid address in netlink, so we should
+not try to send them to the kernel.
+
+Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
+---
+ lib/attr.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/lib/attr.c b/lib/attr.c
+index 6838dba392f0..1363afbbbb52 100644
+--- a/lib/attr.c
++++ b/lib/attr.c
+@@ -541,6 +541,9 @@ int nla_put_data(struct nl_msg *msg, int attrtype, const struct nl_data *data)
+  */
+ int nla_put_addr(struct nl_msg *msg, int attrtype, struct nl_addr *addr)
+ {
++	if (nl_addr_get_len(addr) == 0)
++		return -NLE_INVAL;
++
+ 	return nla_put(msg, attrtype, nl_addr_get_len(addr),
+ 		       nl_addr_get_binary_addr(addr));
+ }
+-- 
+2.42.0
+
