@@ -3,7 +3,7 @@ HOMEPAGE = "http://www.infradead.org/~tgr/libnl/"
 SECTION = "libs/network"
 
 PE = "1"
-PR = "r2"
+PR = "r1"
 
 LICENSE = "LGPL-2.1-only"
 LIC_FILES_CHKSUM = "file://COPYING;md5=4fbd65380cdd255951079008b364516c"
@@ -17,14 +17,12 @@ SRC_URI = " \
     file://0001-link-bonding-parse-and-expose-bonding-options.patch \
     file://0002-WIP-add-info-slave-data-support.patch \
     file://0003-link-bonding-expose-state-on-enslaved-interfaces.patch \
-    file://0004-sync-linux-headers-with-5.11.patch \
-    file://0005-bridge-vlan-add-per-vlan-stp-state-object-and-cache.patch \
-    file://0006-route-route_obj-treat-each-IPv6-link-local-route-as-.patch \
-    file://0007-lib-attr-handle-default-routes.patch \
+    file://0004-bridge-vlan-add-per-vlan-stp-state-object-and-cache.patch \
+    file://0005-route-route_obj-treat-each-IPv6-link-local-route-as-.patch \
 "
 
-# commit hash of release tag libnl3_7_0
-SRCREV = "1bb416213c7038d0da9a6f5141c611f6dbcefedc"
+# commit hash of release tag libnl3_8_0
+SRCREV = "6b2533c02813ce21b27ea8318fbe1af95652a39e"
 
 S = "${WORKDIR}/git"
 

@@ -1,63 +1,86 @@
-From 91dbec7d1e5df2ce4bb6d38f460def10c1847bbf Mon Sep 17 00:00:00 2001
+From f827424185592fa1db39fe822827e12ee894560a Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Tue, 6 Oct 2020 10:00:37 +0200
-Subject: [PATCH 1/6] link/bonding: parse and expose bonding options
+Subject: [PATCH 1/5] link/bonding: parse and expose bonding options
 
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
- include/netlink/route/link/bonding.h |  12 +
- lib/route/link/bonding.c             | 323 +++++++++++++++++++++++++++
- libnl-route-3.sym                    |  14 +-
- 3 files changed, 348 insertions(+), 1 deletion(-)
+ include/netlink/route/link/bonding.h |   9 +
+ lib/route/link/bonding.c             | 235 ++++++++++++++++++++++++++-
+ libnl-route-3.sym                    |  10 ++
+ 3 files changed, 247 insertions(+), 7 deletions(-)
 
 diff --git a/include/netlink/route/link/bonding.h b/include/netlink/route/link/bonding.h
-index 09d495eb570e..56de595e6988 100644
+index e85b44a24b59..b64964c70b62 100644
 --- a/include/netlink/route/link/bonding.h
 +++ b/include/netlink/route/link/bonding.h
-@@ -25,6 +25,18 @@ extern int	rtnl_link_bond_enslave(struct nl_sock *, struct rtnl_link *,
- extern int	rtnl_link_bond_release_ifindex(struct nl_sock *, int);
+@@ -26,7 +26,16 @@ extern int	rtnl_link_bond_release_ifindex(struct nl_sock *, int);
  extern int	rtnl_link_bond_release(struct nl_sock *, struct rtnl_link *);
  
-+extern int	rtnl_link_bond_set_mode(struct rtnl_link *, uint8_t);
-+extern int	rtnl_link_bond_get_mode(struct rtnl_link *, uint8_t *);
+ extern void	rtnl_link_bond_set_mode(struct rtnl_link *link, uint8_t mode);
++extern int	rtnl_link_bond_get_mode(struct rtnl_link *link, uint8_t *mode);
 +
-+extern int	rtnl_link_bond_set_active_slave(struct rtnl_link *, uint32_t);
-+extern int	rtnl_link_bond_get_active_slave(struct rtnl_link *, uint32_t *);
+ extern void	rtnl_link_bond_set_activeslave(struct rtnl_link *link, int active_slave);
++extern int	rtnl_link_bond_get_activeslave(struct rtnl_link *link, int *active_slave);
 +
-+extern int	rtnl_link_bond_set_primary(struct rtnl_link *, uint32_t);
-+extern int	rtnl_link_bond_get_primary(struct rtnl_link *, uint32_t *);
++extern void	rtnl_link_bond_set_primary(struct rtnl_link *, int primary);
++extern int	rtnl_link_bond_get_primary(struct rtnl_link *, int *primary);
 +
-+extern int	rtnl_link_bond_set_xmit_hash_policy(struct rtnl_link *, uint8_t);
-+extern int	rtnl_link_bond_get_xmit_hash_policy(struct rtnl_link *, uint8_t *);
-+
++extern void	rtnl_link_bond_set_xmit_hash_policy(struct rtnl_link *, uint8_t policy);
++extern int	rtnl_link_bond_get_xmit_hash_policy(struct rtnl_link *, uint8_t *policy);
+ 
  #ifdef __cplusplus
  }
- #endif
 diff --git a/lib/route/link/bonding.c b/lib/route/link/bonding.c
-index 90e647036d50..11f31736fb51 100644
+index 640a62caca78..4ad1ee6f547d 100644
 --- a/lib/route/link/bonding.c
 +++ b/lib/route/link/bonding.c
-@@ -19,6 +19,153 @@
- #include <netlink/route/link/bonding.h>
- #include <netlink-private/route/link/api.h>
+@@ -22,13 +22,17 @@
+ #include "nl-route.h"
+ #include "link-api.h"
  
-+/** @cond SKIP */
-+#define BOND_ATTR_MODE		(1 << 0)
-+#define BOND_ATTR_ACTIVE_SLAVE	(1 << 1)
-+#define BOND_ATTR_PRIMARY		(1 << 2)
-+#define BOND_ATTR_XMIT_HASH_POLICY	(1 << 3)
+-#define BOND_HAS_MODE		(1 << 0)
+-#define BOND_HAS_ACTIVE_SLAVE	(1 << 1)
++#define BOND_HAS_MODE			(1 << 0)
++#define BOND_HAS_ACTIVE_SLAVE		(1 << 1)
++#define BOND_HAS_PRIMARY		(1 << 2)
++#define BOND_HAS_XMIT_HASH_POLICY	(1 << 3)
+ 
+ struct bond_info {
+ 	uint8_t bn_mode;
+ 	uint32_t ifindex;
+-	uint32_t bn_mask;
++	uint32_t primary;
++	uint8_t xmit_hash_policy;
++	uint32_t ce_mask; /* HACK to support attr macros */
+ };
+ 
+ static int bond_info_alloc(struct rtnl_link *link)
+@@ -61,12 +65,18 @@ static int bond_put_attrs(struct nl_msg *msg, struct rtnl_link *link)
+ 	data = nla_nest_start(msg, IFLA_INFO_DATA);
+ 	if (!data)
+ 		return -NLE_MSGSIZE;
+-	if (bn->bn_mask & BOND_HAS_MODE)
++	if (bn->ce_mask & BOND_HAS_MODE)
+ 		NLA_PUT_U8(msg, IFLA_BOND_MODE, bn->bn_mode);
+ 
+-	if (bn->bn_mask & BOND_HAS_ACTIVE_SLAVE)
++	if (bn->ce_mask & BOND_HAS_ACTIVE_SLAVE)
+ 		NLA_PUT_U32(msg, IFLA_BOND_ACTIVE_SLAVE, bn->ifindex);
+ 
++	if (bn->ce_mask & BOND_HAS_PRIMARY)
++		NLA_PUT_U32(msg, IFLA_BOND_PRIMARY, bn->primary);
 +
-+struct bond_info
-+{
-+	uint8_t  bi_mode;
-+	uint32_t bi_active_slave;
-+	uint32_t bi_primary;
-+	uint8_t  bi_xmit_hash_policy;
-+	uint32_t ce_mask;
-+};
++	if (bn->ce_mask & BOND_HAS_XMIT_HASH_POLICY)
++		NLA_PUT_U8(msg, IFLA_BOND_XMIT_HASH_POLICY, bn->xmit_hash_policy);
 +
-+/** @endcond */
-+
+ 	nla_nest_end(msg, data);
+ 	return 0;
+ 
+@@ -75,11 +85,100 @@ nla_put_failure:
+ 	return -NLE_MSGSIZE;
+ }
+ 
 +static struct nla_policy bonding_nl_policy[IFLA_BOND_MAX+1] = {
 +	[IFLA_BOND_MODE]             = { .type = NLA_U8 },
 +	[IFLA_BOND_ACTIVE_SLAVE]     = { .type = NLA_U32 },
@@ -65,26 +88,11 @@ index 90e647036d50..11f31736fb51 100644
 +	[IFLA_BOND_XMIT_HASH_POLICY] = { .type = NLA_U8 },
 +};
 +
-+static int bond_alloc(struct rtnl_link *link)
-+{
-+	struct bond_info *info;
-+
-+	if (link->l_info)
-+		memset(link->l_info, 0, sizeof(*info));
-+	else {
-+		if ((info = calloc(1, sizeof(*info))) == NULL)
-+			return -NLE_NOMEM;
-+
-+		link->l_info = info;
-+	}
-+	return 0;
-+}
-+
 +static int bond_parse(struct rtnl_link *link, struct nlattr *data,
 +			struct nlattr *xstats)
 +{
 +	struct nlattr *tb[IFLA_BOND_MAX+1];
-+	struct bond_info *info;
++	struct bond_info *bn;
 +	int err;
 +
 +	NL_DBG(3, "Parsing bonding info\n");
@@ -92,29 +100,29 @@ index 90e647036d50..11f31736fb51 100644
 +	if ((err = nla_parse_nested(tb, IFLA_BOND_MAX, data, bonding_nl_policy)) < 0)
 +		goto errout;
 +
-+	if ((err = bond_alloc(link)) < 0)
++	if ((err = bond_info_alloc(link)) < 0)
 +		goto errout;
 +
-+	info = link->l_info;
++	bn = link->l_info;
 +
 +	if (tb[IFLA_BOND_MODE]) {
-+		info->bi_mode = nla_get_u8(tb[IFLA_BOND_MODE]);
-+		info->ce_mask |= BOND_ATTR_MODE;
++		bn->bn_mode = nla_get_u8(tb[IFLA_BOND_MODE]);
++		bn->ce_mask |= BOND_HAS_MODE;
 +	}
 +
 +	if (tb[IFLA_BOND_ACTIVE_SLAVE]) {
-+		info->bi_active_slave = nla_get_u32(tb[IFLA_BOND_ACTIVE_SLAVE]);
-+		info->ce_mask |= BOND_ATTR_ACTIVE_SLAVE;
++		bn->ifindex = nla_get_u32(tb[IFLA_BOND_ACTIVE_SLAVE]);
++		bn->ce_mask |= BOND_HAS_ACTIVE_SLAVE;
 +	}
 +
 +	if (tb[IFLA_BOND_PRIMARY]) {
-+		info->bi_primary = nla_get_u32(tb[IFLA_BOND_PRIMARY]);
-+		info->ce_mask |= BOND_ATTR_PRIMARY;
++		bn->primary = nla_get_u32(tb[IFLA_BOND_PRIMARY]);
++		bn->ce_mask |= BOND_HAS_PRIMARY;
 +	}
 +
 +	if (tb[IFLA_BOND_XMIT_HASH_POLICY]) {
-+		info->bi_xmit_hash_policy = nla_get_u32(tb[IFLA_BOND_XMIT_HASH_POLICY]);
-+		info->ce_mask |= BOND_ATTR_XMIT_HASH_POLICY;
++		bn->xmit_hash_policy = nla_get_u32(tb[IFLA_BOND_XMIT_HASH_POLICY]);
++		bn->ce_mask |= BOND_HAS_XMIT_HASH_POLICY;
 +	}
 +
 +	err = 0;
@@ -122,15 +130,9 @@ index 90e647036d50..11f31736fb51 100644
 +	return err;
 +}
 +
-+static void bond_free(struct rtnl_link *link)
-+{
-+	free(link->l_info);
-+	link->l_info = NULL;
-+}
-+
 +static int bond_clone(struct rtnl_link *dst, struct rtnl_link *src)
 +{
-+	struct boding_info *vdst, *vsrc = src->l_info;
++	struct bond_info *vdst, *vsrc = src->l_info;
 +	int err;
 +
 +	dst->l_info = NULL;
@@ -146,29 +148,6 @@ index 90e647036d50..11f31736fb51 100644
 +	return 0;
 +}
 +
-+static int bond_put_attrs(struct nl_msg *msg, struct rtnl_link *link)
-+{
-+	struct bond_info *info = link->l_info;
-+	struct nlattr *data;
-+
-+	if (!(data = nla_nest_start(msg, IFLA_INFO_DATA)))
-+		return -NLE_MSGSIZE;
-+
-+	if (info->ce_mask & BOND_ATTR_MODE)
-+		NLA_PUT_U8(msg, IFLA_BOND_MODE, info->bi_mode);
-+	if (info->ce_mask & BOND_ATTR_ACTIVE_SLAVE)
-+		NLA_PUT_U32(msg, IFLA_BOND_ACTIVE_SLAVE, info->bi_active_slave);
-+	if (info->ce_mask & BOND_ATTR_PRIMARY)
-+		NLA_PUT_U32(msg, IFLA_BOND_PRIMARY, info->bi_primary);
-+	if (info->ce_mask & BOND_ATTR_XMIT_HASH_POLICY)
-+		NLA_PUT_U8(msg, IFLA_BOND_XMIT_HASH_POLICY, info->bi_xmit_hash_policy);
-+
-+	nla_nest_end(msg, data);
-+
-+nla_put_failure:
-+	return 0;
-+}
-+
 +static int bond_compare(struct rtnl_link *link_a, struct rtnl_link *link_b,
 +			 int flags)
 +{
@@ -177,234 +156,186 @@ index 90e647036d50..11f31736fb51 100644
 +	int diff = 0;
 +	uint32_t attrs = flags & LOOSE_COMPARISON ? b->ce_mask : ~0;
 +
-+#define BOND_DIFF(ATTR, EXPR) ATTR_DIFF(attrs, BOND_ATTR_##ATTR, a, b, EXPR)
++#define BOND_DIFF(ATTR, EXPR) ATTR_DIFF(attrs, BOND_HAS_##ATTR, a, b, EXPR)
 +
-+	diff |= BOND_DIFF(MODE, a->bi_mode != b->bi_mode);
-+	diff |= BOND_DIFF(ACTIVE_SLAVE, a->bi_active_slave != b->bi_active_slave);
-+	diff |= BOND_DIFF(PRIMARY, a->bi_primary != b->bi_primary);
-+	diff |= BOND_DIFF(XMIT_HASH_POLICY, a->bi_xmit_hash_policy != b->bi_xmit_hash_policy);
++	diff |= BOND_DIFF(MODE, a->bn_mode != b->bn_mode);
++	diff |= BOND_DIFF(ACTIVE_SLAVE, a->ifindex != b->ifindex);
++	diff |= BOND_DIFF(PRIMARY, a->primary != b->primary);
++	diff |= BOND_DIFF(XMIT_HASH_POLICY, a->xmit_hash_policy != b->xmit_hash_policy);
 +#undef BOND_DIFF
 +
 +	return diff;
 +}
 +
- /**
-  * Allocate link object of type bond
-  *
-@@ -206,8 +353,184 @@ int rtnl_link_bond_release(struct nl_sock *sock, struct rtnl_link *slave)
- 
  static struct rtnl_link_info_ops bonding_info_ops = {
  	.io_name		= "bond",
-+	.io_alloc		= bond_alloc,
+ 	.io_alloc		= bond_info_alloc,
 +	.io_parse		= bond_parse,
 +	.io_clone		= bond_clone,
-+	.io_put_attrs		= bond_put_attrs,
-+	.io_free		= bond_free,
+ 	.io_put_attrs		= bond_put_attrs,
+ 	.io_free		= bond_info_free,
 +	.io_compare		= bond_compare,
  };
  
-+/** @cond SKIP */
-+#define IS_BOND_LINK_ASSERT(link) \
-+	if ((link)->l_info_ops != &bonding_info_ops) { \
-+		APPBUG("Link is not a bonding link. set type \"bond\" first."); \
-+		return -NLE_OPNOTSUPP; \
-+	}
-+/** @endcond */
-+
-+/**
-+ * Set bonding mode
-+ * @arg link		Link object
-+ * @arg mode		bond mode
-+ *
-+ * @return 0 on success or a negative error code.
-+ */
-+int rtnl_link_bond_set_mode(struct rtnl_link *link, uint8_t mode)
-+{
-+	struct bond_info *info = link->l_info;
-+
-+	IS_BOND_LINK_ASSERT(link);
-+
-+	info->bi_mode = mode;
-+	info->ce_mask |= BOND_ATTR_MODE;
-+
-+	return 0;
+ #define IS_BOND_INFO_ASSERT(link)                                                    \
+@@ -104,7 +203,29 @@ void rtnl_link_bond_set_activeslave(struct rtnl_link *link, int active_slave)
+ 
+ 	bn->ifindex = active_slave;
+ 
+-	bn->bn_mask |= BOND_HAS_ACTIVE_SLAVE;
++	bn->ce_mask |= BOND_HAS_ACTIVE_SLAVE;
 +}
 +
 +/**
-+ * Get bonding mode
-+ * @arg link		Link object
++ * Get active slave for bond
++ * @arg link		Link object of type bond
++ * @arg active          ifindex of active slave
++ *
++ * @return 0 on success or a negative error code
++ */
++int rtnl_link_bond_get_activeslave(struct rtnl_link *link, int *active_slave)
++{
++	struct bond_info *info = link->l_info;
++
++	IS_BOND_INFO_ASSERT(link);
++
++	if (!(info->ce_mask & BOND_HAS_ACTIVE_SLAVE))
++		return -NLE_NOATTR;
++
++	if (active_slave)
++		*active_slave = info->ifindex;
++
++	return 0;
+ }
+ 
+ /**
+@@ -122,7 +243,107 @@ void rtnl_link_bond_set_mode(struct rtnl_link *link, uint8_t mode)
+ 
+ 	bn->bn_mode = mode;
+ 
+-	bn->bn_mask |= BOND_HAS_MODE;
++	bn->ce_mask |= BOND_HAS_MODE;
++}
++
++/**
++ * Get bond mode
++ * @arg link		Link object of type bond
 + * @arg mode		bond mode
 + *
-+ * @return bond mode, 0 if not set or a negative error code.
++ * @return 0 on success or a negative error code
 + */
 +int rtnl_link_bond_get_mode(struct rtnl_link *link, uint8_t *mode)
 +{
 +	struct bond_info *info = link->l_info;
 +
-+	IS_BOND_LINK_ASSERT(link);
++	IS_BOND_INFO_ASSERT(link);
 +
-+	if (!(info->ce_mask & BOND_ATTR_MODE))
++	if (!(info->ce_mask & BOND_HAS_MODE))
 +		return -NLE_NOATTR;
 +
 +	if (mode)
-+		*mode = info->bi_mode;
++		*mode = info->bn_mode;
 +
 +	return 0;
 +}
 +
 +/**
-+ * Set bonding active slave
-+ * @arg link		Link object
-+ * @arg active_slave	active slave
++ * Set bond primary link
++ * @arg link		Link object of type bond
++ * @arg primary		ifindex of primary slave to set
 + *
-+ * @return 0 on success or a negative error code.
++ * @return void
 + */
-+int rtnl_link_bond_set_active_slave(struct rtnl_link *link, uint32_t active_slave)
++void rtnl_link_bond_set_primary(struct rtnl_link *link, int primary)
 +{
 +	struct bond_info *info = link->l_info;
 +
-+	IS_BOND_LINK_ASSERT(link);
++	IS_BOND_INFO_ASSERT(link);
 +
-+	info->bi_active_slave = active_slave;
-+	info->ce_mask |= BOND_ATTR_ACTIVE_SLAVE;
-+
-+	return 0;
++	info->primary = primary;
++	info->ce_mask |= BOND_HAS_PRIMARY;
 +}
 +
 +/**
-+ * Get bonding mode
-+ * @arg link		Link object
++ * Get bond primary link
++ * @arg link		Link object of type bond
++ * @arg primary		ifindex of primary slave
 + *
-+ * @return bond mode, 0 if not set or a negative error code.
++ * @return 0 on success or a negative error code
 + */
-+int rtnl_link_bond_get_active_slave(struct rtnl_link *link, uint32_t *active_slave)
++int rtnl_link_bond_get_primary(struct rtnl_link *link, int *primary)
 +{
 +	struct bond_info *info = link->l_info;
 +
-+	IS_BOND_LINK_ASSERT(link);
++	IS_BOND_INFO_ASSERT(link);
 +
-+	if (!(info->ce_mask & BOND_ATTR_ACTIVE_SLAVE))
-+		return -NLE_NOATTR;
-+
-+	if (active_slave)
-+		*active_slave = info->bi_active_slave;
-+
-+	return 0;
-+}
-+
-+/**
-+ * Set bonding primary
-+ * @arg link		Link object
-+ * @arg primary		primary
-+ *
-+ * @return 0 on success or a negative error code.
-+ */
-+int rtnl_link_bond_set_primary(struct rtnl_link *link, uint32_t primary)
-+{
-+	struct bond_info *info = link->l_info;
-+
-+	IS_BOND_LINK_ASSERT(link);
-+
-+	info->bi_primary = primary;
-+	info->ce_mask |= BOND_ATTR_PRIMARY;
-+
-+	return 0;
-+}
-+
-+/**
-+ * Get bonding primary
-+ * @arg link		Link object
-+ *
-+ * @return primary, 0 if not set or a negative error code.
-+ */
-+int rtnl_link_bond_get_primary(struct rtnl_link *link, uint32_t *primary)
-+{
-+	struct bond_info *info = link->l_info;
-+
-+	IS_BOND_LINK_ASSERT(link);
-+
-+	if (!(info->ce_mask & BOND_ATTR_PRIMARY))
++	if (!(info->ce_mask & BOND_HAS_PRIMARY))
 +		return -NLE_NOATTR;
 +
 +	if (primary)
-+		*primary = info->bi_primary;
++		*primary = info->primary;
 +
 +	return 0;
 +}
 +
 +/**
-+ * Set bonding mode
-+ * @arg link		Link object
-+ * @arg mode		bond mode
++ * Set bond mode xmit hash policy
++ * @arg link		Link object of type bond
++ * @arg mode		bond xmit hash policy to set
 + *
-+ * @return 0 on success or a negative error code.
++ * @return void
 + */
-+int rtnl_link_bond_set_xmit_hash_policy(struct rtnl_link *link, uint8_t policy)
++void rtnl_link_bond_set_xmit_hash_policy(struct rtnl_link *link, uint8_t policy)
 +{
 +	struct bond_info *info = link->l_info;
 +
-+	IS_BOND_LINK_ASSERT(link);
++	IS_BOND_INFO_ASSERT(link);
 +
-+	info->bi_xmit_hash_policy = policy;
-+	info->ce_mask |= BOND_ATTR_XMIT_HASH_POLICY;
-+
-+	return 0;
++	info->xmit_hash_policy = policy;
++	info->ce_mask |= BOND_HAS_XMIT_HASH_POLICY;
 +}
 +
 +/**
-+ * Get bonding mode
-+ * @arg link		Link object
-+ * @arg mode		bond mode
++ * Get bond mode xmit hash policy
++ * @arg link		Link object of type bond
++ * @arg mode		bond xmit hash policy
 + *
-+ * @return bond mode, 0 if not set or a negative error code.
++ * @return 0 on success or a negative error code
 + */
 +int rtnl_link_bond_get_xmit_hash_policy(struct rtnl_link *link, uint8_t *policy)
 +{
 +	struct bond_info *info = link->l_info;
 +
-+	IS_BOND_LINK_ASSERT(link);
++	IS_BOND_INFO_ASSERT(link);
 +
-+	if (!(info->ce_mask & BOND_ATTR_XMIT_HASH_POLICY))
++	if (!(info->ce_mask & BOND_HAS_XMIT_HASH_POLICY))
 +		return -NLE_NOATTR;
 +
 +	if (policy)
-+		*policy = info->bi_xmit_hash_policy;
++		*policy = info->xmit_hash_policy;
 +
 +	return 0;
-+}
-+
- static void __init bonding_init(void)
- {
- 	rtnl_link_register_info(&bonding_info_ops);
+ }
+ 
+ /**
 diff --git a/libnl-route-3.sym b/libnl-route-3.sym
-index e54bc6dd7833..910a4b3c550a 100644
+index 7e36de1eb28c..ee5b0e66a65f 100644
 --- a/libnl-route-3.sym
 +++ b/libnl-route-3.sym
-@@ -232,7 +232,6 @@ global:
- 	rtnl_link_bond_add;
- 	rtnl_link_bond_alloc;
- 	rtnl_link_bond_enslave;
--	rtnl_link_bond_enslave_ifindex;
- 	rtnl_link_bond_release;
- 	rtnl_link_bond_release_ifindex;
- 	rtnl_link_bridge_add;
-@@ -1268,3 +1267,16 @@ global:
- 	rtnl_nat_set_new_addr;
- 	rtnl_nat_set_old_addr;
- } libnl_3_6;
+@@ -1306,3 +1306,13 @@ global:
+ 	rtnl_nh_set_fdb;
+ 	rtnl_nh_set_gateway;
+ } libnl_3_7;
 +
-+libnl_3_8 {
++libnl_3_9 {
 +global:
-+	rtnl_link_bond_enslave_ifindex;
-+	rtnl_link_bond_get_active_slave;
++	rtnl_link_bond_get_activeslave;
 +	rtnl_link_bond_get_mode;
 +	rtnl_link_bond_get_primary;
 +	rtnl_link_bond_get_xmit_hash_policy;
-+	rtnl_link_bond_set_active_slave;
-+	rtnl_link_bond_set_mode;
 +	rtnl_link_bond_set_primary;
 +	rtnl_link_bond_set_xmit_hash_policy;
-+} libnl_3_7;
++} libnl_3_8;
 -- 
-2.37.0
+2.42.0
 
