@@ -9,3 +9,10 @@ RDEPENDS:${PN} = "\
     rp-pppoe \
     rp-pppoe-server \
 "
+
+# utilities useful for debugging (zstd to extract coredumps)
+RDEPENDS:${PN} += "\
+    gdb \
+    strace \
+    zstd \
+"
