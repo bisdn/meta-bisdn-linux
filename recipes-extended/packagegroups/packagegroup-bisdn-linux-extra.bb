@@ -6,4 +6,6 @@ inherit packagegroup
 
 # optional packages as dependencies of this package to allow easy building
 RDEPENDS:${PN} = "\
+    rp-pppoe \
+    rp-pppoe-server \
 "
