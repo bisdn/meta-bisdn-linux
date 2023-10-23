@@ -6,7 +6,7 @@
 set -e
 
 USAGE="Upgrade BISDN Linux
-usage: $(basename "$0") [OPTIONS] [IMAGEURL [IPCONFIG]]
+usage: $(basename "$0") [OPTIONS] [IMAGEURL]
 
 [OPTIONS]
 -h show this message
@@ -14,12 +14,7 @@ usage: $(basename "$0") [OPTIONS] [IMAGEURL [IPCONFIG]]
 
 [IMAGEURL] URL of an installable BISDN Linux image
            example: http://repo.bisdn.de/ftp/pub/onie/onie-bisdn-agema-ag7648.bin
-
-[IPCONFIG] IP address (IP), gateway (GW) and netmask (NETMASK) of an interface, must be omitted when DHCP is available!
-           format: <IP>::<GW>:<NETMASK>
-	   example: 10.250.7.177::10.250.7.1:255.255.255.0
-	   'current' takes the current IP/GW/NETMASK of the 'enp0s20f0' interface
-	   example: $(basename "$0") http://repo.bisdn.de/ftp/pub/onie/onie-bisdn-agema-ag7648.bin current
+	   example: $(basename "$0") http://repo.bisdn.de/ftp/pub/onie/onie-bisdn-agema-ag7648.bin
 "
 
 NEED_CONFIRM=true
@@ -49,25 +44,13 @@ case $# in
       echo "Unsufficient parameters passed!";
       echo "$USAGE"; exit 1;;
     1)
-      INSTALL_FILE=$1; IP="dhcp";;
-    2)
-      INSTALL_FILE=$1;
-      if [[ $2 == "current" ]]; then
-        INTF="enp0s20f0";
-        IP_ADDR=$(ip -j -4 a l dev ${INTF} | jq -r '.[].addr_info[0].local //empty');
-        GW=$(ip -j -4 r l dev ${INTF} | jq -r '.[0].gateway // empty');
-        PREFIXLEN=$(ip -j -4 a l dev ${INTF} | jq -r '.[].addr_info[0].prefixlen // empty');
-        eval $(ipcalc -m ${IP_ADDR}"/"${PREFIXLEN});
-        IP="${IP_ADDR}::${GW}:${NETMASK}::eth0:none";
-        else
-        IP="$2::eth0:none";
-      fi;;
+      INSTALL_FILE=$1;;
     *)
       echo "Too many parameters passed"; exit 1;;
 esac;
 
 if [ "${NEED_CONFIRM}" = true ]; then
-  read -p "Upgrading BISDN Linux to install-source: ${INSTALL_FILE} using Client-IP-cfg: ${IP}! Please confirm system reboot: [y/N] " yn
+  read -p "Upgrading BISDN Linux to install-source: ${INSTALL_FILE} using Client-IP-cfg: dhcp! Please confirm system reboot: [y/N] " yn
   case $yn in
     [Yy]* ) ;;
     * ) echo "Operation aborted.";
@@ -76,11 +59,7 @@ if [ "${NEED_CONFIRM}" = true ]; then
 fi
 
 if [ -f /etc/fw_env.config ]; then
-  if [[ -n "${IP}" && "${IP}" != "dhcp" ]]; then
-    debugargs="ip=${IP} install_url=${INSTALL_FILE}"
-  else
-    debugargs="install_url=${INSTALL_FILE}"
-  fi
+  debugargs="install_url=${INSTALL_FILE}"
   fw_setenv onie_debugargs "$debugargs"
   fw_setenv onie_boot_reason "install"
 else
@@ -89,11 +68,7 @@ else
   ${MNT_DIR}/onie/tools/bin/onie-boot-mode -q -o install
   grub-reboot ONIE
 
-  if [[ -n "${IP}" && "${IP}" != "dhcp" ]]; then
-    sed -i "/export ONIE_EXTRA_CMDLINE_LINUX/ i ONIE_EXTRA_CMDLINE_LINUX=\""\${ONIE_EXTRA_CMDLINE_LINUX}" ip=${IP} install_url=${INSTALL_FILE}\" " ${MNT_DIR}/grub/grub.cfg
-  else
-    sed -i "/export ONIE_EXTRA_CMDLINE_LINUX/ i ONIE_EXTRA_CMDLINE_LINUX=\""\${ONIE_EXTRA_CMDLINE_LINUX}" install_url=${INSTALL_FILE}\" " ${MNT_DIR}/grub/grub.cfg
-  fi;
+  sed -i "/export ONIE_EXTRA_CMDLINE_LINUX/ i ONIE_EXTRA_CMDLINE_LINUX=\""\${ONIE_EXTRA_CMDLINE_LINUX}" install_url=${INSTALL_FILE}\" " ${MNT_DIR}/grub/grub.cfg
 fi
 
 systemctl reboot
