@@ -17,7 +17,6 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL = "\
     kernel-modules \
     less \
     onie-tools \
-    onl \
     openssh-sftp \
     openssh-sftp-server \
     parted \
