@@ -6,8 +6,14 @@ inherit packagegroup
 
 # optional packages as dependencies of this package to allow easy building
 RDEPENDS:${PN} = "\
+    fping \
+    iperf3 \
+    ipmitool \
+    net-tools \
+    openvswitch \
     rp-pppoe \
     rp-pppoe-server \
+    screen \
 "
 
 # utilities useful for debugging (zstd to extract coredumps)
