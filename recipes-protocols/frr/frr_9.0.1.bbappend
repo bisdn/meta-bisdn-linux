@@ -6,7 +6,7 @@ SRC_URI:append = " \
            file://support_bundle_commands.conf;subdir=git/tools/etc/frr \
            "
 
-PR = "r1"
+PR = "r2"
 
 SYSTEMD_AUTO_ENABLE = "enable"
 
