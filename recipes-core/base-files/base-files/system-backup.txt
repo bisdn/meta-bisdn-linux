@@ -5,6 +5,8 @@
 /etc/group
 /etc/gshadow
 /etc/sudoers.d
+/etc/hostname
+/etc/hosts
 /etc/systemd/network/
 /etc/ofdpa-grpc.conf
 -/etc/modprobe.d/i2c-i801.conf
