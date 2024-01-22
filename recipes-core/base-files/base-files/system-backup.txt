@@ -8,6 +8,12 @@
 /etc/hostname
 /etc/hosts
 /etc/systemd/network/
+/etc/ssh/ssh_host_ecdsa_key
+/etc/ssh/ssh_host_ecdsa_key.pub
+/etc/ssh/ssh_host_ed25519_key
+/etc/ssh/ssh_host_ed25519_key.pub
+/etc/ssh/ssh_host_rsa_key
+/etc/ssh/ssh_host_rsa_key.pub
 /etc/ofdpa-grpc.conf
 -/etc/modprobe.d/i2c-i801.conf
 -/etc/modprobe.d/i2c-ismt.conf
