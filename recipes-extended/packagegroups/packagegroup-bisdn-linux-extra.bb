@@ -22,3 +22,19 @@ RDEPENDS:${PN} += "\
     strace \
     zstd \
 "
+
+# Workaround a bug in bitbake where runall does not properly consider all
+# transitive RDEPENDS chains, so add them explicitly.
+# Can be dropped once the fix get backported or we switch to the next LTS Yocto.
+#
+# ref: https://git.yoctoproject.org/poky/commit/?id=61182659c212db24e52cdbcdbb043c7b0de86094
+RDEPENDS:${PN} += " \
+    python3-appdirs \
+    python3-automat \
+    python3-constantly \
+    python3-hyperlink \
+    python3-incremental \
+    python3-pyhamcrest \
+    python3-pyserial \
+    python3-zopeinterface \
+"
