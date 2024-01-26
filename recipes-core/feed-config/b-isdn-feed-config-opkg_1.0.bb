@@ -41,7 +41,3 @@ do_install () {
 }
 
 FILES:${PN} = "${sysconfdir}/opkg/ "
-
-CONFFILES:${PN} += "${sysconfdir}/opkg/base-feeds.conf \
-                    ${sysconfdir}/opkg/arch.conf"
-
