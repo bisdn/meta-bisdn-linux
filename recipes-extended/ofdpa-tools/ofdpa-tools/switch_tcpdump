@@ -29,6 +29,7 @@
 
 import argparse
 import os
+import signal
 import subprocess
 import time
 
@@ -102,9 +103,11 @@ def main():
         args.stdout,
         args.filters)
 
+    sig = signal.signal(signal.SIGINT, signal.SIG_IGN)
     if rule_delete(portNumber) != 0:
         print("Failed while deleting rule in the ACL table")
         return 1
+    signal.signal(signal.SIGINT, sig)
 
     print("Rule deleted from the ACL table")
 
