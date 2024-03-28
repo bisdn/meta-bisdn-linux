@@ -191,6 +191,9 @@ def run_tcpdump(portName, filePath, timeoutSeconds,
     except KeyboardInterrupt:
         tcpdumpProcess.terminate()
 
+    # Wait for tcpdump to finish writing before starting to print again.
+    tcpdumpProcess.wait()
+
     if not stdout:
         print(f"Final file size: {os.path.getsize(filePath)/1e6} MB")
     return tcpdumpProcess.returncode
