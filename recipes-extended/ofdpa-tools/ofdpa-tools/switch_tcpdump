@@ -58,15 +58,16 @@ def main():
         nargs='+',
         help="tcpdump filter arguments")
 
-    group = parser.add_mutually_exclusive_group(required=True)
+    group = parser.add_mutually_exclusive_group()
     group.add_argument(
         "--filePath",
         type=str,
         help="resulting .pcap file location")
+    # This argument is kept for for backward compatibility. It is not used.
     group.add_argument(
         "--stdout",
         action='store_true',
-        help="output to stdout instead of file - overrides file path",
+        help="output to stdout [default]",
         default=False)
 
     args, extra_args = parser.parse_known_args()
@@ -100,7 +101,6 @@ def main():
         args.filePath,
         args.timeout,
         args.maxSize,
-        args.stdout,
         args.filters,
         extra_args)
 
@@ -154,12 +154,12 @@ def rule_delete(portNumber):
 
 
 def run_tcpdump(portName, filePath, timeoutSeconds,
-                maxSizeMB, stdout, filters, extra_args):
+                maxSizeMB, filters, extra_args):
 
     tcpdumpCommand = ["tcpdump", "-i", portName]
 
     # Override file argument for stdout
-    if not stdout:
+    if filePath:
         tcpdumpCommand = tcpdumpCommand + ["-w", filePath]
         print(f"Saving to {filePath}")
 
@@ -187,7 +187,7 @@ def run_tcpdump(portName, filePath, timeoutSeconds,
                 tcpdumpProcess.terminate()
                 print("Reached capture timeout, stopping")
 
-            if not stdout and os.path.isfile(filePath) \
+            if filePath and os.path.isfile(filePath) \
                     and int(os.path.getsize(filePath) / 1e6) > maxSizeMB:
                 tcpdumpProcess.terminate()
                 print("Max file size reached, stopping")
@@ -198,7 +198,7 @@ def run_tcpdump(portName, filePath, timeoutSeconds,
     # Wait for tcpdump to finish writing before starting to print again.
     tcpdumpProcess.wait()
 
-    if not stdout:
+    if filePath:
         print(f"Final file size: {os.path.getsize(filePath)/1e6} MB")
     return tcpdumpProcess.returncode
 
