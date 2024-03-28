@@ -69,7 +69,7 @@ def main():
         help="output to stdout instead of file - overrides file path",
         default=False)
 
-    args = parser.parse_args()
+    args, extra_args = parser.parse_known_args()
 
     print("=" * 80)
     print("Running switch_tcpdump")
@@ -101,7 +101,8 @@ def main():
         args.timeout,
         args.maxSize,
         args.stdout,
-        args.filters)
+        args.filters,
+        extra_args)
 
     sig = signal.signal(signal.SIGINT, signal.SIG_IGN)
     if rule_delete(portNumber) != 0:
@@ -153,7 +154,7 @@ def rule_delete(portNumber):
 
 
 def run_tcpdump(portName, filePath, timeoutSeconds,
-                maxSizeMB, stdout, filters):
+                maxSizeMB, stdout, filters, extra_args):
 
     tcpdumpCommand = ["tcpdump", "-i", portName]
 
@@ -161,6 +162,9 @@ def run_tcpdump(portName, filePath, timeoutSeconds,
     if not stdout:
         tcpdumpCommand = tcpdumpCommand + ["-w", filePath]
         print(f"Saving to {filePath}")
+
+    if extra_args:
+        tcpdumpCommand = tcpdumpCommand + extra_args
 
     if filters:
         tcpdumpCommand = tcpdumpCommand + filters
