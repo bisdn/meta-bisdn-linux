@@ -72,10 +72,6 @@ def main():
 
     args, extra_args = parser.parse_known_args()
 
-    print("=" * 80)
-    print("Running switch_tcpdump")
-    print(f"Interface name: {args.inPort}")
-
     if interface_exists(args.inPort) != 0:
         print("Interface %s does not exist" % args.inPort)
         return 1
@@ -94,7 +90,7 @@ def main():
         print("Failed while inserting rule into the ACL table")
         return 1
 
-    print("Rule inserted to the ACL table")
+    print("Set ACL table rule to redirect", args.inPort, "ingress traffic to us")
 
     tcpdumpReturnCode = run_tcpdump(
         args.inPort,
@@ -112,9 +108,6 @@ def main():
 
     print("Rule deleted from the ACL table")
 
-    print("Finished capturing")
-    print("=" * 80)
-
     return tcpdumpReturnCode
 
 
@@ -123,7 +116,8 @@ def interface_exists(interfaceName):
         "/sbin/ip",
         "link",
         "show",
-        interfaceName])
+        interfaceName],
+        stdout=subprocess.DEVNULL)
 
     return completed_process.returncode
 
@@ -161,7 +155,6 @@ def run_tcpdump(portName, filePath, timeoutSeconds,
     # Override file argument for stdout
     if filePath:
         tcpdumpCommand = tcpdumpCommand + ["-w", filePath]
-        print(f"Saving to {filePath}")
 
     if extra_args:
         tcpdumpCommand = tcpdumpCommand + extra_args
@@ -169,13 +162,11 @@ def run_tcpdump(portName, filePath, timeoutSeconds,
     if filters:
         tcpdumpCommand = tcpdumpCommand + filters
 
-    print("Starting tcpdump...")
     if timeoutSeconds:
         print(f"The timeout is {timeoutSeconds} seconds")
-    else:
-        print("Capturing traffic until user interruption")
     starting_time = time.time()
 
+    print("Running", " ".join(tcpdumpCommand))
     tcpdumpProcess = subprocess.Popen(tcpdumpCommand)
 
     try:
