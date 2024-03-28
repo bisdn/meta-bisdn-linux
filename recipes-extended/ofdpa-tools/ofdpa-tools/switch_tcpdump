@@ -33,11 +33,27 @@ import signal
 import subprocess
 import time
 
+EPILOG = """
+Example usage:
+
+Capture ingress packets on port3 and write at most 100 MB to /tmp/capture.pcap:
+switch_tcpdump --inPort port3 --filePath /tmp/capture.pcap --maxSize 100
+
+For ten seconds, show all packets arriving on port3:
+switch_tcpdump --inPort port3 --timeout 10
+
+Extra arguments are passed to tcpdump directly. For example, to get
+verbose output for ARP packets arriving on port3, use:
+switch_tcpdump --inPort port3 -v 'arp'
+"""
+
 
 def main():
     parser = argparse.ArgumentParser(
         prog="switch_tcpdump",
-        description="Capture packets in the switch controller")
+        description="Capture ingress packets on switch ports",
+        formatter_class=argparse.RawTextHelpFormatter,
+        epilog=EPILOG)
     parser.add_argument(
         "--inPort",
         required=True,
@@ -53,10 +69,12 @@ def main():
         type=int,
         help="capture duration, in seconds (0 for manual stop)",
         default=0)
+    # This argument is kept for for backward compatibility. Filter arguments
+    # can just be appended to the command line without adding "--filters".
     parser.add_argument(
         "--filters",
         nargs='+',
-        help="tcpdump filter arguments")
+        help="tcpdump pcap-filter arguments")
 
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
