@@ -71,7 +71,7 @@ def main():
     parser.add_argument(
         "--maxSize",
         type=int,
-        help="maximum tcpdump file size in MB",
+        help="maximum tcpdump file size in MB (0 for unlimited)",
         default=100)
     parser.add_argument(
         "--timeout",
@@ -205,8 +205,10 @@ def run_tcpdump(portName, filePath, timeoutSeconds,
                 tcpdumpProcess.terminate()
                 print("Reached capture timeout, stopping")
 
-            if filePath and os.path.isfile(filePath) \
-                    and int(os.path.getsize(filePath) / 1e6) > maxSizeMB:
+            if (maxSizeMB
+                    and filePath
+                    and os.path.isfile(filePath)
+                    and int(os.path.getsize(filePath) / 1e6) > maxSizeMB):
                 tcpdumpProcess.terminate()
                 print("Max file size reached, stopping")
 
