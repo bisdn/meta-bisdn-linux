@@ -157,9 +157,21 @@ def rule_insert(portNumber):
         str(portNumber),
         "--inPortMask",
         "0xffffffff",
-        "--controller"])
+        "--controller"],
+        text=True,
+        capture_output=True)
 
-    return completed_process.returncode
+    rc = int.from_bytes(
+        completed_process.returncode.to_bytes(1, "little", signed=False),
+        "little",
+        signed=True,
+    )
+
+    if rc not in [0, -25]:
+        print(completed_process.stdout)
+        print("Unexpected return code while inserting rule into the ACL table")
+
+    return rc
 
 
 def rule_delete(portNumber):
@@ -169,9 +181,21 @@ def rule_delete(portNumber):
         "--inPort",
         str(portNumber),
         "--inPortMask",
-        "0xffffffff"])
+        "0xffffffff"],
+        text=True,
+        capture_output=True)
 
-    return completed_process.returncode
+    rc = int.from_bytes(
+        completed_process.returncode.to_bytes(1, "little", signed=False),
+        "little",
+        signed=True,
+    )
+
+    if rc not in [0, -30]:
+        print(completed_process.stdout)
+        print("Unexpected return code while deleting rule from the ACL table")
+
+    return rc
 
 
 def run_tcpdump(portName, filePath, timeoutSeconds,
