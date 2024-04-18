@@ -113,9 +113,15 @@ def main():
 
     portNumber = int(args.inPort.replace("port", ""))
 
-    if rule_insert(portNumber) != 0:
-        print("Failed while inserting rule into the ACL table")
-        return ERROR_EXIT_CODE
+    rc = rule_insert(portNumber)
+    if rc == -25:
+        # A conflicting rule is already present in the ACL table. Remove and
+        # try again.
+        if rule_delete(portNumber) != 0:
+            return ERROR_EXIT_CODE
+        if rule_insert(portNumber) != 0:
+            print("Failed while inserting rule into the ACL table")
+            return ERROR_EXIT_CODE
 
     print("Set ACL table rule to redirect", args.inPort, "ingress traffic to us")
 
@@ -128,8 +134,9 @@ def main():
         extra_args)
 
     sig = signal.signal(signal.SIGINT, signal.SIG_IGN)
-    if rule_delete(portNumber) != 0:
-        print("Failed while deleting rule in the ACL table")
+    # Remove the rule from the ACL table in case it was not removed by the
+    # signal handler. Not having the rule anymore (-30) is not an error.
+    if rule_delete(portNumber) not in [0, -30]:
         return ERROR_EXIT_CODE
     signal.signal(signal.SIGINT, sig)
 
