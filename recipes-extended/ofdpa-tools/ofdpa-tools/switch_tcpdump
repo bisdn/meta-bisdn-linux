@@ -48,6 +48,10 @@ switch_tcpdump --inPort port3 -v 'arp'
 """
 
 
+# tcpdump returns 1 on error. Use 2 for this wrapper to indicate the source.
+ERROR_EXIT_CODE = 2
+
+
 def main():
     parser = argparse.ArgumentParser(
         prog="switch_tcpdump",
@@ -92,21 +96,21 @@ def main():
 
     if interface_exists(args.inPort) != 0:
         print("Interface %s does not exist" % args.inPort)
-        return 1
+        return ERROR_EXIT_CODE
 
     if args.maxSize <= 0:
         print("--maxSize should be greater than 0 (got %d)" % args.maxSize)
-        return 1
+        return ERROR_EXIT_CODE
 
     if args.timeout < 0:
         print("--timeout should 0 or greater (got %d)" % args.timeout)
-        return 1
+        return ERROR_EXIT_CODE
 
     portNumber = int(args.inPort.replace("port", ""))
 
     if rule_insert(portNumber) != 0:
         print("Failed while inserting rule into the ACL table")
-        return 1
+        return ERROR_EXIT_CODE
 
     print("Set ACL table rule to redirect", args.inPort, "ingress traffic to us")
 
@@ -121,7 +125,7 @@ def main():
     sig = signal.signal(signal.SIGINT, signal.SIG_IGN)
     if rule_delete(portNumber) != 0:
         print("Failed while deleting rule in the ACL table")
-        return 1
+        return ERROR_EXIT_CODE
     signal.signal(signal.SIGINT, sig)
 
     print("Rule deleted from the ACL table")
