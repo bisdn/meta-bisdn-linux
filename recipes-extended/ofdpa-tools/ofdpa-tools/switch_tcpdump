@@ -113,6 +113,8 @@ def main():
 
     portNumber = int(args.inPort.replace("port", ""))
 
+    sig_handler = create_signal_handler(portNumber)
+
     rc = rule_insert(portNumber)
     if rc == -25:
         # A conflicting rule is already present in the ACL table. Remove and
@@ -125,6 +127,9 @@ def main():
 
     print("Set ACL table rule to redirect", args.inPort, "ingress traffic to us")
 
+    signal.signal(signal.SIGINT, sig_handler)
+    signal.signal(signal.SIGTERM, sig_handler)
+
     tcpdumpReturnCode = run_tcpdump(
         args.inPort,
         args.filePath,
@@ -133,16 +138,27 @@ def main():
         args.filters,
         extra_args)
 
-    sig = signal.signal(signal.SIGINT, signal.SIG_IGN)
     # Remove the rule from the ACL table in case it was not removed by the
     # signal handler. Not having the rule anymore (-30) is not an error.
     if rule_delete(portNumber) not in [0, -30]:
         return ERROR_EXIT_CODE
-    signal.signal(signal.SIGINT, sig)
-
-    print("Rule deleted from the ACL table")
 
     return tcpdumpReturnCode
+
+def create_signal_handler(portNumber):
+    """
+    Create a signal handler that deletes the ACL table rule and raises
+    KeyboardInterrupt to terminate tcpdump.
+    """
+
+    def sig_handler(signum, frame):
+        if rule_delete(portNumber) != 0:
+            # This should never happen.
+            print("Failed while deleting rule in the ACL table")
+        # Raise KeyboardInterrupt to terminate tcpdump.
+        raise KeyboardInterrupt
+
+    return sig_handler
 
 
 def interface_exists(interfaceName):
@@ -182,6 +198,10 @@ def rule_insert(portNumber):
 
 
 def rule_delete(portNumber):
+    # Prevent interruption of rule_delete and re-entrance of the signal handler
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+    signal.signal(signal.SIGTERM, signal.SIG_IGN)
+
     completed_process = subprocess.run([
         "/usr/sbin/ofdpa_acl_flow_cli.py",
         "-d",
