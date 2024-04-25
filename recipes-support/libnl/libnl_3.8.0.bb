@@ -3,7 +3,7 @@ HOMEPAGE = "http://www.infradead.org/~tgr/libnl/"
 SECTION = "libs/network"
 
 PE = "1"
-PR = "r1"
+PR = "r2"
 
 LICENSE = "LGPL-2.1-only"
 LIC_FILES_CHKSUM = "file://COPYING;md5=4fbd65380cdd255951079008b364516c"
@@ -19,6 +19,7 @@ SRC_URI = " \
     file://0003-link-bonding-expose-state-on-enslaved-interfaces.patch \
     file://0004-bridge-vlan-add-per-vlan-stp-state-object-and-cache.patch \
     file://0005-route-route_obj-treat-each-IPv6-link-local-route-as-.patch \
+    file://0006-link-ignore-incomplete-bridge-updates.patch \
 "
 
 # commit hash of release tag libnl3_8_0
