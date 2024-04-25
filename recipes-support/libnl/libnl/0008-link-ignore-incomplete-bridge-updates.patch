@@ -1,0 +1,72 @@
+From 01269e0cde032b503261b8c71cfcce3c119af903 Mon Sep 17 00:00:00 2001
+From: Jonas Gorski <jonas.gorski@bisdn.de>
+Date: Wed, 24 Apr 2024 14:13:22 +0200
+Subject: [PATCH] link: ignore incomplete bridge updates
+
+For currently unknown reasons, the kernel sends a minimal RTM_NEWLINK
+message for a bridge shortly after attaching a port:
+
+-- Debug: Received Message:
+--------------------------   BEGIN NETLINK MESSAGE ---------------------------
+  [NETLINK HEADER] 16 octets
+    .nlmsg_len = 96
+    .type = 16 <route/link::new>
+    .flags = 0 <>
+    .seq = 0
+    .port = 0
+  [PAYLOAD] 16 octets
+    07 00 01 00 40 00 00 00 03 10 00 00 00 00 00 00 ....@...........
+  [ATTR 03] 9 octets
+    73 77 62 72 69 64 67 65 00                      swbridge.
+  [PADDING] 3 octets
+    00 00 00                                        ...
+  [ATTR 10] 4 octets
+    40 00 00 00                                     @...
+  [ATTR 04] 4 octets
+    dc 05 00 00                                     ....
+  [ATTR 16] 1 octets
+    02                                              .
+  [PADDING] 3 octets
+    00 00 00                                        ...
+  [ATTR 01] 6 octets
+    da 56 2f bc 9f 33                               .V/..3
+  [PADDING] 2 octets
+    00 00                                           ..
+  [ATTR 26] 8 octets
+    08 00 02 00 00 00 01 00                         ........
+---------------------------  END NETLINK MESSAGE   ---------------------------
+
+This minimal message does not contain any IFLA_INFO_KIND, but has its
+family set to AF_BRIDGE. This causes the full bridge object in the link
+cache to be replaced with this minimal one, breaking any attempts to get
+information about the bridge interface from the cache.
+
+Work around for now by ignoring these updates.
+
+Upstream-Status: Reported [https://github.com/thom311/libnl/issues/377]
+Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
+---
+ lib/route/link.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/lib/route/link.c b/lib/route/link.c
+index 2410391f3de3..89fe3d197691 100644
+--- a/lib/route/link.c
++++ b/lib/route/link.c
+@@ -746,6 +746,13 @@ static int link_msg_parser(struct nl_cache_ops *ops, struct sockaddr_nl *who,
+ 		}
+ 	}
+ 
++	/* ignore incomplete link objects with family set but no kind set */
++	if (   link->ce_msgtype == RTM_NEWLINK
++	    && link->l_family == AF_BRIDGE
++	    && !(link->ce_mask & LINK_ATTR_LINKINFO)
++	    && link->l_index == link->l_master)
++		return 0;
++
+ 	if (   tb[IFLA_PROTINFO]
+ 	    && link->l_af_ops
+ 	    && link->l_af_ops->ao_parse_protinfo) {
+-- 
+2.46.1
+
