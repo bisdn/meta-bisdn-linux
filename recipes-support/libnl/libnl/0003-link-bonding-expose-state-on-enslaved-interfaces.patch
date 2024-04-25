@@ -1,7 +1,7 @@
 From 5d46d6538a88b04738b56a6f2d3bc149f76cd2c5 Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Tue, 6 Oct 2020 16:53:36 +0200
-Subject: [PATCH 3/5] link/bonding: expose state on enslaved interfaces
+Subject: [PATCH 3/6] link/bonding: expose state on enslaved interfaces
 
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
@@ -233,5 +233,5 @@ index ee5b0e66a65f..ec366a7852c1 100644
 +	rtnl_link_bond_slave_set_state;
  } libnl_3_8;
 -- 
-2.42.0
+2.44.0
 
