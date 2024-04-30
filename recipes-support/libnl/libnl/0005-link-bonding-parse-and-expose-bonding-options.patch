@@ -1,7 +1,7 @@
-From 7507b575413a515f09de79cae7a71c549437b121 Mon Sep 17 00:00:00 2001
+From 6927bcefbfc3e853bd7073ac997eb581e1bb2189 Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Tue, 6 Oct 2020 10:00:37 +0200
-Subject: [PATCH 4/9] link/bonding: parse and expose bonding options
+Subject: [PATCH 05/10] link/bonding: parse and expose bonding options
 
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
@@ -335,5 +335,5 @@ index e36175b500a6..dee4c64094bb 100644
  	rtnl_route_nh_identical;
  } libnl_3_8;
 -- 
-2.44.0
+2.45.0
 

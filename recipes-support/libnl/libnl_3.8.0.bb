@@ -3,7 +3,7 @@ HOMEPAGE = "http://www.infradead.org/~tgr/libnl/"
 SECTION = "libs/network"
 
 PE = "1"
-PR = "r3"
+PR = "r4"
 
 LICENSE = "LGPL-2.1-only"
 LIC_FILES_CHKSUM = "file://COPYING;md5=4fbd65380cdd255951079008b364516c"
@@ -14,15 +14,16 @@ DEPENDS = "flex-native bison-native"
 
 SRC_URI = " \
     git://github.com/thom311/${BPN}.git;protocol=https;branch=main \
-    file://0001-route-fix-IPv6-ecmp-route-deleted-nexthop-matching.patch \
-    file://0002-nexthop-add-a-identical-helper-function.patch \
-    file://0003-route-use-the-new-helper-function-for-comparing-next.patch \
-    file://0004-link-bonding-parse-and-expose-bonding-options.patch \
-    file://0005-WIP-add-info-slave-data-support.patch \
-    file://0006-link-bonding-expose-state-on-enslaved-interfaces.patch \
-    file://0007-bridge-vlan-add-per-vlan-stp-state-object-and-cache.patch \
-    file://0008-route-route_obj-treat-each-IPv6-link-local-route-as-.patch \
-    file://0009-link-ignore-incomplete-bridge-updates.patch \
+    file://0001-cache-fix-new-object-in-callback-v2-on-updated-objec.patch \
+    file://0002-route-fix-IPv6-ecmp-route-deleted-nexthop-matching.patch \
+    file://0003-nexthop-add-a-identical-helper-function.patch \
+    file://0004-route-use-the-new-helper-function-for-comparing-next.patch \
+    file://0005-link-bonding-parse-and-expose-bonding-options.patch \
+    file://0006-WIP-add-info-slave-data-support.patch \
+    file://0007-link-bonding-expose-state-on-enslaved-interfaces.patch \
+    file://0008-bridge-vlan-add-per-vlan-stp-state-object-and-cache.patch \
+    file://0009-route-route_obj-treat-each-IPv6-link-local-route-as-.patch \
+    file://0010-link-ignore-incomplete-bridge-updates.patch \
 "
 
 # commit hash of release tag libnl3_8_0

@@ -1,7 +1,7 @@
-From 45e07d1775723b6d738c921ec990ed4d6f971ac3 Mon Sep 17 00:00:00 2001
+From 87d4026cb13a1d05b222c0aadee4cf85422f49dd Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Mon, 13 May 2024 14:00:39 +0200
-Subject: [PATCH 2/9] nexthop: add a identical helper function
+Subject: [PATCH 03/10] nexthop: add a identical helper function
 
 Not all attributes of a nexthop are id attributes, e.g. the flags will
 contain state (LINKDOWN, DEAD) of the attached link about which the
@@ -14,7 +14,7 @@ Since rtnl_nexthop isn't a first class cache object, we cannot use
 nl_object_identical(), so add a separate identical helper function which
 compares only fixed attributes.
 
-Upstream-Status: Submitted [https://github.com/thom311/libnl/pull/384]
+Upstream-Status: Backport [https://github.com/thom311/libnl/commit/8cf29d7b4a8f4dadcc68932edc23e05f5d0fee89]
 [jonas.gorski: adapted for libnl 3.8]
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
@@ -79,5 +79,5 @@ index 7e36de1eb28c..e36175b500a6 100644
 +	rtnl_route_nh_identical;
 +} libnl_3_8;
 -- 
-2.44.0
+2.45.0
 

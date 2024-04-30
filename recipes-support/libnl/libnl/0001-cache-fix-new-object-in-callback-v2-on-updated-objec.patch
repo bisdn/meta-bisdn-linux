@@ -1,0 +1,40 @@
+From b6f7c5fbd6b0f5649d54804acb56c4b95db0fae9 Mon Sep 17 00:00:00 2001
+From: Jonas Gorski <jonas.gorski@bisdn.de>
+Date: Fri, 26 Apr 2024 16:32:21 +0200
+Subject: [PATCH 01/10] cache: fix new object in callback v2 on updated objects
+
+When calling the callback v2 for objects that were updated, we pass the
+update ("obj") instead of the updated object ("old") as new.
+
+Presumably this wasn't intended, so pass the updated object as new.
+
+This avoids weird updates where the new object is significantly smaller
+than the old one. E.g. for IPv6 multipath route updates, old would be
+the full route with all nexthops, while new would be a partial route
+with only the added/removed nexthop.
+
+Upstream-Status: backport [https://github.com/thom311/libnl/commit/3a43faa1aa8e9fb98ae8bc41496ceabc4c0838f1]
+Fixes: 66d032ad443a ("cache_mngr: add include callback v2")
+Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
+
+https://github.com/thom311/libnl/pull/381
+---
+ lib/cache.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/lib/cache.c b/lib/cache.c
+index dd059c11e1a8..bae641ded565 100644
+--- a/lib/cache.c
++++ b/lib/cache.c
+@@ -808,7 +808,7 @@ static int cache_include(struct nl_cache *cache, struct nl_object *obj,
+ 			 */
+ 			if (nl_object_update(old, obj) == 0) {
+ 				if (cb_v2) {
+-					cb_v2(cache, clone, obj, diff,
++					cb_v2(cache, clone, old, diff,
+ 					      NL_ACT_CHANGE, data);
+ 					nl_object_put(clone);
+ 				} else if (cb)
+-- 
+2.45.0
+
