@@ -38,15 +38,18 @@ import time
 EPILOG = """
 Example usage:
 
-Capture ingress packets on port3 and write at most 100 MB to /tmp/capture.pcap:
-switch_tcpdump --inPort port3 --filePath /tmp/capture.pcap --maxSize 100
+Capture seen packets on port3 and write /tmp/pcap (defaults to 100 MB limit):
+switch_tcpdump --inPort port3 --filePath /tmp/pcap
 
-For ten seconds, show all packets arriving on port3:
+Write a capture file with no size limit:
+switch_tcpdump --inPort port3 --filePath /tmp/pcap --maxSize 0
+
+For ten seconds, show all packets seen on port3:
 switch_tcpdump --inPort port3 --timeout 10
 
-Extra arguments are passed to tcpdump directly. For example, to get
-verbose output for ARP packets arriving on port3, use:
-switch_tcpdump --inPort port3 -v 'arp'
+Extra arguments (all arguments after "port3" in this case) are passed on to
+tcpdump:
+switch_tcpdump --inPort port3 -nv arp or icmp
 """
 
 
@@ -60,7 +63,7 @@ def main():
 
     parser = argparse.ArgumentParser(
         prog="switch_tcpdump",
-        description="Capture ingress packets on switch ports",
+        description="Capture packets on switch ports",
         formatter_class=argparse.RawTextHelpFormatter,
         epilog=EPILOG)
     parser.add_argument(
