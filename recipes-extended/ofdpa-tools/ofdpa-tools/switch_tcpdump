@@ -28,6 +28,8 @@
 """
 
 import argparse
+import builtins
+import functools
 import os
 import signal
 import subprocess
@@ -53,6 +55,9 @@ ERROR_EXIT_CODE = 2
 
 
 def main():
+    # Flush print output immediately
+    builtins.print = functools.partial(print, flush=True)
+
     parser = argparse.ArgumentParser(
         prog="switch_tcpdump",
         description="Capture ingress packets on switch ports",
