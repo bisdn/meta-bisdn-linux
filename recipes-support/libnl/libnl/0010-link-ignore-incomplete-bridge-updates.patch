@@ -1,7 +1,7 @@
-From 7c3976ccf11bd499d84c54a0693239c273cd371a Mon Sep 17 00:00:00 2001
+From 6f57f9f19b672897214eefe86c01ec2aa109d53d Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Wed, 24 Apr 2024 14:13:22 +0200
-Subject: [PATCH 9/9] link: ignore incomplete bridge updates
+Subject: [PATCH 10/10] link: ignore incomplete bridge updates
 
 For currently unknown reasons, the kernel sends a minimal RTM_NEWLINK
 message for a bridge shortly after attaching a port:
@@ -68,5 +68,5 @@ index e33bb3ab61c3..631ca42c1a7c 100644
  	    && link->l_af_ops
  	    && link->l_af_ops->ao_parse_protinfo) {
 -- 
-2.44.0
+2.45.0
 

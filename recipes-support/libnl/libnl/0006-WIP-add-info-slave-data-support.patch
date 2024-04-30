@@ -1,7 +1,7 @@
-From af6039212ac7c311388ce66104528a37417f2d8e Mon Sep 17 00:00:00 2001
+From e0825cfdebf8418ef4b27ebc140cdec35df9ebc1 Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Tue, 6 Oct 2020 15:25:38 +0200
-Subject: [PATCH 5/9] WIP: add info slave data support
+Subject: [PATCH 06/10] WIP: add info slave data support
 
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
@@ -265,5 +265,5 @@ index 28d0166295e7..f559de40ace2 100644
  	uint32_t l_promiscuity;
  	uint32_t l_num_tx_queues;
 -- 
-2.44.0
+2.45.0
 

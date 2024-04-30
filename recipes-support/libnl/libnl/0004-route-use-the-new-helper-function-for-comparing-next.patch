@@ -1,7 +1,8 @@
-From cbb143fb12980b92f39f736ee54e2f358f8feb14 Mon Sep 17 00:00:00 2001
+From 490b8a8a27d62bd37f31d08cbfc4d4caa3f2ca51 Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Mon, 13 May 2024 14:06:48 +0200
-Subject: [PATCH 3/9] route: use the new helper function for comparing nexthops
+Subject: [PATCH 04/10] route: use the new helper function for comparing
+ nexthops
 
 When a route is created while the interface has no link, we get a
 notification with the route and the nexthop having the flag LINKDOWN.
@@ -15,7 +16,7 @@ nexthop(s).
 
 So use the new nexthop identical helper to avoid this scenario.
 
-Upstream-Status: Submitted [https://github.com/thom311/libnl/pull/384]
+Upstream-Status: Backport [https://github.com/thom311/libnl/commit/861fb8090c4bd670890b310b9761edfd1d12d916]
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
  lib/route/route_obj.c | 16 ++++------------
@@ -70,5 +71,5 @@ index cf538db93680..6d36f80d2e13 100644
  				rtnl_route_remove_nexthop(old_route, old_nh);
  
 -- 
-2.44.0
+2.45.0
 
