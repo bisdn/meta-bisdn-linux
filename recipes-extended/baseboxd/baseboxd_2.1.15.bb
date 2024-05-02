@@ -22,4 +22,8 @@ do_install:append() {
    # update service file
    sed -i -e 's,/etc/sysconfig/baseboxd,/etc/default/baseboxd,g' \
           ${D}${systemd_unitdir}/system/baseboxd.service
+
+   # install default configuration directory and copy files over
+   install -d ${D}/usr/share/baseboxd/default_configurations/simple-l2-bridge
+   install -m 0644 ${S}/examples/networkd/simple-l2-bridge/* ${D}/usr/share/baseboxd/default_configurations/simple-l2-bridge/
 }
