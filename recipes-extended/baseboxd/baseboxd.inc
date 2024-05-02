@@ -33,3 +33,5 @@ FILES:${PN} += "/lib/systemd/system/baseboxd.service"
 CONFFILES:${PN} += "${sysconfdir}/default/baseboxd"
 # Enable baseboxd service (SYSTEMD_AUTO_ENABLE default is enable)
 SYSTEMD_SERVICE:${PN} = "baseboxd.service"
+
+FILES:${PN} += "/usr/share/baseboxd/default_configurations/simple-l2-bridge/"
