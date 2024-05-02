@@ -359,8 +359,10 @@ old_part=$(eval $detect_bisdn_linux_partition $boot_dev)
 if [ -n "$old_part" ]; then
     # old_part contains partition number of existing BISDN Linux installation
 
-    # backup existing config
-    backup_cfg $boot_dev $old_part
+    if [ -z "$BISDN_DEFAULT_CONFIG" ]; then
+	    # backup existing config
+	    backup_cfg $boot_dev $old_part
+    fi
     # delete existing partition
     eval $delete_bisdn_linux_partition $boot_dev $old_part
 fi
@@ -465,6 +467,16 @@ platform_setup
 if [ "${DO_RESTORE}" = true ]; then
     restore_cfg $backup_tmp_dir $bisdn_linux_mnt
 fi;
+
+if [ -n "$BISDN_DEFAULT_CONFIG" ] && [ "$BISDN_DEFAULT_CONFIG" != "none" ]; then
+    example_path="/usr/share/docs/baseboxd/examples/$BISDN_DEFAULT_CONFIG"
+    if [ -d "${bisdn_linux_mnt}${example_path}" ]; then
+        cp "${bisdn_linux_mnt}${example_path}/"* \
+	    ${bisdn_linux_mnt}/etc/systemd/network
+    else
+        echo "WARNING: no default config '$BISDN_DEFAULT_CONFIG' found."
+    fi
+fi
 
 # clean up
 umount $bisdn_linux_mnt || {

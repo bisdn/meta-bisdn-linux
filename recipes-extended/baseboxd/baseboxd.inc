@@ -20,7 +20,7 @@ DEPENDS = "\
     systemd \
 "
 
-SRC_URI = "gitsm://github.com/bisdn/basebox.git;protocol=https;branch=main"
+SRC_URI = "gitsm://github.com/bisdn/basebox.git;protocol=https;branch=rf_l2bridge_example"
 S = "${WORKDIR}/git"
 
 inherit pkgconfig systemd
@@ -33,3 +33,5 @@ FILES:${PN} += "/lib/systemd/system/baseboxd.service"
 CONFFILES:${PN} += "${sysconfdir}/default/baseboxd"
 # Enable baseboxd service (SYSTEMD_AUTO_ENABLE default is enable)
 SYSTEMD_SERVICE:${PN} = "baseboxd.service"
+
+FILES:${PN} += "/usr/share/docs/baseboxd/examples/l2switch/"

@@ -4,7 +4,7 @@ inherit meson
 TARGET_LDFLAGS:remove = "-Wl,--as-needed"
 TARGET_LDFLAGS:append = " -Wl,--no-as-needed"
 
-SRCREV = "61862809bd16ce8a02bf34b97f2e368ae42c6874"
+SRCREV = "36b97c79796f7e878f5ffc3f733d912d279fd612"
 
 # install service and sysconfig
 do_install:append() {
@@ -22,4 +22,8 @@ do_install:append() {
    # update service file
    sed -i -e 's,/etc/sysconfig/baseboxd,/etc/default/baseboxd,g' \
           ${D}${systemd_unitdir}/system/baseboxd.service
+
+   # install files
+   install -d ${D}/usr/share/docs/baseboxd/examples/l2switch
+   install -m 0644 ${S}/examples/networkd/* ${D}/usr/share/docs/baseboxd/examples/l2switch/
 }
