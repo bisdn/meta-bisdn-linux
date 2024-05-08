@@ -1,0 +1,116 @@
+.\" switch_tcpdump.8
+.TH "SWITCH_TCPDUMP" "8" "8 May 2024" "" "documentation"
+.SH "NAME"
+switch_tcpdump \- dump switch port traffic
+.SH "SYNOPSIS"
+.B switch_tcpdump
+.B \-\-inPort
+.I INPORT
+.br
+[
+.B \-\-filePath
+.I FILEPATH
+[
+.B \-\-maxSize
+.I \%MAXSIZE_MB
+]
+]
+.br
+[
+.B \-\-timeout
+.I TIMEOUT_SECONDS
+]
+[
+.I TCPDUMP_OPTIONS
+]
+
+.SH "DESCRIPTION"
+\fIswitch_tcpdump\fP is a wrapper around
+.BR tcpdump (8).
+
+Its main features are:
+
+.IP
+Inserting a rule into the ACL table to redirect ingress traffic for
+the given port to the CPU (i.e., the Linux kernel).
+.IP
+Deleting the rule from the ACL table when the capture is stopped.
+.IP
+Preventing file system overflow by stopping the capture when the
+capture file reaches a certain size (default 100 MB).
+.IP
+Stopping the capture after a certain amount of time (default 0, meaning
+no timeout).
+.PP
+
+\fIswitch_tcpdump\fP captures all packets arriving on the given port
+and all packets seen by the kernel going through that port (i.e.,
+any packets that you are sending out from the switch through that
+port). It cannot see any packets that are treated exclusively in the
+switch ASIC; this includes packets that are eventually sent out through
+the capture port without being seen by the kernel (e.g., packets that
+are bridged in hardware).
+
+.SH "OPTIONS"
+.TP
+.BI \-\-inPort " INPORT"
+Listen on specified port (named portX). This is a mandatory option.
+.TP
+.BI \-\-filePath " FILEPATH"
+Write the captured packets to the specified file. If not specified,
+packet descriptions are printed to stdout (mirroring tcpdump behavior).
+The maximum file size is limited by the \fB\%\-\-maxSize\fR option.
+.TP
+.BI \-\-maxSize " MAXSIZE_MB"
+MAXSIZE_MB is the maximum size of the capture file in megabytes. The
+mechanism checks the file size every 0.1 seconds. The default value is
+100. Setting MAXSIZE_MB to 0 disables the size limit.
+.TP
+.BI \-\-timeout " TIMEOUT_SECONDS"
+Stop the capture after TIMEOUT_SECONDS seconds.
+.TP
+.I "TCPDUMP_OPTIONS"
+All remaining arguments are passed on to tcpdump.
+
+.SH "EXAMPLES"
+.LP
+To capture seen packets on port3 and write /tmp/pcap (defaults to 100 MB
+limit):
+.RS
+.nf
+\fBswitch_tcpdump --inPort port3 --filePath /tmp/pcap\fP
+.fi
+.RE
+.LP
+To write a capture file with no size limit:
+.RS
+.nf
+\fBswitch_tcpdump --inPort port3 --filePath /tmp/pcap --maxSize 0\fP
+.fi
+.RE
+.LP
+To show for ten seconds all packets seen on port3:
+.RS
+.nf
+\fBswitch_tcpdump --inPort port3 --timeout 10\fP
+.fi
+.RE
+.LP
+Extra arguments (all arguments after "port3" in this case) are passed on to
+tcpdump:
+.RS
+.nf
+\fBswitch_tcpdump --inPort port3 -nv arp or icmp\fP
+.fi
+.RE
+
+.SH "EXIT STATUS"
+\fIswitch_tcpdump\fP returns 2 for all errrors except for \fItcpdump\fP
+errors whose exit status (usually 1 in case of errors) is passed through.
+
+.SH "BUGS"
+Fails to remove the ACL rule if terminated by SIGKILL.
+
+Using \fItcpdump\fP options such as \fB\-i\fR or \fB\-w\fR that
+conflict with \fI\%switch_tcpdump\fP options (e.g., \fB\-\-inPort\fR,
+\fB\-\-filePath\fR) is unsupported and may result in unexpected behavior.
