@@ -5,6 +5,7 @@ SRC_URI += " \
   file://onie-bisdn-uninstall.1 \
   file://onie-bisdn-upgrade.1 \
   file://onie-bisdn-rescue.1 \
+  file://switch_tcpdump.8 \
 "
 
 do_install:append() {

@@ -50,6 +50,8 @@ switch_tcpdump --inPort port3 --timeout 10
 Extra arguments (all arguments after "port3" in this case) are passed on to
 tcpdump:
 switch_tcpdump --inPort port3 -nv arp or icmp
+
+For additional information, see the man page for switch_tcpdump(8).
 """
 
 
