@@ -1,14 +1,14 @@
-From f827424185592fa1db39fe822827e12ee894560a Mon Sep 17 00:00:00 2001
+From 7507b575413a515f09de79cae7a71c549437b121 Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Tue, 6 Oct 2020 10:00:37 +0200
-Subject: [PATCH 1/6] link/bonding: parse and expose bonding options
+Subject: [PATCH 4/9] link/bonding: parse and expose bonding options
 
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
  include/netlink/route/link/bonding.h |   9 +
  lib/route/link/bonding.c             | 235 ++++++++++++++++++++++++++-
- libnl-route-3.sym                    |  10 ++
- 3 files changed, 247 insertions(+), 7 deletions(-)
+ libnl-route-3.sym                    |   6 +
+ 3 files changed, 243 insertions(+), 7 deletions(-)
 
 diff --git a/include/netlink/route/link/bonding.h b/include/netlink/route/link/bonding.h
 index e85b44a24b59..b64964c70b62 100644
@@ -319,23 +319,21 @@ index 640a62caca78..4ad1ee6f547d 100644
  
  /**
 diff --git a/libnl-route-3.sym b/libnl-route-3.sym
-index 7e36de1eb28c..ee5b0e66a65f 100644
+index e36175b500a6..dee4c64094bb 100644
 --- a/libnl-route-3.sym
 +++ b/libnl-route-3.sym
-@@ -1306,3 +1306,13 @@ global:
- 	rtnl_nh_set_fdb;
- 	rtnl_nh_set_gateway;
- } libnl_3_7;
-+
-+libnl_3_9 {
-+global:
+@@ -1309,5 +1309,11 @@ global:
+ 
+ libnl_3_9 {
+ global:
 +	rtnl_link_bond_get_activeslave;
 +	rtnl_link_bond_get_mode;
 +	rtnl_link_bond_get_primary;
 +	rtnl_link_bond_get_xmit_hash_policy;
 +	rtnl_link_bond_set_primary;
 +	rtnl_link_bond_set_xmit_hash_policy;
-+} libnl_3_8;
+ 	rtnl_route_nh_identical;
+ } libnl_3_8;
 -- 
 2.44.0
 
