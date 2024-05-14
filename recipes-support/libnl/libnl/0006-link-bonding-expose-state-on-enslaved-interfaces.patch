@@ -1,7 +1,7 @@
-From 5d46d6538a88b04738b56a6f2d3bc149f76cd2c5 Mon Sep 17 00:00:00 2001
+From ac3dad258f10cbe0df0bfa0ec754446d416b51b8 Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Tue, 6 Oct 2020 16:53:36 +0200
-Subject: [PATCH 3/6] link/bonding: expose state on enslaved interfaces
+Subject: [PATCH 6/9] link/bonding: expose state on enslaved interfaces
 
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
@@ -222,15 +222,16 @@ index 4ad1ee6f547d..a47871ee3e6a 100644
   * Allocate link object of type bond
   *
 diff --git a/libnl-route-3.sym b/libnl-route-3.sym
-index ee5b0e66a65f..ec366a7852c1 100644
+index dee4c64094bb..f7017e161e43 100644
 --- a/libnl-route-3.sym
 +++ b/libnl-route-3.sym
-@@ -1315,4 +1315,6 @@ global:
+@@ -1315,5 +1315,7 @@ global:
  	rtnl_link_bond_get_xmit_hash_policy;
  	rtnl_link_bond_set_primary;
  	rtnl_link_bond_set_xmit_hash_policy;
 +	rtnl_link_bond_slave_get_state;
 +	rtnl_link_bond_slave_set_state;
+ 	rtnl_route_nh_identical;
  } libnl_3_8;
 -- 
 2.44.0

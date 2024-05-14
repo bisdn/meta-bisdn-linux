@@ -1,7 +1,7 @@
-From a566cc5f9ecfe13f369840c341976081343b05be Mon Sep 17 00:00:00 2001
+From 1b1bc4b35a8a1a3e863395e416ff009cc52dc6c2 Mon Sep 17 00:00:00 2001
 From: Rubens Figueiredo <rubens.figueiredo@bisdn.de>
 Date: Tue, 10 Aug 2021 11:23:39 +0200
-Subject: [PATCH 4/6] bridge-vlan: add per vlan stp state object and cache
+Subject: [PATCH 7/9] bridge-vlan: add per vlan stp state object and cache
 
 Signed-off-by: Rubens Figueiredo <rubens.figueiredo@bisdn.de>
 Co-authored-by: Jonas Gorski <jonas.gorski@bisdn.de>
@@ -589,7 +589,7 @@ index 75f03cd154af..bc10208c8459 100644
 +	nl_cli_bridge_vlan_parse_ifindex;
 +} libnl_3_8;
 diff --git a/libnl-route-3.sym b/libnl-route-3.sym
-index ec366a7852c1..141fd07d9538 100644
+index f7017e161e43..dac68eb65ef5 100644
 --- a/libnl-route-3.sym
 +++ b/libnl-route-3.sym
 @@ -1310,6 +1310,19 @@ global:
