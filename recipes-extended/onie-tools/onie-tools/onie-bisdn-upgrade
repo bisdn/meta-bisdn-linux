@@ -14,8 +14,10 @@ usage: $(basename "$0") [OPTIONS] [IMAGEURL]
 -y automatically answer yes to all questions (use with caution, system is going to reboot and configuration files might get lost)
 
 [IMAGEURL] URL of an installable BISDN Linux image
-           example: http://repo.bisdn.de/ftp/pub/onie/onie-bisdn-agema-ag7648.bin
-	   example: $(basename "$0") http://repo.bisdn.de/ftp/pub/onie/onie-bisdn-agema-ag7648.bin
+           Example: http://repo.bisdn.de/pub/onie/generic-x86-64/onie-bisdn-generic-x86-64-v5.1.1.bin
+
+Example usage:
+$(basename "$0") http://repo.bisdn.de/pub/onie/generic-x86-64/onie-bisdn-generic-armel-iproc-v5.1.1.bin
 "
 
 NEED_CONFIRM=true

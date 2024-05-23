@@ -1,30 +1,35 @@
 .\" Manpage for onie-bisdn-upgrade.
-.\" Contact pierluigi.greto@bisdn.de to correct errors or typos.
-.TH man 8 "30 January 2019" "1.0" "onie-bisdn-upgrade man page"
+.\" File an issue at https://github.com/bisdn/meta-switch/issues to correct
+.\" errors or typos.
+.TH ONIE-BISDN-UPGRADE 8 "23 May 2024" "" "BISDN Linux User Manual"
 .SH NAME
-onie-bisdn-upgrade \- will upgrade BISDN Linux
+onie-bisdn-upgrade \- upgrade or reinstall BISDN Linux
 .SH SYNOPSIS
 .B onie-bisdn-upgrade
-[\fI\,OPTION\/\fR] [\fI\,IMAGEURL\/\fR [\fI\,IPCONFIG\/\fR]]
+[\fI\,OPTION\/\fR] [\fI\,IMAGEURL\/\fR]
 .SH DESCRIPTION
 .PP
-onie-bisdn-upgrade will upgrade BISDN Linux.
+\fIonie-bisdn-upgrade\fP will upgrade BISDN Linux.
 .TP
 [\fI\,IMAGEURL\/\fR]
+.nf
 URL of an installable BISDN Linux image
-(example: onie-bisdn-upgrade http://repo.bisdn.de/ftp/pub/onie/onie-bisdn-agema-ag7648.bin)
-.TP
-[\fI\,IPCONFIG\/\fR]
-IP address (IP), gateway (GW) and netmask (NETMASK) of an interface, must be omitted when DHCP is available! format: <IP>::<GW>:<NETMASK> (example: 10.250.7.177::10.250.7.1:255.255.255.0).
-
-If 'current' is specified, the script takes the current IP/GW/NETMASK of the 'enp0s20f0' interface (example: onie-bisdn-upgrade http://repo.bisdn.de/ftp/pub/onie/onie-bisdn-agema-ag7648.bin current).
+(e.g. http://repo.bisdn.de/pub/onie/generic-x86-64/onie-bisdn-generic-x86-64-v5.1.1.bin)
+.fi
 .TP
 \fB\-y\fR
 automatically answer yes to all questions (use with caution, system is going to reboot and configuration files might get lost)
 .TP
+\fB\-d\fR
+download image before rebooting; useful in DHCP-less environments, or if the
+image is not available via a protocol handled by ONIE's \fIwget\fP
+.TP
 \fB\-h\fR
 display help and exit
 .TP
+.SH EXAMPLES
+.TP
+\fBonie-bisdn-upgrade http://repo.bisdn.de/pub/onie/generic-x86-64/onie-bisdn-generic-x86-64-v5.1.1.bin\fP
 .SH SEE ALSO
 onie-bisdn-uninstall(1)
 .SH BUGS
