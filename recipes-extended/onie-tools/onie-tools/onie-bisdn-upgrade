@@ -18,6 +18,8 @@ usage: $(basename "$0") [OPTIONS] [IMAGEURL]
 
 Example usage:
 $(basename "$0") http://repo.bisdn.de/pub/onie/generic-x86-64/onie-bisdn-generic-armel-iproc-v5.1.1.bin
+
+For additional information, see the man page for onie-bisdn-upgrade(1).
 "
 
 NEED_CONFIRM=true
@@ -54,7 +56,16 @@ case $# in
 esac;
 
 if [ "${NEED_CONFIRM}" = true ]; then
-  read -p "Upgrading BISDN Linux to install-source: ${INSTALL_FILE} using Client-IP-cfg: dhcp! Please confirm system reboot: [y/N] " yn
+  cat << EOF
+Upgrading BISDN Linux from ${INSTALL_FILE}.
+
+############################################################################
+# ONLY FILES CONFIGURED FOR RETENTION WILL BE KEPT!                        #
+#                                                                          #
+# For additional information, see the man page for onie-bisdn-upgrade(1).  #
+############################################################################
+EOF
+  read -p "Reboot the system and upgrade BISDN Linux? [y/N] " yn
   case $yn in
     [Yy]* ) ;;
     * ) echo "Operation aborted.";
