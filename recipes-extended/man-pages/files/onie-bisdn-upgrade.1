@@ -9,7 +9,40 @@ onie-bisdn-upgrade \- upgrade or reinstall BISDN Linux
 [\fI\,OPTION\/\fR] [\fI\,IMAGEURL\/\fR]
 .SH DESCRIPTION
 .PP
-\fIonie-bisdn-upgrade\fP will upgrade BISDN Linux.
+\fIonie-bisdn-upgrade\fP initiates the installation of a new BISDN
+Linux image on the switch.
+
+The storage device is erased during the upgrade process. All files not
+explicitly configured for retention will be deleted.
+
+BISDN Linux has a backup configuration file, to keep specified user files
+during the upgrade process.
+
+To list files that will be preserved, run the following command:
+
+.RS
+.nf
+\fIgrep -hv "^#" /var/lib/opkg/info/*.conffiles /etc/default/{system,user}-backup.txt\fP
+.fi
+.RE
+
+Each line contains the path to a file (or directory) that should be kept,
+unless the line starts with the \fI-\fP character which indicates that
+the file should be deleted.
+
+Files are only kept if they are listed in the above output without the
+leading \fI-\fP.
+
+Note: deletion takes precedence, files and subdirectories cannot be included
+from a path marked for deletion.
+
+To add a file to the list of retained files, add the path to the file to
+\fI\%/etc/default/user-backup.txt\fP.
+
+Any symbolic links listed in user-backup.txt will be ignored. Symlinks
+within included directories will be kept.
+
+.SH OPTIONS
 .TP
 [\fI\,IMAGEURL\/\fR]
 .nf
