@@ -1,4 +1,4 @@
-From 6f57f9f19b672897214eefe86c01ec2aa109d53d Mon Sep 17 00:00:00 2001
+From 76b5b2e3874b86f07d0e8f20b37f2591c8818774 Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Wed, 24 Apr 2024 14:13:22 +0200
 Subject: [PATCH 10/10] link: ignore incomplete bridge updates
@@ -50,10 +50,10 @@ Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
  1 file changed, 7 insertions(+)
 
 diff --git a/lib/route/link.c b/lib/route/link.c
-index e33bb3ab61c3..631ca42c1a7c 100644
+index d325deced80a..6f657bb7cbbd 100644
 --- a/lib/route/link.c
 +++ b/lib/route/link.c
-@@ -753,6 +753,13 @@ static int link_msg_parser(struct nl_cache_ops *ops, struct sockaddr_nl *who,
+@@ -758,6 +758,13 @@ static int link_msg_parser(struct nl_cache_ops *ops, struct sockaddr_nl *who,
  		}
  	}
  
