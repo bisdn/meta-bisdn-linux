@@ -394,6 +394,7 @@ mount -t $fs_type -o defaults,rw $bisdn_linux_dev $bisdn_linux_mnt || {
 }
 
 # install fs
+echo "Writing root file system to $bisdn_linux_dev..."
 if [ -f rootfs.cpio.gz ] ; then
     image_archive=$(realpath rootfs.cpio.gz)
     cd $bisdn_linux_mnt
@@ -405,6 +406,7 @@ else
     echo "Error: Invalid root fs" >&2
     exit 1
 fi
+echo "Finished writing root file system."
 
 # store installation log in BISDN Linux file system (/onie-support-*.tar.bz2)
 onie-support $bisdn_linux_mnt
