@@ -9,29 +9,16 @@ LICENSE = "GPL-2.0-only & LGPL-2.1-only"
 LIC_FILES_CHKSUM = "file://doc/licenses/GPL-2.0;md5=b234ee4d69f5fce4486a80fdaf4a4263 \
                     file://doc/licenses/LGPL-2.1;md5=4fbd65380cdd255951079008b364516c"
 
-SRC_URI = "git://github.com/FRRouting/frr.git;protocol=https;branch=stable/9.0 \
+
+SRC_URI = "git://github.com/FRRouting/frr.git;protocol=https;branch=stable/9.1 \
            file://frr.pam \
            "
 
-SRCREV = "c1610fbddd11ab6250049293b87f035d4af2541d"
+SRCREV = "312faf8008bb4f3b9e84b8e2758cd2cbdf5742b5"
 
 UPSTREAM_CHECK_GITTAGREGEX = "frr-(?P<pver>\d+(\.\d+)+)$"
 
 CVE_PRODUCT = "frrouting"
-
-# Fixed in 9.0.4 (#15628)
-CVE_CHECK_IGNORE += "CVE-2024-31948"
-# Not an issue in 9.0 and earlier (was introduced in 9.1 with commit
-# bf11a9eb252d ("bgpd: Handle software version capability dynamicaly").
-#
-# Before this commit any continues in the loop were after the increment of pnt,
-# and only after this commit continues were skipping the increment and thus
-# introducing an endless loop.
-CVE_CHECK_IGNORE += "CVE-2024-31949"
-# Fixed in 9.0.4 (#16086)
-CVE_CHECK_IGNORE += "CVE-2024-31950 CVE-2024-31951 CVE-2024-34088"
-# Fixed in 9.0.4 (#16505)
-CVE_CHECK_IGNORE += "CVE-2024-44070"
 
 S = "${WORKDIR}/git"
 
