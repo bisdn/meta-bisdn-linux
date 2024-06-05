@@ -1,4 +1,4 @@
-FILESEXTRAPATHS:prepend := "${THISDIR}/files9:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/files10:"
 
 SRC_URI:append = " \
            file://frr.service \
@@ -6,9 +6,12 @@ SRC_URI:append = " \
            file://support_bundle_commands.conf;subdir=git/tools/etc/frr \
            "
 
-PR = "r2"
+PR = "r1"
 
-RCONFLICTS:${PN} = "frr10"
+# frr 10 as frr10 package workarounds:
+
+# prevent parallel installation
+RCONFLICTS:${PN} = "frr9"
 
 # replace frr-native so that the correct one is used
 DEPENDS:class-target:remove = " frr-native"
