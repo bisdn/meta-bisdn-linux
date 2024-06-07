@@ -1,4 +1,4 @@
-From b6f7c5fbd6b0f5649d54804acb56c4b95db0fae9 Mon Sep 17 00:00:00 2001
+From 71c8836eff748c9811ac6534ee5f5c15cdf4404d Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Fri, 26 Apr 2024 16:32:21 +0200
 Subject: [PATCH 01/10] cache: fix new object in callback v2 on updated objects
@@ -36,5 +36,5 @@ index dd059c11e1a8..bae641ded565 100644
  					nl_object_put(clone);
  				} else if (cb)
 -- 
-2.45.0
+2.45.1
 

@@ -1,4 +1,4 @@
-From 253d75558c50689ab5251829b480b386851db845 Mon Sep 17 00:00:00 2001
+From ef8b19ed89de79cae236e8d39829f8b4c56326d4 Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Tue, 6 Oct 2020 16:53:36 +0200
 Subject: [PATCH 07/10] link/bonding: expose state on enslaved interfaces
@@ -11,12 +11,12 @@ Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
  3 files changed, 177 insertions(+)
 
 diff --git a/include/netlink/route/link/bonding.h b/include/netlink/route/link/bonding.h
-index b64964c70b62..36ca58aa60b4 100644
+index dbd33222b26b..730cda3416c0 100644
 --- a/include/netlink/route/link/bonding.h
 +++ b/include/netlink/route/link/bonding.h
-@@ -37,6 +37,9 @@ extern int	rtnl_link_bond_get_primary(struct rtnl_link *, int *primary);
- extern void	rtnl_link_bond_set_xmit_hash_policy(struct rtnl_link *, uint8_t policy);
- extern int	rtnl_link_bond_get_xmit_hash_policy(struct rtnl_link *, uint8_t *policy);
+@@ -39,6 +39,9 @@ extern void	rtnl_link_bond_set_min_links (struct rtnl_link *link, uint32_t min_l
+ extern void	rtnl_link_bond_set_primary(struct rtnl_link *, int primary);
+ extern int	rtnl_link_bond_get_primary(struct rtnl_link *, int *primary);
  
 +extern void	rtnl_link_bond_slave_set_state(struct rtnl_link *, uint8_t state);
 +extern int	rtnl_link_bond_slave_get_state(struct rtnl_link *, uint8_t *state);
@@ -25,10 +25,10 @@ index b64964c70b62..36ca58aa60b4 100644
  }
  #endif
 diff --git a/lib/route/link/bonding.c b/lib/route/link/bonding.c
-index 4ad1ee6f547d..a47871ee3e6a 100644
+index 2308e4cc3915..c56906362d6c 100644
 --- a/lib/route/link/bonding.c
 +++ b/lib/route/link/bonding.c
-@@ -171,6 +171,125 @@ static int bond_compare(struct rtnl_link *link_a, struct rtnl_link *link_b,
+@@ -182,6 +182,125 @@ static int bond_compare(struct rtnl_link *link_a, struct rtnl_link *link_b,
  	return diff;
  }
  
@@ -154,7 +154,7 @@ index 4ad1ee6f547d..a47871ee3e6a 100644
  static struct rtnl_link_info_ops bonding_info_ops = {
  	.io_name		= "bond",
  	.io_alloc		= bond_info_alloc,
-@@ -179,6 +298,15 @@ static struct rtnl_link_info_ops bonding_info_ops = {
+@@ -190,6 +309,15 @@ static struct rtnl_link_info_ops bonding_info_ops = {
  	.io_put_attrs		= bond_put_attrs,
  	.io_free		= bond_info_free,
  	.io_compare		= bond_compare,
@@ -170,7 +170,7 @@ index 4ad1ee6f547d..a47871ee3e6a 100644
  };
  
  #define IS_BOND_INFO_ASSERT(link)                                                    \
-@@ -346,6 +474,50 @@ int rtnl_link_bond_get_xmit_hash_policy(struct rtnl_link *link, uint8_t *policy)
+@@ -359,6 +487,50 @@ int rtnl_link_bond_get_hashing_type(struct rtnl_link *link, uint8_t *type)
  	return 0;
  }
  
@@ -219,20 +219,20 @@ index 4ad1ee6f547d..a47871ee3e6a 100644
 +}
 +
  /**
-  * Allocate link object of type bond
-  *
+  * Set MII monitoring interval
+  * @arg link            Link object of type bond
 diff --git a/libnl-route-3.sym b/libnl-route-3.sym
-index dee4c64094bb..f7017e161e43 100644
+index c07bcc071613..70ab31a2eef0 100644
 --- a/libnl-route-3.sym
 +++ b/libnl-route-3.sym
-@@ -1315,5 +1315,7 @@ global:
+@@ -1323,5 +1323,7 @@ global:
  	rtnl_link_bond_get_xmit_hash_policy;
  	rtnl_link_bond_set_primary;
  	rtnl_link_bond_set_xmit_hash_policy;
 +	rtnl_link_bond_slave_get_state;
 +	rtnl_link_bond_slave_set_state;
  	rtnl_route_nh_identical;
- } libnl_3_8;
+ } libnl_3_9;
 -- 
-2.45.0
+2.45.1
 

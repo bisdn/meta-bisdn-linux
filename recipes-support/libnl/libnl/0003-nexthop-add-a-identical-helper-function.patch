@@ -1,4 +1,4 @@
-From 87d4026cb13a1d05b222c0aadee4cf85422f49dd Mon Sep 17 00:00:00 2001
+From 6e8d8feed2e5d6abc82f51336ecd386da6bee9df Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Mon, 13 May 2024 14:00:39 +0200
 Subject: [PATCH 03/10] nexthop: add a identical helper function
@@ -15,7 +15,7 @@ nl_object_identical(), so add a separate identical helper function which
 compares only fixed attributes.
 
 Upstream-Status: Backport [https://github.com/thom311/libnl/commit/8cf29d7b4a8f4dadcc68932edc23e05f5d0fee89]
-[jonas.gorski: adapted for libnl 3.8]
+[jonas.gorski: adapted for libnl 3.9]
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
  include/netlink/route/nexthop.h |  3 +++
@@ -66,18 +66,18 @@ index 962f2bab59c8..7e0df6136b04 100644
  {
  	struct nl_cache *link_cache;
 diff --git a/libnl-route-3.sym b/libnl-route-3.sym
-index 7e36de1eb28c..e36175b500a6 100644
+index fa7af4551495..a97ff3f74475 100644
 --- a/libnl-route-3.sym
 +++ b/libnl-route-3.sym
-@@ -1306,3 +1306,8 @@ global:
- 	rtnl_nh_set_fdb;
- 	rtnl_nh_set_gateway;
- } libnl_3_7;
+@@ -1314,3 +1314,8 @@ global:
+ 	rtnl_link_bond_set_min_links;
+ 	rtnl_link_can_get_device_stats;
+ } libnl_3_8;
 +
-+libnl_3_9 {
++libnl_3_10 {
 +global:
 +	rtnl_route_nh_identical;
-+} libnl_3_8;
++} libnl_3_9;
 -- 
-2.45.0
+2.45.1
 

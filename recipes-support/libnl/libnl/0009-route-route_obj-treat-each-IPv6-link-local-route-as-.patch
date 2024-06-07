@@ -1,4 +1,4 @@
-From 8e1f89cbaf90b5b0938b8091df5211f6bd809d0d Mon Sep 17 00:00:00 2001
+From 0474e570fff610eb70adb62afb6ab63a33412096 Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Tue, 1 Mar 2022 12:59:50 +0100
 Subject: [PATCH 09/10] route/route_obj: treat each IPv6 link-local route as
@@ -50,5 +50,5 @@ index 6d36f80d2e13..93f3d87b9c96 100644
  }
  
 -- 
-2.45.0
+2.45.1
 

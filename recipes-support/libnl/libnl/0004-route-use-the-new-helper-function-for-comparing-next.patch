@@ -1,4 +1,4 @@
-From 490b8a8a27d62bd37f31d08cbfc4d4caa3f2ca51 Mon Sep 17 00:00:00 2001
+From 6a865688445448396aef5e46192034f1571c35a3 Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Mon, 13 May 2024 14:06:48 +0200
 Subject: [PATCH 04/10] route: use the new helper function for comparing
@@ -71,5 +71,5 @@ index cf538db93680..6d36f80d2e13 100644
  				rtnl_route_remove_nexthop(old_route, old_nh);
  
 -- 
-2.45.0
+2.45.1
 
