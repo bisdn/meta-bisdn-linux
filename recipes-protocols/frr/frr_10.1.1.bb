@@ -12,10 +12,9 @@ LIC_FILES_CHKSUM = "file://doc/licenses/GPL-2.0;md5=b234ee4d69f5fce4486a80fdaf4a
 
 SRC_URI = "git://github.com/FRRouting/frr.git;protocol=https;branch=stable/10.0 \
            file://frr.pam \
-           file://0001-zebra-Mimic-GNU-basename-API-for-non-glibc-library-e.patch \
            "
 
-SRCREV = "03a143cd49ed1b190cb38f48a31ef4d71fa01a02"
+SRCREV = "dbf8dac1cea2b1235746e2d966a8ded9cffd5dc3"
 
 UPSTREAM_CHECK_GITTAGREGEX = "frr-(?P<pver>\d+(\.\d+)+)$"
 
