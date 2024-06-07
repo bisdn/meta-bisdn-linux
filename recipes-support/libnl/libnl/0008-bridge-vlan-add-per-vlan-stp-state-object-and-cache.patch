@@ -1,4 +1,4 @@
-From 9416344f29401aa585e26e36a2814f56824aba52 Mon Sep 17 00:00:00 2001
+From cd48953535a8c54d01ce161223288b41cd91f192 Mon Sep 17 00:00:00 2001
 From: Rubens Figueiredo <rubens.figueiredo@bisdn.de>
 Date: Tue, 10 Aug 2021 11:23:39 +0200
 Subject: [PATCH 08/10] bridge-vlan: add per vlan stp state object and cache
@@ -38,7 +38,7 @@ index cb825cd0bbce..ae56d075718e 100644
  /src/nl-class-delete
  /src/nl-class-list
 diff --git a/Makefile.am b/Makefile.am
-index 29748d9beec0..09b50d63daef 100644
+index 1e766493b5f3..3805e25472f9 100644
 --- a/Makefile.am
 +++ b/Makefile.am
 @@ -103,6 +103,7 @@ libnlinclude_netlink_routedir = $(libnlincludedir)/netlink/route
@@ -57,7 +57,7 @@ index 29748d9beec0..09b50d63daef 100644
  	include/netlink/cli/class.h \
  	include/netlink/cli/cls.h \
  	include/netlink/cli/ct.h \
-@@ -430,6 +432,7 @@ lib_libnl_route_3_la_SOURCES = \
+@@ -435,6 +437,7 @@ lib_libnl_route_3_la_SOURCES = \
  	lib/route/act/skbedit.c \
  	lib/route/act/vlan.c \
  	lib/route/addr.c \
@@ -65,7 +65,7 @@ index 29748d9beec0..09b50d63daef 100644
  	lib/route/class.c \
  	lib/route/classid.c \
  	lib/route/cls.c \
-@@ -683,6 +686,7 @@ endif
+@@ -688,6 +691,7 @@ endif
  
  src_lib_libnl_cli_3_la_SOURCES = \
  	src/lib/addr.c \
@@ -73,7 +73,7 @@ index 29748d9beec0..09b50d63daef 100644
  	src/lib/class.c \
  	src/lib/cls.c \
  	src/lib/ct.c \
-@@ -749,6 +753,7 @@ cli_programs = \
+@@ -754,6 +758,7 @@ cli_programs = \
  	src/nl-addr-add \
  	src/nl-addr-delete \
  	src/nl-addr-list \
@@ -81,7 +81,7 @@ index 29748d9beec0..09b50d63daef 100644
  	src/nl-class-add \
  	src/nl-class-delete \
  	src/nl-class-list \
-@@ -827,6 +832,8 @@ src_nl_addr_delete_CPPFLAGS =       $(src_cppflags)
+@@ -832,6 +837,8 @@ src_nl_addr_delete_CPPFLAGS =       $(src_cppflags)
  src_nl_addr_delete_LDADD =          $(src_ldadd)
  src_nl_addr_list_CPPFLAGS =         $(src_cppflags)
  src_nl_addr_list_LDADD =            $(src_ldadd)
@@ -589,11 +589,11 @@ index 75f03cd154af..bc10208c8459 100644
 +	nl_cli_bridge_vlan_parse_ifindex;
 +} libnl_3_8;
 diff --git a/libnl-route-3.sym b/libnl-route-3.sym
-index f7017e161e43..dac68eb65ef5 100644
+index 70ab31a2eef0..2842d6785234 100644
 --- a/libnl-route-3.sym
 +++ b/libnl-route-3.sym
-@@ -1310,6 +1310,19 @@ global:
- libnl_3_9 {
+@@ -1318,6 +1318,19 @@ global:
+ libnl_3_10 {
  global:
  	rtnl_link_bond_get_activeslave;
 +	rtnl_bridge_vlan_alloc;
@@ -718,5 +718,5 @@ index 60a02d2b49d4..c85d2323ac36 100644
  };
  
 -- 
-2.45.0
+2.45.1
 

@@ -3,7 +3,7 @@ HOMEPAGE = "http://www.infradead.org/~tgr/libnl/"
 SECTION = "libs/network"
 
 PE = "1"
-PR = "r5"
+PR = "r1"
 
 LICENSE = "LGPL-2.1-only"
 LIC_FILES_CHKSUM = "file://COPYING;md5=4fbd65380cdd255951079008b364516c"
@@ -26,8 +26,8 @@ SRC_URI = " \
     file://0010-link-ignore-incomplete-bridge-updates.patch \
 "
 
-# commit hash of release tag libnl3_8_0
-SRCREV = "6b2533c02813ce21b27ea8318fbe1af95652a39e"
+# commit hash of release tag libnl3_9_0
+SRCREV = "bdf83151326e365f137fe0e36dc9b1b7aeb1cf33"
 
 S = "${WORKDIR}/git"
 

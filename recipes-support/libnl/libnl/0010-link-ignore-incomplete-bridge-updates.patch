@@ -1,4 +1,4 @@
-From 76b5b2e3874b86f07d0e8f20b37f2591c8818774 Mon Sep 17 00:00:00 2001
+From d0eeaa3f06a4c17b8ba940ab6bca61693cb994ef Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Wed, 24 Apr 2024 14:13:22 +0200
 Subject: [PATCH 10/10] link: ignore incomplete bridge updates
@@ -68,5 +68,5 @@ index d325deced80a..6f657bb7cbbd 100644
  	    && link->l_af_ops
  	    && link->l_af_ops->ao_parse_protinfo) {
 -- 
-2.45.0
+2.45.1
 
