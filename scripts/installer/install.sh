@@ -471,7 +471,7 @@ if [ "${DO_RESTORE}" = true ]; then
 fi;
 
 if [ -n "$BISDN_DEFAULT_CONFIG" ] && [ "$BISDN_DEFAULT_CONFIG" != "none" ]; then
-    example_path="/usr/share/doc/baseboxd/examples/$BISDN_DEFAULT_CONFIG"
+    example_path="/usr/share/baseboxd/default_configurations/$BISDN_DEFAULT_CONFIG"
     if [ -d "${bisdn_linux_mnt}${example_path}" ]; then
         # copy *.netdev and *.network files, but not e.g. *.md
         cp "${bisdn_linux_mnt}${example_path}/"*.net* \
