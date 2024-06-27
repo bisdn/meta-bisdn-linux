@@ -3,7 +3,7 @@
 
 require minimal.bb
 
-IMAGE_FEATURES += " package-management"
+IMAGE_FEATURES += " doc-pkgs package-management"
 
 BISDN_SWITCH_IMAGE_EXTRA_INSTALL += "\
     baseboxd \
