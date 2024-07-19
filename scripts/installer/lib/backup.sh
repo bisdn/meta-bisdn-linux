@@ -98,6 +98,8 @@ parse_file() {
 		return 0
 	fi
 
+	# Switch to src directory to make globbing (wildcard expansion) work
+	cd "$3" || exit 1
 	while read -r line; do
 		case "$line" in
 		"#"*)
@@ -105,16 +107,22 @@ parse_file() {
 			;;
 		"-"*)
 			if [ "$2" = "-" ]; then
-				remove_from_backup "${line:1}" $3 $4
+				# Globbing after removing the leading '-'
+				for fpath in ./${line:1}; do
+					remove_from_backup "${fpath}" $3 $4
+				done
 			fi
 			;;
 		/*)
 			if [ "$2" = "+" ]; then
-				add_to_backup "$line" $3 $4
+				for fpath in ./${line}; do
+					add_to_backup "$fpath" $3 $4
+				done
 			fi
 			;;
 		esac
 	done < $1
+	cd -
 }
 
 # $1 src $2 dst

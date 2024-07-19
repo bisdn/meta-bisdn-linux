@@ -5,6 +5,7 @@
 # 
 # - absolute paths to files or directories to keep:
 # e.g. "/etc/default/user-backup.txt"
+# or, using wildcards: "/home/*/.ssh/"
 #
 # - prefixed paths with a "-" for configuration files to NOT keep:
 # e.g. "-/etc/hostname"
@@ -12,7 +13,6 @@
 # - comments, like this block, prefixed with #.
 #
 # Limitations:
-# - You cannot use wildcards.
 # - Symlinks are not supported and will be ignored.
 # - Do NOT keep ("-") has higher priority than keep. When both are
 #   present, the file will not be kept, regardless of the order.
