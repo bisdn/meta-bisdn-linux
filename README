@@ -1,5 +1,5 @@
 This README file contains information on the contents of the
-meta-switch layer.
+meta-bisdn-linux layer.
 
 Please see the corresponding sections below for details.
 
@@ -19,26 +19,26 @@ This layer depends on:
 Table of Contents
 =================
 
-  I. Adding the meta-switch layer to your build
+  I. Adding the meta-bisdn-linux layer to your build
  II. Misc
 
 
-I. Adding the meta-switch layer to your build
+I. Adding the meta-bisdn-linux layer to your build
 =================================================
 
 In order to use this layer, you need to make the build system aware of
 it.
 
-Assuming the meta-switch layer exists at the top-level of your
+Assuming the meta-bisdn-linux layer exists at the top-level of your
 yocto build tree, you can add it to the build system by adding the
-location of the meta-switch layer to bblayers.conf, along with any
+location of the meta-bisdn-linux layer to bblayers.conf, along with any
 other layers needed. e.g.:
 
   BBLAYERS ?= " \
     /path/to/yocto/meta \
     /path/to/yocto/meta-yocto \
     /path/to/yocto/meta-yocto-bsp \
-    /path/to/yocto/meta-meta-switch \
+    /path/to/yocto/meta-meta-bisdn-linux \
     "
 
 
