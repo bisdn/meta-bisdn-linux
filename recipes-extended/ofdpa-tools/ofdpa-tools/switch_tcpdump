@@ -260,6 +260,7 @@ def run_tcpdump(portName, filePath, timeoutSeconds,
                     time.time() - starting_time > timeoutSeconds):
                 tcpdumpProcess.terminate()
                 print("Reached capture timeout, stopping")
+                break
 
             if (maxSizeMB
                     and filePath
@@ -267,6 +268,7 @@ def run_tcpdump(portName, filePath, timeoutSeconds,
                     and int(os.path.getsize(filePath) / 1e6) > maxSizeMB):
                 tcpdumpProcess.terminate()
                 print("Max file size reached, stopping")
+                break
 
     except KeyboardInterrupt:
         tcpdumpProcess.terminate()
