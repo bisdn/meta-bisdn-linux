@@ -29,6 +29,7 @@
 
 import argparse
 import builtins
+import ctypes
 import functools
 import os
 import signal
@@ -189,11 +190,7 @@ def rule_insert(portNumber):
         text=True,
         capture_output=True)
 
-    rc = int.from_bytes(
-        completed_process.returncode.to_bytes(1, "little", signed=False),
-        "little",
-        signed=True,
-    )
+    rc = ctypes.c_int8(completed_process.returncode)
 
     if rc not in [0, -25]:
         print(completed_process.stdout)
@@ -217,11 +214,7 @@ def rule_delete(portNumber):
         text=True,
         capture_output=True)
 
-    rc = int.from_bytes(
-        completed_process.returncode.to_bytes(1, "little", signed=False),
-        "little",
-        signed=True,
-    )
+    rc = ctypes.c_int8(completed_process.returncode)
 
     if rc not in [0, -30]:
         print(completed_process.stdout)
