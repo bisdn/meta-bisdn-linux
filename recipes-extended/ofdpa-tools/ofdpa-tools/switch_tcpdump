@@ -144,6 +144,10 @@ def main():
         args.filters,
         extra_args)
 
+    if tcpdumpReturnCode == -15:
+      # SIGTERM was received, which is not an error.
+      tcpdumpReturnCode = 0
+
     # Remove the rule from the ACL table in case it was not removed by the
     # signal handler. Not having the rule anymore (-30) is not an error.
     if rule_delete(portNumber) not in [0, -30]:
@@ -271,7 +275,7 @@ def run_tcpdump(portName, filePath, timeoutSeconds,
 
     if filePath:
         print(f"Final file size: {os.path.getsize(filePath)/1e6} MB")
-    return tcpdumpProcess.returncode
+    return ctypes.c_int8(tcpdumpProcess.returncode)
 
 
 if __name__ == "__main__":
