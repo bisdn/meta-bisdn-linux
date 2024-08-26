@@ -194,7 +194,7 @@ def rule_insert(portNumber):
         text=True,
         capture_output=True)
 
-    rc = ctypes.c_int8(completed_process.returncode)
+    rc = ctypes.c_int8(completed_process.returncode).value
 
     if rc not in [0, -25]:
         print(completed_process.stdout)
@@ -218,7 +218,7 @@ def rule_delete(portNumber):
         text=True,
         capture_output=True)
 
-    rc = ctypes.c_int8(completed_process.returncode)
+    rc = ctypes.c_int8(completed_process.returncode).value
 
     if rc not in [0, -30]:
         print(completed_process.stdout)
@@ -275,7 +275,7 @@ def run_tcpdump(portName, filePath, timeoutSeconds,
 
     if filePath:
         print(f"Final file size: {os.path.getsize(filePath)/1e6} MB")
-    return ctypes.c_int8(tcpdumpProcess.returncode)
+    return ctypes.c_int8(tcpdumpProcess.returncode).value
 
 
 if __name__ == "__main__":
