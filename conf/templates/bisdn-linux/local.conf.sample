@@ -223,10 +223,6 @@ BB_DISKMON_DIRS = "\
 # this doesn't mean anything to you.
 CONF_VERSION = "2"
 
-SSTATE_DIR ?= "/tmp/sstate-cache"
-TMPDIR = "/tmp/${MACHINE}"
-DL_DIR ?= "/tmp/downloads"
-
 # To enable ccache, uncomment the following line
 #
 # ccache use may break reproducability, and may break sharing debug symbols.
