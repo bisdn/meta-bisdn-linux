@@ -51,3 +51,7 @@ opkgstatus_reproducible () {
         fi
 }
 ROOTFS_POSTPROCESS_COMMAND:append = " opkgstatus_reproducible;"
+
+# Strip atime and ctime from rootfs tar, as they are dynamic and break
+# reproducibility.
+IMAGE_CMD_TAR = "tar --pax-option='delete=atime,delete=ctime'"
