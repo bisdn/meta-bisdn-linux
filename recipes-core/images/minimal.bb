@@ -40,3 +40,14 @@ IMAGE_FSTYPES = "tar.xz"
 include onie-nos-installer.inc
 
 inherit core-image
+
+# opkg logs the current time as Installed-Time, so replace it with a fixed value
+opkgstatus_reproducible () {
+        if [ "${REPRODUCIBLE_TIMESTAMP_ROOTFS}" != "" ]; then
+                if [ -f ${IMAGE_ROOTFS}${localstatedir}/lib/opkg/status ]; then
+                        sed -i 's/Installed-Time: .*/Installed-Time: ${REPRODUCIBLE_TIMESTAMP_ROOTFS}/' \
+                        ${IMAGE_ROOTFS}${localstatedir}/lib/opkg/status
+                fi
+        fi
+}
+ROOTFS_POSTPROCESS_COMMAND:append = " opkgstatus_reproducible;"
