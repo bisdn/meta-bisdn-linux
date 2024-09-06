@@ -23,6 +23,10 @@ ONIEIMAGE_OUTPUT_FILE = "${ONIEIMAGE_DIR}/onie-installer.bin"
 # we only use a tar.xz packed rootfs
 IMAGE_FSTYPES = "tar.xz"
 
+# use the same variable name and content as os-release
+BUILD_ID ?= "${DATETIME}"
+BUILD_ID[vardepsexclude] = "DATETIME"
+
 do_onie_bundle[depends] += "virtual/kernel:do_deploy"
 
 do_onie_bundle () {
@@ -45,7 +49,7 @@ do_onie_bundle () {
     cp "${ONIEIMAGE_SHELL_ARCHIVE_BODY}" "${ONIEIMAGE_OUTPUT_FILE}"
     image_sha1=$(sha1sum "${ONIEIMAGE_PAYLOAD_FILE}" | awk '{print $1}')
     sed -i -e "s/%%IMAGE_SHA1%%/${image_sha1}/" "${ONIEIMAGE_OUTPUT_FILE}"
-    build_date=$(date -d "${DATE}" +%Y-%m-%d)
+    build_date=$(date -d "${@'${BUILD_ID}'[0:8]}" +%Y-%m-%d)
     sed -i -e "s/%%BUILD_DATE%%/${build_date}/" "${ONIEIMAGE_OUTPUT_FILE}"
 
     # Generate the ONIE bin file
