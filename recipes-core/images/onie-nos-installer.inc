@@ -43,7 +43,9 @@ do_onie_bundle () {
     done
 
     # Generate the payload tar file
-    tar -C "${ONIEIMAGE_DIR}" -cf "${ONIEIMAGE_PAYLOAD_FILE}" "installer"
+    tar --sort=name --format=posix --pax-option='delete=atime,delete=ctime' \
+        --numeric-owner --owner=0 --group=0 --mtime="@${SOURCE_DATE_EPOCH}" \
+        -C "${ONIEIMAGE_DIR}" -cf "${ONIEIMAGE_PAYLOAD_FILE}" "installer"
 
     # Populate the shell archive body
     cp "${ONIEIMAGE_SHELL_ARCHIVE_BODY}" "${ONIEIMAGE_OUTPUT_FILE}"
