@@ -61,7 +61,8 @@ do_onie_bundle () {
     ln -sf "./onie-bisdn-${IMAGE_NAME}.bin" "./onie-bisdn-${IMAGE_LINK_NAME}.bin"
 }
 
-SSTATE_SKIP_CREATION:task-onie-bundle = '0'
+SSTATETASKS += "do_onie_bundle"
+SSTATE_SKIP_CREATION:task-onie-bundle = '1'
 
 addtask do_onie_bundle after do_image_complete before do_build
 
