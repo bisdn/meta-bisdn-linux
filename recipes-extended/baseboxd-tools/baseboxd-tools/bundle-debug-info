@@ -168,20 +168,20 @@ function get_client_tools_info() {
   fi
 
   OUTPUT_FILE="$TMPDIR/client_tools"
-  LST="Group table" log_cmd_output /usr/sbin/client_grouptable_dump
-  LST="Flow table" log_cmd_output /usr/sbin/client_flowtable_dump
-  LST="Port table" log_cmd_output /usr/sbin/client_port_table_dump
-  LST="Tunnel table" log_cmd_output /usr/sbin/client_tunnel_dump
-  LST="Client Ports" log_cmd_output /usr/sbin/client_drivshell ports
-  LST="STG State" log_cmd_output /usr/sbin/client_drivshell stg show
-  LST="Trunk Group State" log_cmd_output /usr/sbin/client_drivshell trunk show
+  LST="Group table" log_cmd_output client_grouptable_dump
+  LST="Flow table" log_cmd_output client_flowtable_dump
+  LST="Port table" log_cmd_output client_port_table_dump
+  LST="Tunnel table" log_cmd_output client_tunnel_dump
+  LST="Client Ports" log_cmd_output client_drivshell ports
+  LST="STG State" log_cmd_output client_drivshell stg show
+  LST="Trunk Group State" log_cmd_output client_drivshell trunk show
 }
 
 function get_switch_state() {
   title "Retrieving basic techsupport from SDK"
 
   OUTPUT_FILE="$TMPDIR/tech_support"
-  log_cmd_output /usr/sbin/client_drivshell techsupport basic
+  log_cmd_output client_drivshell techsupport basic
 }
 
 function get_frr_support_bundle() {
@@ -203,9 +203,9 @@ function get_port_list() {
 function get_mstpd_state() {
   title "Retrieving MSTPD state"
   OUTPUT_FILE="$TMPDIR/mstpd_state"
-  IGNORE_ERRORS=1 LST="Service State" log_cmd_output /bin/systemctl status mstpd
+  IGNORE_ERRORS=1 LST="Service State" log_cmd_output systemctl status mstpd
 
-  if ! /bin/systemctl is-active --quiet mstpd; then
+  if ! systemctl is-active --quiet mstpd; then
     return 0
   fi
 
@@ -217,27 +217,40 @@ function get_mstpd_state() {
     # get the interface name
     ifname="$(basename $interface)"
 
-    LST="Bridge State" log_cmd_output /sbin/mstpctl showbridge $ifname
-    LST="Port Detail" log_cmd_output /sbin/mstpctl showportdetail $ifname
+    LST="Bridge State" log_cmd_output mstpctl showbridge $ifname
+    LST="Port Detail" log_cmd_output mstpctl showportdetail $ifname
 
-    LST="MST Config ID" log_cmd_output /sbin/mstpctl showmstconfid $ifname
-    LST="MSTIs" log_cmd_output /sbin/mstpctl showmstilist $ifname
-    LST="VID-to-FID" log_cmd_output /sbin/mstpctl showvid2fid $ifname
-    LST="FID-to-MSTID" log_cmd_output /sbin/mstpctl showfid2mstid $ifname
+    LST="MST Config ID" log_cmd_output mstpctl showmstconfid $ifname
+    LST="MSTIs" log_cmd_output mstpctl showmstilist $ifname
+    LST="VID-to-FID" log_cmd_output mstpctl showvid2fid $ifname
+    LST="FID-to-MSTID" log_cmd_output mstpctl showfid2mstid $ifname
 
     # will always contain at least the CIST (MSTI 0)
-    mstis="$(/sbin/mstpctl showmstilist $ifname | tail -n +2)"
+    mstis="$(mstpctl showmstilist $ifname | tail -n +2)"
 
     for msti in $mstis; do
-      LST="MSTI $msti Tree State" log_cmd_output /sbin/mstpctl showtree $ifname $msti
+      LST="MSTI $msti Tree State" log_cmd_output mstpctl showtree $ifname $msti
 
       for port in $interface/brif/*; do
         portname="$(basename $port)"
-        LST="MSTI $msti Port $portname State" log_cmd_output /sbin/mstpctl showtreeport $ifname $portname $msti
+        LST="MSTI $msti Port $portname State" log_cmd_output mstpctl showtreeport $ifname $portname $msti
       done
     done
 
   done
+}
+
+function get_networkd_info() {
+  title "Retrieving systemd-networkd information"
+  OUTPUT_FILE="$TMPDIR/networkd_info"
+  IGNORE_ERRORS=1 LST="Service State" log_cmd_output systemctl status systemd-networkd
+
+  if ! systemctl is-active --quiet systemd-networkd; then
+    return 0
+  fi
+
+  LST="Network interface list" log_cmd_output systemctl list
+  LST="Systemd-networkd configuration" log_cmd_output systemd-analyze cat-config systemd/networkd.conf
 }
 
 ###############################################################################
@@ -324,6 +337,7 @@ fi
 
 if [ $((COLLECT_MASK & COLLECT_NET)) -gt 0 ]; then
   get_network_state
+  get_networkd_info
   copy_path /etc/systemd/network
 fi
 

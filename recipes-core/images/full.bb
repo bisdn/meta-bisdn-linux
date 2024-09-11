@@ -42,6 +42,7 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL += "\
     radvd \
     rsync \
     run-preinsts \
+    systemd-analyze \
     tcpdump \
     tmux \
     vim \
