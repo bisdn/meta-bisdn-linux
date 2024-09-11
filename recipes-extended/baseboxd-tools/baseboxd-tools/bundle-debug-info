@@ -240,6 +240,19 @@ function get_mstpd_state() {
   done
 }
 
+function get_networkd_info() {
+  title "Retrieving systemd-networkd information"
+  OUTPUT_FILE="$TMPDIR/networkd_info"
+  IGNORE_ERRORS=1 LST="Service State" log_cmd_output systemctl status systemd-networkd
+
+  if ! systemctl is-active --quiet systemd-networkd; then
+    return 0
+  fi
+
+  LST="Network interface list" log_cmd_output systemctl list
+  LST="Systemd-networkd configuration" log_cmd_output systemd-analyze cat-config systemd/networkd.conf
+}
+
 ###############################################################################
 # Main
 ###############################################################################
@@ -324,6 +337,7 @@ fi
 
 if [ $((COLLECT_MASK & COLLECT_NET)) -gt 0 ]; then
   get_network_state
+  get_networkd_info
   copy_path /etc/systemd/network
 fi
 
