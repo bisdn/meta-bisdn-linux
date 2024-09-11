@@ -149,6 +149,7 @@ function get_network_state() {
   log_cmd_output ip a
   log_cmd_output ip route list table all
   log_cmd_output ip neigh
+  log_cmd_output ip nexthop
   log_cmd_output bridge fdb
   if grep -q bridge.ko "/lib/modules/$(uname -r)/modules.builtin" ||
       grep "^bridge " /proc/modules; then
