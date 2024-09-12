@@ -15,6 +15,8 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
+SYSTEMCTL=$(command -v systemctl)
+
 ###############################################################################
 # Helper functions
 ###############################################################################
@@ -204,9 +206,9 @@ function get_port_list() {
 function get_mstpd_state() {
   title "Retrieving MSTPD state"
   OUTPUT_FILE="$TMPDIR/mstpd_state"
-  IGNORE_ERRORS=1 LST="Service State" log_cmd_output /bin/systemctl status mstpd
+  IGNORE_ERRORS=1 LST="Service State" log_cmd_output $SYSTEMCTL status mstpd
 
-  if ! /bin/systemctl is-active --quiet mstpd; then
+  if ! $SYSTEMCTL is-active --quiet mstpd; then
     return 0
   fi
 
