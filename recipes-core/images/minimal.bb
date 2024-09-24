@@ -55,3 +55,10 @@ ROOTFS_POSTPROCESS_COMMAND:append = " opkgstatus_reproducible;"
 # Strip atime and ctime from rootfs tar, as they are dynamic and break
 # reproducibility.
 IMAGE_CMD_TAR = "tar --pax-option='delete=atime,delete=ctime'"
+
+# include information about the build in the image
+inherit image-buildinfo
+
+IMAGE_BUILDINFO_VARS = "IMAGE_BASENAME MACHINE TUNE_PKGARCH \
+    MACHINE_FEATURES DISTRO_FEATURES COMMON_FEATURES IMAGE_FEATURES \
+    TUNE_FEATURES TARGET_FPU"
