@@ -62,3 +62,10 @@ inherit image-buildinfo
 IMAGE_BUILDINFO_VARS = "IMAGE_BASENAME MACHINE TUNE_PKGARCH \
     MACHINE_FEATURES DISTRO_FEATURES COMMON_FEATURES IMAGE_FEATURES \
     TUNE_FEATURES TARGET_FPU"
+
+# set rootfs timestamp to newest commit date of all layers to get an
+# approximation to source date
+
+inherit layers-sourcedate
+
+REPRODUCIBLE_TIMESTAMP_ROOTFS ?= "${@get_layers_sourcedate_epoch(d)}"
