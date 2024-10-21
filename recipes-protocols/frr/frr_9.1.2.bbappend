@@ -1,6 +1,7 @@
 FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
 SRC_URI:append = " \
+           file://0001-bgpd-Retry-connecting-to-label-manager-if-failed.patch \
            file://frr.service \
            file://frr@.service \
            file://support_bundle_commands.conf;subdir=git/tools/etc/frr \
