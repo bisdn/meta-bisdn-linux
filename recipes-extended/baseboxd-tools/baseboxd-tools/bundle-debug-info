@@ -188,13 +188,22 @@ function get_switch_state() {
 }
 
 function get_frr_support_bundle() {
-  if [ -x /usr/lib/frr/generate_support_bundle.py ]; then
-    title "Retrieving support bundle from FRR"
-    if /usr/lib/frr/generate_support_bundle.py; then
-      cp /var/log/frr/*_support_bundle.log "$TMPDIR"
-    fi
-    report_result $?
+  local generate_bundle
+
+  title "Retrieving support bundle from FRR"
+  if [ -x /usr/libexec/frr/generate_support_bundle.py ]; then
+    generate_bundle=/usr/libexec/frr/generate_support_bundle.py
+  elif [ -x /usr/lib/frr/generate_support_bundle.py ]; then
+    generate_bundle=/usr/lib/frr/generate_support_bundle.py
+  else
+    echo "WARNING: generate_support_bundle.py not found. Skipping."
+    return 0
   fi
+
+  if "$generate_bundle"; then
+    cp /var/log/frr/*_support_bundle.log "$TMPDIR"
+  fi
+  report_result $?
 }
 
 function get_port_list() {
