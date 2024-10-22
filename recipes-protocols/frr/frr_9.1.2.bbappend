@@ -1,12 +1,13 @@
 FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
 SRC_URI:append = " \
+           file://0001-bgpd-Retry-connecting-to-label-manager-if-failed.patch \
            file://frr.service \
            file://frr@.service \
            file://support_bundle_commands.conf;subdir=git/tools/etc/frr \
            "
 
-PR = "r2"
+PR = "r1"
 
 SYSTEMD_AUTO_ENABLE = "enable"
 
@@ -14,6 +15,7 @@ FRR_DAEMONS ?= "zebra staticd bgpd ospfd ospf6d ripd ripngd isisd pimd ldpd nhrp
 FRR_EXTRA_CONF ?= "cumulus datacenter"
 
 PACKAGECONFIG ??= " \
+    capabilities \
     ${@bb.utils.filter('DISTRO_FEATURES', 'pam', d)} \
     ${@bb.utils.filter('FRR_DAEMONS', 'zebra', d)} \
     ${@bb.utils.filter('FRR_DAEMONS', 'staticd', d)} \

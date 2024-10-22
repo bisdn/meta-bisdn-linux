@@ -9,11 +9,11 @@ LICENSE = "GPL-2.0-only & LGPL-2.1-only"
 LIC_FILES_CHKSUM = "file://doc/licenses/GPL-2.0;md5=b234ee4d69f5fce4486a80fdaf4a4263 \
                     file://doc/licenses/LGPL-2.1;md5=4fbd65380cdd255951079008b364516c"
 
-SRC_URI = "git://github.com/FRRouting/frr.git;protocol=https;branch=stable/9.0 \
+SRC_URI = "git://github.com/FRRouting/frr.git;protocol=https;branch=stable/9.1 \
            file://frr.pam \
            "
 
-SRCREV = "6d323ee0e3319cd73afd5e0c62be3a8ee8e8f6fe"
+SRCREV = "ffbac03d726b48083c3de608ea3e3dba7b45c34a"
 
 UPSTREAM_CHECK_GITTAGREGEX = "frr-(?P<pver>\d+(\.\d+)+)$"
 
@@ -44,7 +44,7 @@ PACKAGECONFIG[ospfclient] = "--enable-ospfapi --enable-ospfclient,--disable-ospf
 
 EXTRA_OECONF:class-native = "--enable-clippy-only"
 
-EXTRA_OECONF:class-target = "--sbindir=${libdir}/frr \
+EXTRA_OECONF:class-target = "--sbindir=${libexecdir}/frr \
                              --sysconfdir=${sysconfdir}/frr \
                              --localstatedir=${localstatedir}/run/frr \
                              --enable-vtysh \
@@ -72,6 +72,11 @@ SYSTEMD_PACKAGES = "${PN}"
 SYSTEMD_SERVICE:${PN} = "frr.service"
 SYSTEMD_AUTO_ENABLE = "disable"
 
+inherit update-alternatives multilib_script multilib_header
+
+ALTERNATIVE_PRIORITY = "100"
+ALTERNATIVE:${PN} = " ietf-interfaces "
+ALTERNATIVE_LINK_NAME[ietf-interfaces] = "${datadir}/yang/ietf-interfaces.yang"
 do_compile:prepend () {
    sed -i -e 's#${RECIPE_SYSROOT_NATIVE}##g' \
           -e 's#${RECIPE_SYSROOT}##g' ${S}/lib/version.h
@@ -88,6 +93,7 @@ do_install:class-native () {
 
 do_install:append:class-target () {
     install -m 0755 -d ${D}${sysconfdir}/frr
+    install -m 0755 -d ${D}${libexecdir}/frr
     install -m 0640 ${S}/tools/etc/frr/* ${D}${sysconfdir}/frr/
     chown frr:frrvty ${D}${sysconfdir}/frr
     chown frr:frr ${D}${sysconfdir}/frr/*
@@ -116,6 +122,7 @@ do_install:append:class-target () {
         echo "d /run/frr 0755 frr frr -" \
             > ${D}${sysconfdir}/tmpfiles.d/${BPN}.conf
     fi
+    oe_multilib_header frr/version.h
 }
 
 USERADD_PACKAGES = "${PN}"
