@@ -15,6 +15,7 @@ FRR_DAEMONS ?= "zebra staticd bgpd ospfd ospf6d ripd ripngd isisd pimd ldpd nhrp
 FRR_EXTRA_CONF ?= "cumulus datacenter"
 
 PACKAGECONFIG ??= " \
+    capabilities \
     ${@bb.utils.filter('DISTRO_FEATURES', 'pam', d)} \
     ${@bb.utils.filter('FRR_DAEMONS', 'zebra', d)} \
     ${@bb.utils.filter('FRR_DAEMONS', 'staticd', d)} \
