@@ -36,6 +36,7 @@ PACKAGECONFIG ??= " \
     ${@bb.utils.filter('FRR_EXTRA_CONF', 'cumulus', d)} \
     ${@bb.utils.filter('FRR_EXTRA_CONF', 'datacenter', d)} \
     ${@bb.utils.filter('DISTRO_FEATURES', 'snmp', d)} \
+    capabilities \
     ospfclient \
     "
 
