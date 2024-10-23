@@ -15,10 +15,6 @@ do_install:append() {
    # install service file and config
    install -m 0644 ${S}/pkg/systemd/sysconfig.template ${D}${sysconfdir}/default/baseboxd
 
-   # HACK: baseboxd.service is installed into the wrong dir. we should configure this proper.
-   rm -rf ${D}/usr/lib
-   install -m 0644 ${B}/baseboxd.service ${D}${systemd_unitdir}/system
-
    # update service file
    sed -i -e 's,/etc/sysconfig/baseboxd,/etc/default/baseboxd,g' \
           ${D}${systemd_unitdir}/system/baseboxd.service
