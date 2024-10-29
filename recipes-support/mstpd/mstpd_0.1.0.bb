@@ -8,7 +8,7 @@ SRC_URI = "\
   file://bridge-stp.conf"
 
 PV:append = "+bisdn6"
-SRCREV = "809b744636307dce72807ec5e73e1a10f4ccd008"
+SRCREV = "e3424dff8667bd901a9a349ab18718159b65b263"
 
 S = "${WORKDIR}/git"
 
