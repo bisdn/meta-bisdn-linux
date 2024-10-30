@@ -1,7 +1,7 @@
-From d0eeaa3f06a4c17b8ba940ab6bca61693cb994ef Mon Sep 17 00:00:00 2001
+From ce216cd0a69310bfdf86c2eae62f67cf57251b4c Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Wed, 24 Apr 2024 14:13:22 +0200
-Subject: [PATCH 10/10] link: ignore incomplete bridge updates
+Subject: [PATCH 6/7] link: ignore incomplete bridge updates
 
 For currently unknown reasons, the kernel sends a minimal RTM_NEWLINK
 message for a bridge shortly after attaching a port:
@@ -50,10 +50,10 @@ Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
  1 file changed, 7 insertions(+)
 
 diff --git a/lib/route/link.c b/lib/route/link.c
-index d325deced80a..6f657bb7cbbd 100644
+index c2625a438d8c..b0e1341fa8aa 100644
 --- a/lib/route/link.c
 +++ b/lib/route/link.c
-@@ -758,6 +758,13 @@ static int link_msg_parser(struct nl_cache_ops *ops, struct sockaddr_nl *who,
+@@ -770,6 +770,13 @@ static int link_msg_parser(struct nl_cache_ops *ops, struct sockaddr_nl *who,
  		}
  	}
  
@@ -68,5 +68,5 @@ index d325deced80a..6f657bb7cbbd 100644
  	    && link->l_af_ops
  	    && link->l_af_ops->ao_parse_protinfo) {
 -- 
-2.45.1
+2.47.1
 
