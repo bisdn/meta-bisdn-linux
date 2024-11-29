@@ -8,7 +8,7 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=815ca599c9df247a0c7f619bab123dad"
 
 DEPENDS = "rofl-common"
 
-SRC_URI = "git://github.com/bisdn/rofl-ofdpa.git;protocol=https;branch=master"
+SRC_URI = "git://github.com/bisdn/rofl-ofdpa.git;protocol=https;branch=main"
 
 S = "${WORKDIR}/git"
 
