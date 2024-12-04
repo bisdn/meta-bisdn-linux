@@ -30,3 +30,28 @@ do_install:append() {
 }
 
 USERADD_PARAM:${PN} += "--system --home /dev/null systemd-journal-gateway"
+
+# values taken from BISDN Linux 5.2.1's /etc/passwd and /etc/group
+EXTRA_OEMESON:append = " \
+ -Dadm-gid=4 \
+ -Dtty-gid=5 \
+ -Ddisk-gid=6 \
+ -Dlp-gid=7 \
+ -Dkmem-gid=15 \
+ -Dinput-gid=19 \
+ -Ddialout-gid=20 \
+ -Dcdrom-gid=24 \
+ -Dtape-gid=26 \
+ -Daudio-gid=29 \
+ -Dutmp-gid=43 \
+ -Dvideo-gid=44 \
+ -Dkvm-gid=47 \
+ -Dusers-gid=100 \
+ -Dwheel-gid=984 \
+ -Dsystemd-journal-gid=990 \
+ -Dsgx-gid=994 \
+ -Drender-gid=995 \
+ -Dsystemd-timesync-uid=991 \
+ -Dsystemd-resolve-uid=992 \
+ -Dsystemd-network-uid=993 \
+"
