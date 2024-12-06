@@ -14,6 +14,7 @@ RDEPENDS:${PN} = "\
     rp-pppoe \
     rp-pppoe-server \
     screen \
+    strongswan \
 "
 
 # utilities useful for debugging (zstd to extract coredumps)
