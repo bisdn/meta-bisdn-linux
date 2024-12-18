@@ -21,6 +21,7 @@ RDEPENDS:${PN} = "\
 RDEPENDS:${PN} += "\
     gdb \
     strace \
+    valgrind \
     zstd \
 "
 
