@@ -6,6 +6,7 @@
 /etc/gshadow
 /etc/sudoers.d
 /etc/hostapd/
+/etc/raddb/
 /etc/systemd/network/
 /etc/ofdpa-grpc.conf
 -/etc/opkg/base-feeds.conf
