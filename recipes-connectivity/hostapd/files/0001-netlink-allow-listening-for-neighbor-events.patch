@@ -1,0 +1,125 @@
+From 37002c3bd9f9bd6ddfe252f5591536b3d3502ad7 Mon Sep 17 00:00:00 2001
+From: Jonas Gorski <jonas.gorski@bisdn.de>
+Date: Mon, 13 Jan 2025 11:10:41 +0100
+Subject: [PATCH 1/4] netlink: allow listening for neighbor events
+
+Similar how subscribing to link events works, allow subscribing to
+neighbor events, but only subscribe if any callbacks are populated.
+
+Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
+---
+ src/drivers/netlink.c      | 22 ++++++++++++++++++++++
+ src/drivers/netlink.h      |  5 +++++
+ src/drivers/priv_netlink.h | 14 ++++++++++++++
+ 3 files changed, 41 insertions(+)
+
+diff --git a/src/drivers/netlink.c b/src/drivers/netlink.c
+index 0e960f48c0ad..6e1d4f18d6c8 100644
+--- a/src/drivers/netlink.c
++++ b/src/drivers/netlink.c
+@@ -32,6 +32,17 @@ static void netlink_receive_link(struct netlink_data *netlink,
+ 	   NLMSG_PAYLOAD(h, sizeof(struct ifinfomsg)));
+ }
+ 
++static void netlink_receive_neigh(struct netlink_data *netlink,
++				  void (*cb)(void *ctx, struct ndmsg *ifi,
++					    u8 *buf, size_t len),
++				  struct nlmsghdr *h)
++{
++	if (cb == NULL || NLMSG_PAYLOAD(h, 0) < sizeof(struct ndmsg))
++		return;
++	cb(netlink->cfg->ctx, NLMSG_DATA(h),
++	   (u8 *) NLMSG_DATA(h) + NLMSG_ALIGN(sizeof(struct ndmsg)),
++	   NLMSG_PAYLOAD(h, sizeof(struct ndmsg)));
++}
+ 
+ static void netlink_receive(int sock, void *eloop_ctx, void *sock_ctx)
+ {
+@@ -65,6 +76,14 @@ try_again:
+ 			netlink_receive_link(netlink, netlink->cfg->dellink_cb,
+ 					     h);
+ 			break;
++		case RTM_NEWNEIGH:
++			netlink_receive_neigh(netlink,
++					      netlink->cfg->newneigh_cb, h);
++			break;
++		case RTM_DELNEIGH:
++			netlink_receive_neigh(netlink,
++					      netlink->cfg->delneigh_cb, h);
++			break;
+ 		}
+ 
+ 		h = NLMSG_NEXT(h, left);
+@@ -108,6 +127,9 @@ struct netlink_data * netlink_init(struct netlink_config *cfg)
+ 	os_memset(&local, 0, sizeof(local));
+ 	local.nl_family = AF_NETLINK;
+ 	local.nl_groups = RTMGRP_LINK;
++	if (cfg->newneigh_cb || cfg->delneigh_cb)
++		local.nl_groups |= RTMGRP_NEIGH;
++
+ 	if (bind(netlink->sock, (struct sockaddr *) &local, sizeof(local)) < 0)
+ 	{
+ 		wpa_printf(MSG_ERROR, "netlink: Failed to bind netlink "
+diff --git a/src/drivers/netlink.h b/src/drivers/netlink.h
+index 3a7340e51534..7d51051e8484 100644
+--- a/src/drivers/netlink.h
++++ b/src/drivers/netlink.h
+@@ -11,6 +11,7 @@
+ 
+ struct netlink_data;
+ struct ifinfomsg;
++struct ndmsg;
+ 
+ struct netlink_config {
+ 	void *ctx;
+@@ -18,6 +19,10 @@ struct netlink_config {
+ 			   size_t len);
+ 	void (*dellink_cb)(void *ctx, struct ifinfomsg *ifi, u8 *buf,
+ 			   size_t len);
++	void (*newneigh_cb)(void *ctx, struct ndmsg *nd, u8 *buf,
++			   size_t len);
++	void (*delneigh_cb)(void *ctx, struct ndmsg *nd, u8 *buf,
++			   size_t len);
+ };
+ 
+ struct netlink_data * netlink_init(struct netlink_config *cfg);
+diff --git a/src/drivers/priv_netlink.h b/src/drivers/priv_netlink.h
+index d3f091c392b0..53813ad85554 100644
+--- a/src/drivers/priv_netlink.h
++++ b/src/drivers/priv_netlink.h
+@@ -40,11 +40,15 @@
+ 
+ #define NETLINK_ROUTE 0
+ #define RTMGRP_LINK 1
++#define RTMGRP_NEIGH 4
+ #define RTM_BASE 0x10
+ #define RTM_NEWLINK (RTM_BASE + 0)
+ #define RTM_DELLINK (RTM_BASE + 1)
+ #define RTM_SETLINK (RTM_BASE + 3)
+ 
++#define RTM_NEWNEIGH 28
++#define RTM_DELNEIGH (RTM_NEWNEIGH + 1)
++
+ #define NLMSG_ALIGNTO 4
+ #define NLMSG_ALIGN(len) (((len) + NLMSG_ALIGNTO - 1) & ~(NLMSG_ALIGNTO - 1))
+ #define NLMSG_HDRLEN ((int) NLMSG_ALIGN(sizeof(struct nlmsghdr)))
+@@ -100,6 +104,16 @@ struct ifinfomsg
+ 	unsigned ifi_change;
+ };
+ 
++struct ndmsg {
++	u8	ndm_family;
++	u8	ndm_pad1;
++	u8	ndm_pad2;
++	s32	ndm_ifindex;
++	u16	ndm_state;
++	u8	ndm_flags;
++	u8	ndm_type;
++};
++
+ struct rtattr
+ {
+ 	unsigned short rta_len;
+-- 
+2.47.1
+

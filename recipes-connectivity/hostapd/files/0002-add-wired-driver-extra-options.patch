@@ -1,0 +1,101 @@
+From d29d4a55bf3d32fab7517be9bce64f07148611bf Mon Sep 17 00:00:00 2001
+From: Jonas Gorski <jonas.gorski@bisdn.de>
+Date: Mon, 20 Jan 2025 09:07:56 +0100
+Subject: [PATCH 2/4] add wired driver extra options
+
+Add two options for for driver_wired_linux:
+
+* multi_auth: unlock individual macs instead of full port
+* mac_auth: use MAB (0 = disabled, 1 = kernel MAB, 2 = software
+  MAB)
+
+Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
+---
+ hostapd/config_file.c | 13 +++++++++++++
+ hostapd/main.c        |  2 ++
+ src/ap/ap_config.h    |  2 ++
+ src/common/defs.h     |  6 ++++++
+ src/drivers/driver.h  |  2 ++
+ 5 files changed, 25 insertions(+)
+
+diff --git a/hostapd/config_file.c b/hostapd/config_file.c
+index af1e81d1ddb6..4d13b8a3907f 100644
+--- a/hostapd/config_file.c
++++ b/hostapd/config_file.c
+@@ -2477,6 +2477,19 @@ static int hostapd_config_fill(struct hostapd_config *conf,
+ 		conf->ieee80211h = atoi(pos);
+ 	} else if (os_strcmp(buf, "ieee8021x") == 0) {
+ 		bss->ieee802_1x = atoi(pos);
++	} else if (os_strcmp(buf, "multi_auth") == 0) {
++		bss->multi_auth = atoi(pos);
++	} else if (os_strcmp(buf, "mac_auth") == 0) {
++		enum mac_auth mab = atoi(pos);
++
++		if (mab != DISABLE_MAB &&
++		    mab != ENABLE_KERNEL_MAB &&
++		    mab != ENABLE_SOFTWARE_MAB) {
++			wpa_printf(MSG_ERROR, "Line %d: unknown mac_auth %d",
++				   line, mab);
++			return 1;
++		}
++		bss->mac_auth = mab;
+ 	} else if (os_strcmp(buf, "eapol_version") == 0) {
+ 		int eapol_version = atoi(pos);
+ #ifdef CONFIG_MACSEC
+diff --git a/hostapd/main.c b/hostapd/main.c
+index c9ec38d19f88..34479aa38683 100644
+--- a/hostapd/main.c
++++ b/hostapd/main.c
+@@ -191,6 +191,8 @@ static int hostapd_driver_init(struct hostapd_iface *iface)
+ 	params.ifname = hapd->conf->iface;
+ 	params.driver_params = hapd->iconf->driver_params;
+ 	params.use_pae_group_addr = hapd->conf->use_pae_group_addr;
++	params.multi_auth = hapd->conf->multi_auth;
++	params.mac_auth = hapd->conf->mac_auth;
+ 
+ 	params.num_bridge = hapd->iface->num_bss;
+ 	params.bridge = os_calloc(hapd->iface->num_bss, sizeof(char *));
+diff --git a/src/ap/ap_config.h b/src/ap/ap_config.h
+index 22ad617f4de6..02636ff8e978 100644
+--- a/src/ap/ap_config.h
++++ b/src/ap/ap_config.h
+@@ -453,6 +453,8 @@ struct hostapd_bss_config {
+ 				 * address instead of individual address
+ 				 * (for driver_wired.c).
+ 				 */
++	int multi_auth;
++	enum mac_auth mac_auth;
+ 
+ 	int ap_max_inactivity;
+ 	int ignore_broadcast_ssid;
+diff --git a/src/common/defs.h b/src/common/defs.h
+index f43bdb5d1b15..90f7c1057349 100644
+--- a/src/common/defs.h
++++ b/src/common/defs.h
+@@ -475,4 +475,10 @@ enum ptk0_rekey_handling {
+ 	PTK0_REKEY_ALLOW_NEVER
+ };
+ 
++enum mac_auth {
++	DISABLE_MAB = 0,
++	ENABLE_KERNEL_MAB = 1,
++	ENABLE_SOFTWARE_MAB = 2
++};
++
+ #endif /* DEFS_H */
+diff --git a/src/drivers/driver.h b/src/drivers/driver.h
+index d3312a34d8f8..0df283baa4a6 100644
+--- a/src/drivers/driver.h
++++ b/src/drivers/driver.h
+@@ -2229,6 +2229,8 @@ struct wpa_init_params {
+ 	int use_pae_group_addr;
+ 	char **bridge;
+ 	size_t num_bridge;
++	int multi_auth;
++	enum mac_auth mac_auth;
+ 
+ 	u8 *own_addr; /* buffer for writing own MAC address */
+ };
+-- 
+2.47.1
+

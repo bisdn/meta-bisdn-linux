@@ -7,6 +7,7 @@
 /etc/sudoers.d
 /etc/hostname
 /etc/hosts
+/etc/hostapd/
 /etc/systemd/network/
 /etc/ssh/ssh_host_ecdsa_key
 /etc/ssh/ssh_host_ecdsa_key.pub
