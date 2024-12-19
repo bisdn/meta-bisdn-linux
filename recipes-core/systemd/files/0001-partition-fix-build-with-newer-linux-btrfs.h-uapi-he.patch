@@ -1,0 +1,56 @@
+From 077aeaf270aceb1841ea1e80809f097d72a036d2 Mon Sep 17 00:00:00 2001
+From: Frantisek Sumsal <frantisek@sumsal.cz>
+Date: Wed, 25 Jan 2023 13:21:09 +0100
+Subject: [PATCH] partition: fix build with newer linux/btrfs.h uapi header
+
+linux/btrfs.h needs  to be included after sys/mount.h, as since [0]
+linux/btrfs.h includes linux/fs.h causing build errors:
+
+```
+In file included from /usr/include/linux/fs.h:19,
+                 from ../src/basic/linux/btrfs.h:29,
+                 from ../src/partition/growfs.c:6:
+/usr/include/sys/mount.h:35:3: error: expected identifier before numeric constant
+   35 |   MS_RDONLY = 1,                /* Mount read-only.  */
+      |   ^~~~~~~~~
+[1222/2169] Compiling C object systemd-creds.p/src_creds_creds.c.o
+ninja: build stopped: subcommand failed.
+```
+
+See: https://github.com/systemd/systemd/issues/8507
+
+[0] https://github.com/torvalds/linux/commit/a28135303a669917002f569aecebd5758263e4aa
+
+(cherry picked from commit ed614f17fc9f3876b2178db949df42a2605f6895)
+(cherry picked from commit 8f84df0da357128f1275933cd8aab4c5efad5767)
+(cherry picked from commit 1fc632e15162e0cd02cadc2b8f7fcf1d3b718cbb)
+---
+ src/partition/growfs.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/src/partition/growfs.c b/src/partition/growfs.c
+index ced54f141342..c08c26d92931 100644
+--- a/src/partition/growfs.c
++++ b/src/partition/growfs.c
+@@ -3,12 +3,17 @@
+ #include <errno.h>
+ #include <fcntl.h>
+ #include <getopt.h>
+-#include <linux/btrfs.h>
+ #include <linux/magic.h>
+ #include <sys/ioctl.h>
+ #include <sys/mount.h>
+ #include <sys/types.h>
+ #include <sys/vfs.h>
++/* This needs to be included after sys/mount.h, as since [0] linux/btrfs.h
++ * includes linux/fs.h causing build errors
++ * See: https://github.com/systemd/systemd/issues/8507
++ * [0] https://github.com/torvalds/linux/commit/a28135303a669917002f569aecebd5758263e4aa
++ */
++#include <linux/btrfs.h>
+ 
+ #include "blockdev-util.h"
+ #include "btrfs-util.h"
+-- 
+2.46.1
+
