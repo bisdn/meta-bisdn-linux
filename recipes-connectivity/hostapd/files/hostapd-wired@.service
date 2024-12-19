@@ -1,0 +1,10 @@
+[Unit]
+Description=Hostapd IEEE 802.1X Authenticator
+Requires=sys-subsystem-net-devices-%i.device
+After=sys-subsystem-net-devices-%i.device network.target
+
+[Service]
+ExecStart=/usr/sbin/hostapd /etc/hostapd/hostapd-wired-%i.conf -P /run/hostapd-%i.pid -i %I
+
+[Install]
+Alias=multi-user.target.wants/hostapd-wired@%i.service
