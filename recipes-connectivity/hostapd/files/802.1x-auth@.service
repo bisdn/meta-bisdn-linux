@@ -1,0 +1,12 @@
+[Unit]
+Description=Hostapd IEEE 802.1X Authenticator
+Requires=hostapd-wired@%i.service
+After=hostapd-wired@%i.service network.target
+
+[Service]
+ExecStartPre=/sbin/ip link set %i up
+ExecStart=/usr/sbin/hostapd_cli -P /var/run/hostapd -i %i -a /usr/libexec/802.1x-handler.sh
+ExecStopPost=/sbin/ip link set %i down
+
+[Install]
+Alias=multi-user.target.wants/802.1x-auth@%i.service
