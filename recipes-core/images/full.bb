@@ -36,6 +36,7 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL += "\
     ofdpa-tools \
     procps \
     python3 \
+    python3-docker \
     python3-ofdpa \
     python3-pip \
     python3-ryu \
