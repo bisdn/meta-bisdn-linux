@@ -13,9 +13,11 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL += "\
     docker-moby \
     ethtool \
     file \
+    freeradius \
     frr \
     git \
     grpc-cli \
+    hostapd \
     ipcalc \
     iproute2-ss \
     iptables \
