@@ -1,0 +1,260 @@
+From 3c435925575923661a3ba4224cd4c4bd6b084108 Mon Sep 17 00:00:00 2001
+From: Jonas Gorski <jonas.gorski@bisdn.de>
+Date: Wed, 12 Feb 2025 10:49:28 +0100
+Subject: [PATCH 3/4] import base MAB handling code from Cumulus
+
+Import base MAB handling code from Cumulus:
+
+* updated to hostapd 2.10
+* changed flags to bitfield
+
+This requires the wired driver to tell the source of a new sta (mab or
+pae).
+
+For now no additional configuration options, these will be provided in
+separate commits.
+
+TODO:
+
+* Check if skipping radius msg verifiction really is needed for MAB
+* do we really need separate mab/pae_detected fields?
+* ieee802_1x should just update the sta with pae_detected on eapol rx
+* ieee802_1x should just fallback to MAB in case of no eapol rx
+  detected
+* make mab configurable
+
+Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
+---
+ src/ap/drv_callbacks.c | 11 +++++-
+ src/ap/ieee802_1x.c    | 85 ++++++++++++++++++++++++++++++++++++------
+ src/ap/sta_info.h      |  3 ++
+ src/drivers/driver.h   |  1 +
+ src/radius/radius.h    |  1 +
+ 5 files changed, 88 insertions(+), 13 deletions(-)
+
+diff --git a/src/ap/drv_callbacks.c b/src/ap/drv_callbacks.c
+index a50e6f2afa77..c81ba38d1df6 100644
+--- a/src/ap/drv_callbacks.c
++++ b/src/ap/drv_callbacks.c
+@@ -1508,7 +1508,8 @@ static void hostapd_mgmt_tx_cb(struct hostapd_data *hapd, const u8 *buf,
+ #endif /* NEED_AP_MLME */
+ 
+ 
+-static int hostapd_event_new_sta(struct hostapd_data *hapd, const u8 *addr)
++static int hostapd_event_new_sta(struct hostapd_data *hapd, const u8 *addr,
++				 bool pae_detected)
+ {
+ 	struct sta_info *sta = ap_get_sta(hapd, addr);
+ 
+@@ -1519,6 +1520,11 @@ static int hostapd_event_new_sta(struct hostapd_data *hapd, const u8 *addr)
+ 		   " - adding a new STA", MAC2STR(addr));
+ 	sta = ap_sta_add(hapd, addr);
+ 	if (sta) {
++		if (pae_detected)
++			sta->pae_detected = 1;
++		else
++			sta->mab = 1;
++
+ 		hostapd_new_assoc_sta(hapd, sta, 0);
+ 	} else {
+ 		wpa_printf(MSG_DEBUG, "Failed to add STA entry for " MACSTR,
+@@ -1932,7 +1938,8 @@ void wpa_supplicant_event(void *ctx, enum wpa_event_type event,
+ 				     data->rx_probe_req.ssi_signal);
+ 		break;
+ 	case EVENT_NEW_STA:
+-		hostapd_event_new_sta(hapd, data->new_sta.addr);
++		hostapd_event_new_sta(hapd, data->new_sta.addr,
++				      data->new_sta.pae_detected);
+ 		break;
+ 	case EVENT_EAPOL_RX:
+ 		hostapd_event_eapol_rx(hapd, data->eapol_rx.src,
+diff --git a/src/ap/ieee802_1x.c b/src/ap/ieee802_1x.c
+index 6e7b75128210..d342dc33a498 100644
+--- a/src/ap/ieee802_1x.c
++++ b/src/ap/ieee802_1x.c
+@@ -434,11 +434,17 @@ static int add_common_radius_sta_attr(struct hostapd_data *hapd,
+ 				      struct radius_msg *msg)
+ {
+ 	char buf[128];
++	int nas_service_type = 0;
++
++	if (sta->mab)
++		nas_service_type = RADIUS_SERVICE_TYPE_CALL_CHECK;
++	else
++		nas_service_type = RADIUS_SERVICE_TYPE_FRAMED;
+ 
+ 	if (!hostapd_config_get_radius_attr(req_attr,
+ 					    RADIUS_ATTR_SERVICE_TYPE) &&
+ 	    !radius_msg_add_attr_int32(msg, RADIUS_ATTR_SERVICE_TYPE,
+-				       RADIUS_SERVICE_TYPE_FRAMED)) {
++				       nas_service_type)) {
+ 		wpa_printf(MSG_ERROR, "Could not add Service-Type");
+ 		return -1;
+ 	}
+@@ -712,6 +718,14 @@ void ieee802_1x_encapsulate_radius(struct hostapd_data *hapd,
+ 		goto fail;
+ 	}
+ 
++	if (sta->mab &&
++	    !radius_msg_add_attr_user_password(msg, sm->identity,
++		    sm->identity_len,
++		    hapd->conf->radius->auth_server->shared_secret,
++		    hapd->conf->radius->auth_server->shared_secret_len)) {
++		goto fail;
++	}
++
+ 	if (add_common_radius_attr(hapd, hapd->conf->radius_auth_req_attr, sta,
+ 				   msg) < 0)
+ 		goto fail;
+@@ -1285,6 +1299,34 @@ void ieee802_1x_new_station(struct hostapd_data *hapd, struct sta_info *sta)
+ 		reassoc = 0;
+ 	}
+ 
++	/*
++	 * We may have MAC Authentication Bypass (MAB) configured.
++	 * If so, skip EAPOL and just authorize with RADIUS.
++	 */
++	if (sta->mab) {
++		const u8 *eap = NULL;
++		size_t len = 0;
++		char buf[128];
++
++		hostapd_logger(hapd, sta->addr, HOSTAPD_MODULE_IEEE8021X,
++				HOSTAPD_LEVEL_DEBUG,
++				"MAB enabled - skipping IEEE 802.1X/EAP");
++		os_snprintf(buf, sizeof(buf), RADIUS_ADDR_FORMAT,
++				MAC2STR(sta->addr));
++		os_free(sta->eapol_sm->identity);
++		sta->eapol_sm->identity = (u8 *) dup_binstr(buf, os_strlen(buf));
++		if (sta->eapol_sm->identity == NULL) {
++			sta->eapol_sm->identity_len = 0;
++			hostapd_logger(hapd, sta->addr, HOSTAPD_MODULE_IEEE8021X,
++					HOSTAPD_LEVEL_DEBUG,
++					"Could not set identity");
++			return;
++		}
++		sta->eapol_sm->identity_len = os_strlen(buf);
++		ieee802_1x_encapsulate_radius(hapd, sta, eap, len);
++		return;
++	}
++
+ #ifdef CONFIG_WPS
+ 	sta->eapol_sm->flags &= ~EAPOL_SM_WAIT_START;
+ 	if (!hapd->conf->ieee802_1x && hapd->conf->wps_state &&
+@@ -1939,7 +1981,11 @@ ieee802_1x_receive_auth(struct radius_msg *msg, struct radius_msg *req,
+ 	}
+ 	sta = sm->sta;
+ 
+-	if (radius_msg_verify(msg, shared_secret, shared_secret_len, req, 1)) {
++	/* FIXME: this partially undos CVE-2024-3596 fixes, check if we need this */
++	if (sta->mab && hdr->code == RADIUS_CODE_ACCESS_ACCEPT) {
++		wpa_printf(MSG_INFO, "Incoming MAB RADIUS packet with Access-Accept");
++	} else if (radius_msg_verify(msg, shared_secret, shared_secret_len,
++				     req, 1)) {
+ 		wpa_printf(MSG_INFO,
+ 			   "Incoming RADIUS packet did not have correct Message-Authenticator - dropped");
+ 		return RADIUS_RX_INVALID_AUTHENTICATOR;
+@@ -2014,7 +2060,15 @@ ieee802_1x_receive_auth(struct radius_msg *msg, struct radius_msg *req,
+ 			ap_sta_no_session_timeout(hapd, sta);
+ 
+ 		sm->eap_if->aaaSuccess = true;
+-		override_eapReq = 1;
++		if (sta->mab) {
++			sm->eap_if->aaaEapReq = true;
++			sta->eapol_sm->auth_pae_state = AUTH_PAE_AUTHENTICATED;
++			sta->eapol_sm->be_auth_state = BE_AUTH_SUCCESS;
++			ieee802_1x_set_sta_authorized(sm->eapol->conf.ctx,
++					sm->sta, 1);
++		} else {
++			override_eapReq = 1;
++		}
+ 		ieee802_1x_get_keys(hapd, sta, msg, req, shared_secret,
+ 				    shared_secret_len);
+ 		ieee802_1x_store_radius_class(hapd, sta, msg);
+@@ -2026,13 +2080,19 @@ ieee802_1x_receive_auth(struct radius_msg *msg, struct radius_msg *req,
+ 		break;
+ 	case RADIUS_CODE_ACCESS_REJECT:
+ 		sm->eap_if->aaaFail = true;
+-		override_eapReq = 1;
+-		if (radius_msg_get_attr_int32(msg, RADIUS_ATTR_WLAN_REASON_CODE,
+-					      &reason_code) == 0) {
+-			wpa_printf(MSG_DEBUG,
+-				   "RADIUS server indicated WLAN-Reason-Code %u in Access-Reject for "
+-				   MACSTR, reason_code, MAC2STR(sta->addr));
+-			sta->disconnect_reason_code = reason_code;
++		if (sta->mab) {
++			sm->eap_if->aaaEapReq = true;
++			ieee802_1x_set_sta_authorized(sm->eapol->conf.ctx,
++					sm->sta, 0);
++		} else {
++			override_eapReq = 1;
++			if (radius_msg_get_attr_int32(msg, RADIUS_ATTR_WLAN_REASON_CODE,
++						      &reason_code) == 0) {
++				wpa_printf(MSG_DEBUG,
++					   "RADIUS server indicated WLAN-Reason-Code %u in Access-Reject for "
++					   MACSTR, reason_code, MAC2STR(sta->addr));
++				sta->disconnect_reason_code = reason_code;
++			}
+ 		}
+ 		break;
+ 	case RADIUS_CODE_ACCESS_CHALLENGE:
+@@ -2055,7 +2115,9 @@ ieee802_1x_receive_auth(struct radius_msg *msg, struct radius_msg *req,
+ 		break;
+ 	}
+ 
+-	ieee802_1x_decapsulate_radius(hapd, sta);
++	if (sta->pae_detected)
++		ieee802_1x_decapsulate_radius(hapd, sta);
++
+ 	if (override_eapReq)
+ 		sm->eap_if->aaaEapReq = false;
+ 
+@@ -2470,6 +2532,7 @@ int ieee802_1x_init(struct hostapd_data *hapd)
+ 		return -1;
+ 
+ #ifndef CONFIG_NO_RADIUS
++
+ 	if (radius_client_register(hapd->radius, RADIUS_AUTH,
+ 				   ieee802_1x_receive_auth, hapd))
+ 		return -1;
+diff --git a/src/ap/sta_info.h b/src/ap/sta_info.h
+index 27e72f9a0164..7efbc2052ac6 100644
+--- a/src/ap/sta_info.h
++++ b/src/ap/sta_info.h
+@@ -164,6 +164,9 @@ struct sta_info {
+ 	unsigned int external_dh_updated:1;
+ 	unsigned int post_csa_sa_query:1;
+ 
++	unsigned int pae_detected:1;
++	unsigned int mab:1;
++
+ 	u16 auth_alg;
+ 
+ 	enum {
+diff --git a/src/drivers/driver.h b/src/drivers/driver.h
+index 0df283baa4a6..446c60f79fe4 100644
+--- a/src/drivers/driver.h
++++ b/src/drivers/driver.h
+@@ -5744,6 +5744,7 @@ union wpa_event_data {
+ 	 */
+ 	struct new_sta {
+ 		const u8 *addr;
++		bool pae_detected;
+ 	} new_sta;
+ 
+ 	/**
+diff --git a/src/radius/radius.h b/src/radius/radius.h
+index 6b9dfbca2fbd..4a6339eeeb17 100644
+--- a/src/radius/radius.h
++++ b/src/radius/radius.h
+@@ -118,6 +118,7 @@ enum { RADIUS_ATTR_USER_NAME = 1,
+ 
+ /* Service-Type values (RFC 2865, 5.6) */
+ #define RADIUS_SERVICE_TYPE_FRAMED 2
++#define RADIUS_SERVICE_TYPE_CALL_CHECK 10
+ 
+ /* Termination-Action */
+ #define RADIUS_TERMINATION_ACTION_DEFAULT 0
+-- 
+2.47.1
+
