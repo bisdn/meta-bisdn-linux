@@ -1,0 +1,93 @@
+From eefad83d9db92603b01238c3e2e2cd919798e824 Mon Sep 17 00:00:00 2001
+From: Jonas Gorski <jonas.gorski@bisdn.de>
+Date: Mon, 2 Dec 2024 12:48:22 +0100
+Subject: [PATCH 2/3] network: bridge: add support for IFLA_BRPORT_LOCKED
+
+Since linux commit a21d9a670d81 ("net: bridge: Add support for bridge
+port in locked mode") it is possible to set bridge ports to locked.
+
+Locked ports do not learn automatically, and discard any traffic from
+unknown source MACs. To allow traffic, the userspace authenticator is
+expected to create fdb entries for authenticated hosts.
+
+Add support to systemd-network for setting the new attribute for bridge
+ports.
+
+Upstream-Status: Backport [https://github.com/systemd/systemd/commit/a434de60568b0f34c07de4f97af6cdc33d4fd2a2]
+Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
+---
+ src/libsystemd/sd-netlink/netlink-types-rtnl.c | 1 +
+ src/network/networkd-network-gperf.gperf       | 1 +
+ src/network/networkd-network.c                 | 1 +
+ src/network/networkd-network.h                 | 1 +
+ src/network/networkd-setlink.c                 | 6 ++++++
+ 5 files changed, 10 insertions(+)
+
+diff --git a/src/libsystemd/sd-netlink/netlink-types-rtnl.c b/src/libsystemd/sd-netlink/netlink-types-rtnl.c
+index 167bbc5ccfc6..fd60760e71da 100644
+--- a/src/libsystemd/sd-netlink/netlink-types-rtnl.c
++++ b/src/libsystemd/sd-netlink/netlink-types-rtnl.c
+@@ -483,6 +483,7 @@ static const struct NLType rtnl_bridge_port_types[] = {
+         [IFLA_BRPORT_MRP_IN_OPEN]           = { .type = NETLINK_TYPE_U8 },
+         [IFLA_BRPORT_MCAST_EHT_HOSTS_LIMIT] = { .type = NETLINK_TYPE_U32 },
+         [IFLA_BRPORT_MCAST_EHT_HOSTS_CNT]   = { .type = NETLINK_TYPE_U32 },
++        [IFLA_BRPORT_LOCKED]                = { .type = NETLINK_TYPE_U8 },
+ };
+ 
+ static const NLTypeSystemUnionElement rtnl_link_info_slave_data_type_systems[] = {
+diff --git a/src/network/networkd-network-gperf.gperf b/src/network/networkd-network-gperf.gperf
+index 4c3bf97311d4..3c492e637880 100644
+--- a/src/network/networkd-network-gperf.gperf
++++ b/src/network/networkd-network-gperf.gperf
+@@ -319,6 +319,7 @@ Bridge.ProxyARP,                             config_parse_tristate,
+ Bridge.ProxyARPWiFi,                         config_parse_tristate,                                    0,                             offsetof(Network, bridge_proxy_arp_wifi)
+ Bridge.Priority,                             config_parse_bridge_port_priority,                        0,                             offsetof(Network, priority)
+ Bridge.MulticastRouter,                      config_parse_multicast_router,                            0,                             offsetof(Network, multicast_router)
++Bridge.Locked,                               config_parse_tristate,                                    0,                             offsetof(Network, bridge_locked)
+ BridgeFDB.MACAddress,                        config_parse_fdb_hwaddr,                                  0,                             0
+ BridgeFDB.VLANId,                            config_parse_fdb_vlan_id,                                 0,                             0
+ BridgeFDB.Destination,                       config_parse_fdb_destination,                             0,                             0
+diff --git a/src/network/networkd-network.c b/src/network/networkd-network.c
+index efdedfaa1bfd..a8da727020f0 100644
+--- a/src/network/networkd-network.c
++++ b/src/network/networkd-network.c
+@@ -447,6 +447,7 @@ int network_load_one(Manager *manager, OrderedHashmap **networks, const char *fi
+                 .bridge_proxy_arp_wifi = -1,
+                 .priority = LINK_BRIDGE_PORT_PRIORITY_INVALID,
+                 .multicast_router = _MULTICAST_ROUTER_INVALID,
++                .bridge_locked = -1,
+ 
+                 .lldp_mode = LLDP_MODE_ROUTERS_ONLY,
+                 .lldp_multicast_mode = _SD_LLDP_MULTICAST_MODE_INVALID,
+diff --git a/src/network/networkd-network.h b/src/network/networkd-network.h
+index f7eb37acedaf..9793c6f07dc4 100644
+--- a/src/network/networkd-network.h
++++ b/src/network/networkd-network.h
+@@ -256,6 +256,7 @@ struct Network {
+         uint32_t cost;
+         uint16_t priority;
+         MulticastRouter multicast_router;
++        int bridge_locked;
+ 
+         /* Bridge VLAN */
+         bool use_br_vlan;
+diff --git a/src/network/networkd-setlink.c b/src/network/networkd-setlink.c
+index 1ab58a5bd214..36ae86941fd2 100644
+--- a/src/network/networkd-setlink.c
++++ b/src/network/networkd-setlink.c
+@@ -400,6 +400,12 @@ static int link_configure(
+                                 return log_link_debug_errno(link, r, "Could not append IFLA_BRPORT_MULTICAST_ROUTER attribute: %m");
+                 }
+ 
++                if (link->network->bridge_locked >= 0) {
++                        r = sd_netlink_message_append_u8(req, IFLA_BRPORT_LOCKED, link->network->bridge_locked);
++                        if (r < 0)
++                                return log_link_debug_errno(link, r, "Could not append IFLA_BRPORT_LOCKED attribute: %m");
++                }
++
+                 r = sd_netlink_message_close_container(req);
+                 if (r < 0)
+                         return log_link_debug_errno(link, r, "Could not close IFLA_PROTINFO container: %m");
+-- 
+2.47.1
+
