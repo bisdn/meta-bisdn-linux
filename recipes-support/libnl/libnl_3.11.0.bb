@@ -14,20 +14,17 @@ DEPENDS = "flex-native bison-native"
 
 SRC_URI = " \
     git://github.com/thom311/${BPN}.git;protocol=https;branch=main \
-    file://0001-cache-fix-new-object-in-callback-v2-on-updated-objec.patch \
-    file://0002-route-fix-IPv6-ecmp-route-deleted-nexthop-matching.patch \
-    file://0003-nexthop-add-a-identical-helper-function.patch \
-    file://0004-route-use-the-new-helper-function-for-comparing-next.patch \
-    file://0005-link-bonding-parse-and-expose-bonding-options.patch \
-    file://0006-WIP-add-info-slave-data-support.patch \
-    file://0007-link-bonding-expose-state-on-enslaved-interfaces.patch \
-    file://0008-bridge-vlan-add-per-vlan-stp-state-object-and-cache.patch \
-    file://0009-route-route_obj-treat-each-IPv6-link-local-route-as-.patch \
-    file://0010-link-ignore-incomplete-bridge-updates.patch \
+    file://0001-link-bonding-add-primary-getters-and-setters.patch \
+    file://0002-WIP-add-info-slave-data-support.patch \
+    file://0003-link-bonding-expose-state-on-enslaved-interfaces.patch \
+    file://0004-bridge-vlan-add-per-vlan-stp-state-object-and-cache.patch \
+    file://0005-route-route_obj-treat-each-IPv6-link-local-route-as-.patch \
+    file://0006-link-ignore-incomplete-bridge-updates.patch \
+    file://0007-cache-cache_include-fix-double-put-for-cloned-object.patch \
 "
 
-# commit hash of release tag libnl3_9_0
-SRCREV = "bdf83151326e365f137fe0e36dc9b1b7aeb1cf33"
+# commit hash of release tag libnl3_11_0
+SRCREV = "c7edc38f8e335c18c5e17451d2cb19b9b8d0b48f"
 
 S = "${WORKDIR}/git"
 

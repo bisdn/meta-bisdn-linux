@@ -1,0 +1,152 @@
+From 8c26319a1a3b404cd96f8a21998f8b6703c39ef2 Mon Sep 17 00:00:00 2001
+From: Jonas Gorski <jonas.gorski@bisdn.de>
+Date: Tue, 6 Oct 2020 10:00:37 +0200
+Subject: [PATCH 1/7] link/bonding: add primary getters and setters
+
+Add getters and setters for the primary attribute of active backup
+bonds.
+
+Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
+---
+ include/netlink/route/link/bonding.h |  3 ++
+ lib/route/link/bonding.c             | 53 ++++++++++++++++++++++++++++
+ libnl-route-3.sym                    |  6 ++++
+ 3 files changed, 62 insertions(+)
+
+diff --git a/include/netlink/route/link/bonding.h b/include/netlink/route/link/bonding.h
+index a8dce730279f..4a8cfc546dc6 100644
+--- a/include/netlink/route/link/bonding.h
++++ b/include/netlink/route/link/bonding.h
+@@ -40,6 +40,9 @@ extern int	rtnl_link_bond_get_miimon(struct rtnl_link *link, uint32_t *miimon);
+ extern void	rtnl_link_bond_set_min_links(struct rtnl_link *link, uint32_t min_links);
+ extern int	rtnl_link_bond_get_min_links(struct rtnl_link *link, uint32_t *min_links);
+ 
++extern void	rtnl_link_bond_set_primary(struct rtnl_link *, int primary);
++extern int	rtnl_link_bond_get_primary(struct rtnl_link *, int *primary);
++
+ #ifdef __cplusplus
+ }
+ #endif
+diff --git a/lib/route/link/bonding.c b/lib/route/link/bonding.c
+index 53b70cae7ed5..db46fb59f6de 100644
+--- a/lib/route/link/bonding.c
++++ b/lib/route/link/bonding.c
+@@ -27,6 +27,7 @@
+ #define BOND_HAS_HASHING_TYPE	(1 << 2)
+ #define BOND_HAS_MIIMON		(1 << 3)
+ #define BOND_HAS_MIN_LINKS	(1 << 4)
++#define BOND_HAS_PRIMARY	(1 << 5)
+ 
+ struct bond_info {
+ 	uint32_t ce_mask; /* to support attr macros */
+@@ -35,6 +36,7 @@ struct bond_info {
+ 	uint32_t ifindex;
+ 	uint32_t miimon;
+ 	uint32_t min_links;
++	uint32_t primary;
+ };
+ 
+ static int bond_info_alloc(struct rtnl_link *link)
+@@ -58,6 +60,7 @@ static struct nla_policy bonding_nl_policy[IFLA_BOND_MAX + 1] = {
+ 	[IFLA_BOND_MODE]             = { .type = NLA_U8 },
+ 	[IFLA_BOND_ACTIVE_SLAVE]     = { .type = NLA_U32 },
+ 	[IFLA_BOND_MIIMON]	     = { .type = NLA_U32 },
++	[IFLA_BOND_PRIMARY]	     = { .type = NLA_U32 },
+ 	[IFLA_BOND_XMIT_HASH_POLICY] = { .type = NLA_U8 },
+ 	[IFLA_BOND_MIN_LINKS]	     = { .type = NLA_U32 },
+ };
+@@ -94,6 +97,11 @@ static int bond_info_parse(struct rtnl_link *link, struct nlattr *data,
+ 		bn->ce_mask |= BOND_HAS_MIIMON;
+ 	}
+ 
++	if (tb[IFLA_BOND_PRIMARY]) {
++		bn->hashing_type = nla_get_u32(tb[IFLA_BOND_PRIMARY]);
++		bn->ce_mask |= BOND_HAS_PRIMARY;
++	}
++
+ 	if (tb[IFLA_BOND_XMIT_HASH_POLICY]) {
+ 		bn->hashing_type = nla_get_u8(tb[IFLA_BOND_XMIT_HASH_POLICY]);
+ 		bn->ce_mask |= BOND_HAS_HASHING_TYPE;
+@@ -155,6 +163,9 @@ static int bond_put_attrs(struct nl_msg *msg, struct rtnl_link *link)
+ 	if (bn->ce_mask & BOND_HAS_MIN_LINKS)
+ 		NLA_PUT_U32(msg, IFLA_BOND_MIN_LINKS, bn->min_links);
+ 
++	if (bn->ce_mask & BOND_HAS_PRIMARY)
++		NLA_PUT_U32(msg, IFLA_BOND_PRIMARY, bn->primary);
++
+ 	nla_nest_end(msg, data);
+ 	return 0;
+ 
+@@ -178,6 +189,7 @@ static int bond_info_compare(struct rtnl_link *link_a, struct rtnl_link *link_b,
+ 		      a->hashing_type != b->hashing_type);
+ 	diff |= _DIFF(BOND_HAS_MIIMON, a->miimon != b->miimon);
+ 	diff |= _DIFF(BOND_HAS_MIN_LINKS, a->min_links != b->min_links);
++	diff |= _DIFF(BOND_HAS_PRIMARY, a->primary != b->primary);
+ #undef _DIFF
+ 
+ 	return diff;
+@@ -288,6 +300,47 @@ int rtnl_link_bond_get_mode(struct rtnl_link *link, uint8_t *mode)
+ 	return 0;
+ }
+ 
++/**
++ * Set bond primary link
++ * @arg link		Link object of type bond
++ * @arg primary		ifindex of primary slave to set
++ *
++ * @return void
++ */
++void rtnl_link_bond_set_primary(struct rtnl_link *link, int primary)
++{
++	struct bond_info *info = link->l_info;
++
++	IS_BOND_INFO_ASSERT(link);
++
++	info->primary = primary;
++	info->ce_mask |= BOND_HAS_PRIMARY;
++}
++
++/**
++ * Get bond primary link
++ * @arg link		Link object of type bond
++ * @arg primary		ifindex of primary slave
++ *
++ * @return 0 on success or a negative error code
++ */
++int rtnl_link_bond_get_primary(struct rtnl_link *link, int *primary)
++{
++	struct bond_info *info = link->l_info;
++
++	IS_BOND_INFO_ASSERT(link);
++
++	if (!(info->ce_mask & BOND_HAS_PRIMARY))
++		return -NLE_NOATTR;
++
++	if (!primary)
++		return -NLE_INVAL;
++
++	*primary = info->primary;
++
++	return 0;
++}
++
+ /**
+  * Set hashing type
+  * @arg link            Link object of type bond
+diff --git a/libnl-route-3.sym b/libnl-route-3.sym
+index 75883323c8df..b138b9365e22 100644
+--- a/libnl-route-3.sym
++++ b/libnl-route-3.sym
+@@ -1364,3 +1364,9 @@ global:
+ 	rtnl_neigh_str2extflag;
+ 	rtnl_neigh_unset_ext_flags;
+ } libnl_3_10;
++
++libnl_3_12 {
++global:
++	rtnl_link_bond_get_primary;
++	rtnl_link_bond_set_primary;
++} libnl_3_11;
+-- 
+2.47.1
+
