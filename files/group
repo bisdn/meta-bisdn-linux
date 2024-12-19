@@ -60,6 +60,7 @@ systemd-bus-proxy:x:996:
 basebox:x:1000:
 
 # packages
+radiusd:x:983:
 docker:x:991:
 frrvty:x:992:
 frr:x:993:
