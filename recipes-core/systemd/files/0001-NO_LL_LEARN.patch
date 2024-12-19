@@ -1,0 +1,79 @@
+From 760747bb08d0be418472f245587a8257eb2ff18e Mon Sep 17 00:00:00 2001
+From: Jonas Gorski <jonas.gorski@bisdn.de>
+Date: Wed, 11 Dec 2024 09:24:54 +0100
+Subject: [PATCH] NO_LL_LEARN
+
+Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
+---
+ src/network/netdev/bridge.c           | 14 ++++++++++++++
+ src/network/netdev/bridge.h           |  2 ++
+ src/network/netdev/netdev-gperf.gperf |  1 +
+ 3 files changed, 17 insertions(+)
+
+diff --git a/src/network/netdev/bridge.c b/src/network/netdev/bridge.c
+index b974f2ae0a67..1d19f72d5b26 100644
+--- a/src/network/netdev/bridge.c
++++ b/src/network/netdev/bridge.c
+@@ -48,6 +48,7 @@ static int netdev_bridge_set_handler(sd_netlink *rtnl, sd_netlink_message *m, Ne
+ static int netdev_bridge_post_create(NetDev *netdev, Link *link, sd_netlink_message *m) {
+         _cleanup_(sd_netlink_message_unrefp) sd_netlink_message *req = NULL;
+         Bridge *b;
++        struct br_boolopt_multi bm = {};
+         int r;
+ 
+         assert(netdev);
+@@ -151,6 +152,18 @@ static int netdev_bridge_post_create(NetDev *netdev, Link *link, sd_netlink_mess
+                         return log_netdev_error_errno(netdev, r, "Could not append IFLA_BR_MCAST_IGMP_VERSION attribute: %m");
+         }
+ 
++        if (b->no_ll_learn >= 0) {
++                bm.optmask |= 1 << BR_BOOLOPT_NO_LL_LEARN;
++                if (b->no_ll_learn)
++                        bm.optval |= 1 << BR_BOOLOPT_NO_LL_LEARN;
++        }
++
++        if (bm.optmask != 0) {
++                r = sd_netlink_message_append_data(req, IFLA_BR_MULTI_BOOLOPT, &bm, sizeof(bm));
++                if (r < 0)
++                        return r;
++        }
++
+         r = sd_netlink_message_close_container(req);
+         if (r < 0)
+                 return log_netdev_error_errno(netdev, r, "Could not append IFLA_LINKINFO attribute: %m");
+@@ -269,6 +282,7 @@ static void bridge_init(NetDev *n) {
+         b->default_pvid = VLANID_INVALID;
+         b->forward_delay = USEC_INFINITY;
+         b->ageing_time = USEC_INFINITY;
++        b->no_ll_learn = -1;
+ }
+ 
+ const NetDevVTable bridge_vtable = {
+diff --git a/src/network/netdev/bridge.h b/src/network/netdev/bridge.h
+index a6f322404410..99865cb3dc7b 100644
+--- a/src/network/netdev/bridge.h
++++ b/src/network/netdev/bridge.h
+@@ -24,6 +24,8 @@ typedef struct Bridge {
+         usec_t hello_time;
+         usec_t max_age;
+         usec_t ageing_time;
++
++        int no_ll_learn;
+ } Bridge;
+ 
+ typedef enum MulticastRouter {
+diff --git a/src/network/netdev/netdev-gperf.gperf b/src/network/netdev/netdev-gperf.gperf
+index a948ec2c8a0e..c4f92868acac 100644
+--- a/src/network/netdev/netdev-gperf.gperf
++++ b/src/network/netdev/netdev-gperf.gperf
+@@ -221,6 +221,7 @@ Bridge.VLANFiltering,                     config_parse_tristate,
+ Bridge.VLANProtocol,                      config_parse_vlanprotocol,                 0,                             offsetof(Bridge, vlan_protocol)
+ Bridge.STP,                               config_parse_tristate,                     0,                             offsetof(Bridge, stp)
+ Bridge.MulticastIGMPVersion,              config_parse_uint8,                        0,                             offsetof(Bridge, igmp_version)
++Bridge.NoLinkLocalLearning,               config_parse_tristate,                     0,                             offsetof(Bridge, no_ll_learn)
+ VRF.TableId,                              config_parse_uint32,                       0,                             offsetof(Vrf, table) /* deprecated */
+ VRF.Table,                                config_parse_uint32,                       0,                             offsetof(Vrf, table)
+ BareUDP.DestinationPort,                  config_parse_ip_port,                      0,                             offsetof(BareUDP, dest_port)
+-- 
+2.47.1
+
