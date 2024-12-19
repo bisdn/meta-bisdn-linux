@@ -1,0 +1,855 @@
+From b0dfa9b88b34ee473833503eff04c5bb4e39041d Mon Sep 17 00:00:00 2001
+From: Jonas Gorski <jonas.gorski@bisdn.de>
+Date: Mon, 13 Jan 2025 13:04:48 +0100
+Subject: [PATCH 4/4] drivers: add a linux wired driver
+
+Add a driver making use of the new-ish LOCKED flags for ports and
+neighbors to implement a wired driver for linux.
+
+Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
+---
+ src/drivers/driver.h             |   3 +
+ src/drivers/driver_wired_linux.c | 764 +++++++++++++++++++++++++++++++
+ src/drivers/drivers.c            |   3 +
+ src/drivers/drivers.mak          |   7 +
+ src/drivers/drivers.mk           |   7 +
+ 5 files changed, 784 insertions(+)
+ create mode 100644 src/drivers/driver_wired_linux.c
+
+diff --git a/src/drivers/driver.h b/src/drivers/driver.h
+index 446c60f79fe4..3cac1ef684df 100644
+--- a/src/drivers/driver.h
++++ b/src/drivers/driver.h
+@@ -6138,6 +6138,9 @@ extern struct wpa_driver_ops wpa_driver_ndis_ops; /* driver_ndis.c */
+ #ifdef CONFIG_DRIVER_WIRED
+ extern const struct wpa_driver_ops wpa_driver_wired_ops; /* driver_wired.c */
+ #endif /* CONFIG_DRIVER_WIRED */
++#ifdef CONFIG_DRIVER_WIRED_LINUX
++extern const struct wpa_driver_ops wpa_driver_wired_linux_ops; /* driver_wired_linux.c */
++#endif /* CONFIG_DRIVER_WIRED */
+ #ifdef CONFIG_DRIVER_MACSEC_QCA
+ /* driver_macsec_qca.c */
+ extern const struct wpa_driver_ops wpa_driver_macsec_qca_ops;
+diff --git a/src/drivers/driver_wired_linux.c b/src/drivers/driver_wired_linux.c
+new file mode 100644
+index 000000000000..9d1499203329
+--- /dev/null
++++ b/src/drivers/driver_wired_linux.c
+@@ -0,0 +1,764 @@
++/*
++ * Wired Ethernet driver interface with Linux bridge extensions
++ * Copyright (c) 2025, Jonas Gorski <jonas.gorski@bisdn.de> and BISDN GmbH
++ * Copyright (c) 2005-2009, Jouni Malinen <j@w1.fi>
++ * Copyright (c) 2004, Gunter Burchardt <tira@isx.de>
++ *
++ * This software may be distributed under the terms of the BSD license.
++ * See README for more details.
++ */
++
++#include "includes.h"
++
++#include "common.h"
++#include "eloop.h"
++#include "driver.h"
++#include "driver_wired_common.h"
++#include "netlink.h"
++
++
++#include <linux/rtnetlink.h>
++
++#include <netlink/msg.h>
++#include <netlink/netlink.h>
++#include <netlink/socket.h>
++
++#include <sys/ioctl.h>
++#undef IFNAMSIZ
++#include <net/if.h>
++#include <netpacket/packet.h>
++#include <net/if_arp.h>
++
++struct ieee8023_hdr {
++	u8 dest[6];
++	u8 src[6];
++	u16 ethertype;
++} STRUCT_PACKED;
++
++struct driver_wired_linux_data {
++	struct driver_wired_common_data common;
++	struct netlink_data *netlink;
++
++	struct nl_sock *rtnl_sk;
++	int dhcp_sock; /* socket for dhcp packets */
++
++	int use_pae_group_addr;
++	int multi_auth;
++	enum mac_auth mac_auth;
++
++	int ifindex;
++	int locked;
++
++	bool running;
++};
++
++/* TODO: detecting new devices should eventually be changed from using DHCP
++ * snooping to trigger on any packet from a new layer 2 MAC address, e.g.,
++ * based on ebtables, etc. */
++
++struct dhcp_message {
++	u_int8_t op;
++	u_int8_t htype;
++	u_int8_t hlen;
++	u_int8_t hops;
++	u_int32_t xid;
++	u_int16_t secs;
++	u_int16_t flags;
++	u_int32_t ciaddr;
++	u_int32_t yiaddr;
++	u_int32_t siaddr;
++	u_int32_t giaddr;
++	u_int8_t chaddr[16];
++	u_int8_t sname[64];
++	u_int8_t file[128];
++	u_int32_t cookie;
++	u_int8_t options[308]; /* 312 - cookie */
++};
++
++static void handle_data(void *ctx, unsigned char *buf, size_t len)
++{
++	struct ieee8023_hdr *hdr;
++	u8 *pos, *sa;
++	size_t left;
++	union wpa_event_data event;
++
++	/* must contain at least ieee8023_hdr 6 byte source, 6 byte dest,
++	 * 2 byte ethertype */
++	if (len < 14) {
++		wpa_printf(MSG_MSGDUMP, "handle_data: too short (%lu)",
++			   (unsigned long) len);
++		return;
++	}
++
++	hdr = (struct ieee8023_hdr *) buf;
++
++	switch (ntohs(hdr->ethertype)) {
++	case ETH_P_PAE:
++		wpa_printf(MSG_MSGDUMP, "Received EAPOL packet");
++		sa = hdr->src;
++		os_memset(&event, 0, sizeof(event));
++		event.new_sta.addr = sa;
++		event.new_sta.pae_detected = true;
++		wpa_supplicant_event(ctx, EVENT_NEW_STA, &event);
++
++		pos = (u8 *) (hdr + 1);
++		left = len - sizeof(*hdr);
++		drv_event_eapol_rx(ctx, sa, pos, left);
++		break;
++
++	default:
++		wpa_printf(MSG_DEBUG, "Unknown ethertype 0x%04x in data frame",
++			   ntohs(hdr->ethertype));
++		break;
++	}
++}
++
++static void handle_read(int sock, void *eloop_ctx, void *sock_ctx)
++{
++	int len;
++	unsigned char buf[3000];
++
++	len = recv(sock, buf, sizeof(buf), 0);
++	if (len < 0) {
++		wpa_printf(MSG_ERROR, "recv: %s", strerror(errno));
++		return;
++	}
++
++	handle_data(eloop_ctx, buf, len);
++}
++
++static void handle_dhcp(int sock, void *eloop_ctx, void *sock_ctx)
++{
++	int len;
++	unsigned char buf[3000];
++	struct dhcp_message *msg;
++	u8 *mac_address;
++	union wpa_event_data event;
++
++	len = recv(sock, buf, sizeof(buf), 0);
++	if (len < 0) {
++		wpa_printf(MSG_ERROR, "recv: %s", strerror(errno));
++		return;
++	}
++
++	/* must contain at least dhcp_message->chaddr */
++	if (len < 44) {
++		wpa_printf(MSG_MSGDUMP, "handle_dhcp: too short (%d)", len);
++		return;
++	}
++
++	msg = (struct dhcp_message *) buf;
++	mac_address = (u8 *) &(msg->chaddr);
++
++	wpa_printf(MSG_MSGDUMP, "Got DHCP broadcast packet from " MACSTR,
++		   MAC2STR(mac_address));
++
++	os_memset(&event, 0, sizeof(event));
++	event.new_sta.addr = mac_address;
++	event.new_sta.pae_detected = false;
++	wpa_supplicant_event(eloop_ctx, EVENT_NEW_STA, &event);
++}
++
++static int wired_init_sockets(struct driver_wired_linux_data *drv, u8 *own_addr)
++{
++	struct ifreq ifr;
++	struct sockaddr_ll addr;
++
++	drv->common.sock = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_PAE));
++	if (drv->common.sock < 0) {
++		wpa_printf(MSG_ERROR, "socket[PF_PACKET,SOCK_RAW]: %s",
++			   strerror(errno));
++		return -1;
++	}
++
++	if (eloop_register_read_sock(drv->common.sock, handle_read,
++				     drv->common.ctx, NULL)) {
++		wpa_printf(MSG_INFO, "Could not register read socket");
++		return -1;
++	}
++
++	os_memset(&ifr, 0, sizeof(ifr));
++	os_strlcpy(ifr.ifr_name, drv->common.ifname, sizeof(ifr.ifr_name));
++	if (ioctl(drv->common.sock, SIOCGIFINDEX, &ifr) != 0) {
++		wpa_printf(MSG_ERROR, "ioctl(SIOCGIFINDEX): %s",
++			   strerror(errno));
++		return -1;
++	}
++
++	os_memset(&addr, 0, sizeof(addr));
++	addr.sll_family = AF_PACKET;
++	addr.sll_ifindex = drv->ifindex;
++	wpa_printf(MSG_DEBUG, "Opening raw packet socket for ifindex %d",
++		   addr.sll_ifindex);
++
++	if (bind(drv->common.sock, (struct sockaddr *) &addr, sizeof(addr)) < 0)
++	{
++		wpa_printf(MSG_ERROR, "bind: %s", strerror(errno));
++		return -1;
++	}
++
++	/* filter multicast address */
++	if (wired_multicast_membership(drv->common.sock, drv->ifindex,
++				       pae_group_addr, 1) < 0) {
++		wpa_printf(MSG_ERROR, "wired: Failed to add multicast group "
++			   "membership");
++		return -1;
++	}
++
++	os_memset(&ifr, 0, sizeof(ifr));
++	os_strlcpy(ifr.ifr_name, drv->common.ifname, sizeof(ifr.ifr_name));
++	if (ioctl(drv->common.sock, SIOCGIFHWADDR, &ifr) != 0) {
++		wpa_printf(MSG_ERROR, "ioctl(SIOCGIFHWADDR): %s",
++			   strerror(errno));
++		return -1;
++	}
++
++	if (ifr.ifr_hwaddr.sa_family != ARPHRD_ETHER) {
++		wpa_printf(MSG_INFO, "Invalid HW-addr family 0x%04x",
++			   ifr.ifr_hwaddr.sa_family);
++		return -1;
++	}
++	os_memcpy(own_addr, ifr.ifr_hwaddr.sa_data, ETH_ALEN);
++
++	if (drv->mac_auth == ENABLE_SOFTWARE_MAB) {
++		struct sockaddr_in addr2;
++		int n = 1;
++
++		/* setup dhcp listen socket for sta detection */
++		if ((drv->dhcp_sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0) {
++			wpa_printf(MSG_ERROR, "socket call failed for dhcp: %s",
++				   strerror(errno));
++			return -1;
++		}
++
++		if (eloop_register_read_sock(drv->dhcp_sock, handle_dhcp,
++					     drv->common.ctx, NULL)) {
++			wpa_printf(MSG_INFO, "Could not register read socket");
++			return -1;
++		}
++
++		os_memset(&addr2, 0, sizeof(addr2));
++		addr2.sin_family = AF_INET;
++		addr2.sin_port = htons(67);
++		addr2.sin_addr.s_addr = INADDR_ANY;
++
++		if (setsockopt(drv->dhcp_sock, SOL_SOCKET, SO_REUSEADDR, (char *) &n,
++			       sizeof(n)) == -1) {
++			wpa_printf(MSG_ERROR, "setsockopt[SOL_SOCKET,SO_REUSEADDR]: %s",
++				   strerror(errno));
++			return -1;
++		}
++		if (setsockopt(drv->dhcp_sock, SOL_SOCKET, SO_BROADCAST, (char *) &n,
++			       sizeof(n)) == -1) {
++			wpa_printf(MSG_ERROR, "setsockopt[SOL_SOCKET,SO_BROADCAST]: %s",
++				   strerror(errno));
++			return -1;
++		}
++
++		os_memset(&ifr, 0, sizeof(ifr));
++		os_strlcpy(ifr.ifr_ifrn.ifrn_name, drv->common.ifname, IFNAMSIZ);
++		if (setsockopt(drv->dhcp_sock, SOL_SOCKET, SO_BINDTODEVICE,
++			       (char *) &ifr, sizeof(ifr)) < 0) {
++			wpa_printf(MSG_ERROR,
++				   "setsockopt[SOL_SOCKET,SO_BINDTODEVICE]: %s",
++				   strerror(errno));
++			return -1;
++		}
++
++		if (bind(drv->dhcp_sock, (struct sockaddr *) &addr2,
++			 sizeof(struct sockaddr)) == -1) {
++			wpa_printf(MSG_ERROR, "bind: %s", strerror(errno));
++			return -1;
++		}
++	}
++
++	return 0;
++}
++
++
++static int wired_send_eapol(void *priv, const u8 *addr,
++			    const u8 *data, size_t data_len, int encrypt,
++			    const u8 *own_addr, u32 flags)
++{
++	struct driver_wired_linux_data *drv = priv;
++	struct ieee8023_hdr *hdr;
++	size_t len;
++	u8 *pos;
++	int res;
++
++	len = sizeof(*hdr) + data_len;
++	hdr = os_zalloc(len);
++	if (hdr == NULL) {
++		wpa_printf(MSG_INFO,
++			   "malloc() failed for wired_send_eapol(len=%lu)",
++			   (unsigned long) len);
++		return -1;
++	}
++
++	os_memcpy(hdr->dest, drv->use_pae_group_addr ? pae_group_addr : addr,
++		  ETH_ALEN);
++	os_memcpy(hdr->src, own_addr, ETH_ALEN);
++	hdr->ethertype = htons(ETH_P_PAE);
++
++	pos = (u8 *) (hdr + 1);
++	os_memcpy(pos, data, data_len);
++
++	res = send(drv->common.sock, (u8 *) hdr, len, 0);
++	os_free(hdr);
++
++	if (res < 0) {
++		wpa_printf(MSG_ERROR,
++			   "wired_send_eapol - packet len: %lu - failed: send: %s",
++			   (unsigned long) len, strerror(errno));
++	}
++
++	return res;
++}
++
++static int driver_wired_linux_add_neigh(struct driver_wired_linux_data *drv, const u8 *addr)
++{
++	struct ndmsg nhdr = {
++		.ndm_ifindex = drv->ifindex,
++		.ndm_family = AF_BRIDGE,
++		.ndm_flags = NTF_MASTER,
++		.ndm_state = NUD_REACHABLE,
++	};
++	struct nl_msg *msg;
++	int err;
++
++	msg = nlmsg_alloc_simple(RTM_NEWNEIGH, NLM_F_CREATE|NLM_F_REPLACE);
++	if (!msg)
++		return -ENOMEM;
++
++	if (nlmsg_append(msg, &nhdr, sizeof(nhdr), NLMSG_ALIGNTO) < 0 ||
++	    nla_put(msg, NDA_LLADDR, ETH_ALEN, (void *) addr) ||
++	    nl_send_auto_complete(drv->rtnl_sk, msg) < 0)
++		goto err_out;
++
++	err = nl_wait_for_ack(drv->rtnl_sk);
++	if (err < 0) {
++		wpa_printf(MSG_ERROR, "adding neigh " MACSTR " failed: %s",
++			   MAC2STR(addr), nl_geterror(err));
++	} else {
++		wpa_printf(MSG_DEBUG, "added neigh: " MACSTR,
++			   MAC2STR(addr));
++	}
++
++err_out:
++	nlmsg_free(msg);
++	return err;
++}
++
++static int driver_wired_linux_del_neigh(struct driver_wired_linux_data *drv, const u8 *addr)
++{
++	struct ndmsg nhdr = {
++		.ndm_ifindex = drv->ifindex,
++		.ndm_family = AF_BRIDGE,
++		.ndm_flags = NTF_MASTER,
++	};
++	struct nl_msg *msg;
++	int err;
++
++	msg = nlmsg_alloc_simple(RTM_DELNEIGH, NLM_F_CREATE);
++	if (!msg)
++		return -ENOMEM;
++
++	if (nlmsg_append(msg, &nhdr, sizeof(nhdr), NLMSG_ALIGNTO) < 0 ||
++	    nla_put(msg, NDA_LLADDR, ETH_ALEN, (void *) addr) ||
++	    nl_send_auto_complete(drv->rtnl_sk, msg) < 0)
++		goto err_out;
++
++	err = nl_wait_for_ack(drv->rtnl_sk);
++	if (err < 0) {
++		wpa_printf(MSG_ERROR, "deleting neigh " MACSTR " failed: %s",
++			   MAC2STR(addr), nl_geterror(err));
++	} else {
++		wpa_printf(MSG_DEBUG, "deleted neigh: " MACSTR,
++			   MAC2STR(addr));
++	}
++
++err_out:
++	nlmsg_free(msg);
++	return err;
++}
++
++static int
++driver_wired_linux_flush_port(struct driver_wired_linux_data *drv)
++{
++	struct ndmsg nhdr = {
++		.ndm_ifindex = drv->ifindex,
++		.ndm_family = PF_BRIDGE,
++		.ndm_flags = NTF_MASTER,
++	};
++	struct nl_msg *msg;
++	int err;
++
++	msg = nlmsg_alloc_simple(RTM_DELNEIGH, NLM_F_BULK);
++	if (!msg)
++		return -ENOMEM;
++
++	if ((err = nlmsg_append(msg, &nhdr, sizeof(nhdr), NLMSG_ALIGNTO)) < 0)
++		goto out;
++
++	if ((err = nl_send_auto_complete(drv->rtnl_sk, msg)) < 0)
++		goto out;
++
++	err = nl_wait_for_ack(drv->rtnl_sk);
++
++out:
++	if (err < 0)
++		wpa_printf(MSG_ERROR, "flushing neighs failed: %s", nl_geterror(err));
++	else
++		wpa_printf(MSG_DEBUG, "flushed neighs");
++	nlmsg_free(msg);
++	return err;
++
++}
++
++static int
++driver_wired_linux_set_port_locked(struct driver_wired_linux_data *drv,
++				   bool locked)
++{
++	struct ifinfomsg hdr = {
++		.ifi_family = PF_BRIDGE,
++		.ifi_index = drv->ifindex,
++	};
++	struct nl_msg *msg;
++	struct nlattr *info;
++	int err;
++
++	wpa_printf(MSG_DEBUG,
++		   "driver_linux_wired: setting port %i to %s", drv->ifindex,
++		   locked ? "locked" : "unlocked");
++
++	msg = nlmsg_alloc_simple(RTM_SETLINK, 0);
++	if (!msg)
++		return -ENOMEM;
++
++	if ((err = nlmsg_append(msg, &hdr, sizeof(hdr), NLMSG_ALIGNTO)) < 0)
++		goto out;
++
++	info = nla_nest_start(msg, IFLA_PROTINFO);
++
++	if ((err = nla_put_u8(msg, IFLA_BRPORT_LOCKED, locked)) < 0)
++		goto out;
++	if ((err = nla_put_u8(msg, IFLA_BRPORT_LEARNING, 1)) < 0)
++		goto out;
++	if ((err = nla_put_u8(msg, IFLA_BRPORT_MAB,
++			      locked && drv->mac_auth == ENABLE_KERNEL_MAB)) < 0)
++		goto out;
++	nla_nest_end(msg, info);
++
++	if ((err = nl_send_auto_complete(drv->rtnl_sk, msg)) < 0)
++		goto out;
++
++	if ((err = nl_wait_for_ack(drv->rtnl_sk)) < 0)
++		goto out;
++
++	drv->locked = locked;
++
++out:
++	if (err)
++		wpa_printf(MSG_ERROR, "failed to set port: %i (%s)", err,
++			   nl_geterror(err));
++	nlmsg_free(msg);
++	return err;
++}
++
++static int
++driver_wired_linux_set_port_up(struct driver_wired_linux_data *drv, bool up)
++{
++	struct ifinfomsg hdr = {
++		.ifi_family = AF_UNSPEC,
++		.ifi_index = drv->ifindex,
++		.ifi_change = IFF_UP,
++	};
++	struct nl_msg *msg;
++	int err;
++
++	if (up)
++		hdr.ifi_flags |= IFF_UP;
++
++	msg = nlmsg_alloc_simple(RTM_NEWLINK, 0);
++	if (!msg)
++		return -ENOMEM;
++
++	if ((err = nlmsg_append(msg, &hdr, sizeof(hdr), NLMSG_ALIGNTO)) < 0)
++		goto err_out;
++
++	if ((err = nl_send_auto_complete(drv->rtnl_sk, msg)) < 0)
++		goto err_out;
++
++	if ((err = nl_wait_for_ack(drv->rtnl_sk)) < 0)
++		goto err_out;
++
++	err = 0;
++err_out:
++	if (err)
++		wpa_printf(MSG_ERROR, "failed to set port %s: %i (%s)",
++			   up ? "up" : "down", err, nl_geterror(err));
++	nlmsg_free(msg);
++	return err;
++}
++
++static void driver_wired_linux_event_rtm_newlink(void *ctx,
++						 struct ifinfomsg *ifi,
++						 u8 *buf, size_t len)
++{
++	struct driver_wired_linux_data *drv = ctx;
++	bool running;
++
++	if (drv->ifindex > 0 && ifi->ifi_index != drv->ifindex)
++		return;
++
++        wpa_printf(MSG_DEBUG, "RTM_NEWLINK: ifi_index=%d ifi_family=%d ifi_flags=0x%x",
++                   ifi->ifi_index, ifi->ifi_family,
++                   ifi->ifi_flags);
++
++	running = (ifi->ifi_flags & (IFF_UP | IFF_RUNNING)) == (IFF_UP | IFF_RUNNING);
++
++
++	/* lock port again when going down */
++	if (drv->running && !running) {
++		if (!drv->multi_auth)
++			driver_wired_linux_set_port_locked(drv, true);
++		driver_wired_linux_flush_port(drv);
++	}
++
++	drv->running = running;
++}
++
++static void driver_wired_linux_event_rtm_dellink(void *ctx,
++						 struct ifinfomsg *ifi,
++						 u8 *buf, size_t len)
++{
++	struct driver_wired_linux_data *drv = ctx;
++
++	if (ifi->ifi_index != drv->ifindex)
++		return;
++
++        wpa_printf(MSG_DEBUG, "RTM_DELLINK: ifi_index=%d ifi_family=%d ifi_flags=0x%x",
++                   ifi->ifi_index, ifi->ifi_family,
++                   ifi->ifi_flags);
++
++	/* TODO: please do not remove the interface  */
++}
++
++static void driver_wired_linux_event_rtm_newneigh(void *ctx,
++						 struct ndmsg *nd,
++						 u8 *buf, size_t len)
++{
++	struct driver_wired_linux_data *drv = ctx;
++	union wpa_event_data event;
++	int attrlen;
++	struct rtattr *attr;
++	u8 *mac_address = NULL;
++	u32 flags_ext = 0;
++
++	if (nd->ndm_family != AF_BRIDGE)
++		return;
++
++	if (nd->ndm_ifindex != drv->ifindex)
++		return;
++
++	attrlen = len;
++	attr = (struct rtattr *) buf;
++
++	while (RTA_OK(attr, attrlen)) {
++		if (attr->rta_type == NDA_LLADDR) {
++			if (RTA_PAYLOAD(attr) < 6)
++				return;
++
++			mac_address = (u8 *)RTA_DATA(attr);
++		} else if (attr->rta_type == NDA_FLAGS_EXT) {
++			if (RTA_PAYLOAD(attr) < sizeof(u32))
++				return;
++
++			flags_ext = nla_get_u32((struct nlattr *) attr);
++
++		}
++		attr = RTA_NEXT(attr, attrlen);
++	}
++
++	wpa_printf(MSG_DEBUG, "Got new %slocked neigh " MACSTR,
++		   (flags_ext & NTF_EXT_LOCKED) ? "" : "un",
++		   MAC2STR(mac_address));
++
++	/* no need to report unlocked neighs */
++	if (!(flags_ext & NTF_EXT_LOCKED))
++		return;
++
++	/* should we somehow handle the VID? */
++	os_memset(&event, 0, sizeof(event));
++	event.new_sta.addr = mac_address;
++	event.new_sta.pae_detected = false;
++	wpa_supplicant_event(drv->common.ctx, EVENT_NEW_STA, &event);
++}
++
++static void driver_wired_linux_event_rtm_delneigh(void *ctx,
++						  struct ndmsg *nd,
++						  u8 *buf, size_t len)
++{
++	/* TODO: do we care? */
++}
++
++static void wired_driver_hapd_deinit(void *priv);
++
++static void * wired_driver_hapd_init(struct hostapd_data *hapd,
++				     struct wpa_init_params *params)
++{
++	struct driver_wired_linux_data *drv;
++	struct netlink_config *cfg;
++	int ret;
++
++	drv = os_zalloc(sizeof(struct driver_wired_linux_data));
++	if (drv == NULL) {
++		wpa_printf(MSG_INFO,
++			   "Could not allocate memory for wired driver data");
++		return NULL;
++	}
++
++	drv->common.ctx = hapd;
++	os_strlcpy(drv->common.ifname, params->ifname,
++		   sizeof(drv->common.ifname));
++	drv->ifindex = if_nametoindex(params->ifname);
++	drv->use_pae_group_addr = params->use_pae_group_addr;
++	drv->multi_auth = params->multi_auth;
++	drv->mac_auth = params->mac_auth;
++
++	wpa_printf(MSG_INFO,
++		   "driver_linux_wired: attaching to %s (%i)", drv->common.ifname, drv->ifindex);
++
++
++	drv->rtnl_sk = nl_socket_alloc();
++	ret = nl_connect(drv->rtnl_sk, NETLINK_ROUTE);
++	if (ret) {
++		wpa_printf(MSG_INFO, "driver_linux_wired: failed to connect to netlink: %i\n", ret);
++		goto err_out;
++	}
++
++	cfg = os_zalloc(sizeof(*cfg));
++	if (cfg == NULL)
++		goto err_out;
++
++	cfg->ctx = drv;
++	cfg->newlink_cb = driver_wired_linux_event_rtm_newlink;
++	cfg->dellink_cb = driver_wired_linux_event_rtm_dellink;
++	if (drv->mac_auth == ENABLE_KERNEL_MAB) {
++		cfg->newneigh_cb = driver_wired_linux_event_rtm_newneigh;
++		cfg->delneigh_cb = driver_wired_linux_event_rtm_delneigh;
++	}
++
++	drv->netlink = netlink_init(cfg);
++	if (drv->netlink == NULL) {
++		wpa_printf(MSG_INFO, "driver_linux_wired: failed to init netlink receive\n");
++		os_free(cfg);
++		goto err_out;
++	}
++
++	ret = driver_wired_linux_set_port_locked(drv, true);
++	if (ret) {
++		wpa_printf(MSG_INFO, "driver_linux_wired: failed to set port locked: %i\n", ret);
++		goto err_out;
++	}
++
++	if (wired_init_sockets(drv, params->own_addr))
++		goto err_out;
++
++	ret = driver_wired_linux_set_port_up(drv, true);
++	if (ret)
++		goto err_out;
++
++	return drv;
++
++
++err_out:
++	wired_driver_hapd_deinit(drv);
++
++	return NULL;
++
++}
++
++
++static void wired_driver_hapd_deinit(void *priv)
++{
++	struct driver_wired_linux_data *drv = priv;
++
++	driver_wired_linux_set_port_up(drv, false);
++	driver_wired_linux_set_port_locked(drv, false);
++
++	if (drv->common.sock >= 0) {
++		eloop_unregister_read_sock(drv->common.sock);
++		close(drv->common.sock);
++	}
++
++	if (drv->dhcp_sock >= 0) {
++		eloop_unregister_read_sock(drv->dhcp_sock);
++		close(drv->dhcp_sock);
++	}
++
++	if (drv->netlink)
++		netlink_deinit(drv->netlink);
++
++	if (drv->rtnl_sk)
++		nl_socket_free(drv->rtnl_sk);
++
++	os_free(drv);
++}
++
++static int
++wired_linux_set_sta_authorized(void *priv, const u8 *addr,
++		       unsigned int total_flags, unsigned int flags_or,
++		       unsigned int flags_and)
++{
++	struct driver_wired_linux_data *drv = priv;
++	int authorized = -1;
++
++	/* For now, only support setting Authorized flag */
++	if (flags_or & WPA_STA_AUTHORIZED)
++		authorized = 1;
++	if (!(flags_and & WPA_STA_AUTHORIZED))
++		authorized = 0;
++
++	if (authorized < 0)
++		return 0;
++
++	if (authorized) {
++		wpa_printf(MSG_INFO, "authorizing " MACSTR, MAC2STR(addr));
++		if (drv->multi_auth) {
++			wpa_printf(MSG_DEBUG, "creating neigh");
++			driver_wired_linux_add_neigh(priv, addr);
++		} else {
++			if (drv->locked) {
++				wpa_printf(MSG_DEBUG, "unlocking port");
++				driver_wired_linux_set_port_locked(drv, false);
++			}
++		}
++	} else {
++		wpa_printf(MSG_INFO, "de-authorizing " MACSTR, MAC2STR(addr));
++		if (drv->multi_auth) {
++			wpa_printf(MSG_DEBUG, "removing neigh");
++			driver_wired_linux_del_neigh(priv, addr);
++		} else {
++			if (!drv->locked) {
++				wpa_printf(MSG_DEBUG, "locking port");
++				driver_wired_linux_set_port_locked(drv, true);
++				driver_wired_linux_flush_port(drv);
++			}
++		}
++	}
++
++	return 0;
++}
++
++const struct wpa_driver_ops wpa_driver_wired_linux_ops = {
++	.name = "wired_linux",
++	.desc = "Wired Ethernet driver (linux)",
++	.hapd_init = wired_driver_hapd_init,
++	.hapd_deinit = wired_driver_hapd_deinit,
++	.hapd_send_eapol = wired_send_eapol,
++	.sta_set_flags = wired_linux_set_sta_authorized,
++	.get_ssid = driver_wired_get_ssid,
++	.get_bssid = driver_wired_get_bssid,
++	.get_capa = driver_wired_get_capa,
++};
+diff --git a/src/drivers/drivers.c b/src/drivers/drivers.c
+index e95df6ddb20a..4cf5d3190b0c 100644
+--- a/src/drivers/drivers.c
++++ b/src/drivers/drivers.c
+@@ -34,6 +34,9 @@ const struct wpa_driver_ops *const wpa_drivers[] =
+ #ifdef CONFIG_DRIVER_WIRED
+ 	&wpa_driver_wired_ops,
+ #endif /* CONFIG_DRIVER_WIRED */
++#ifdef CONFIG_DRIVER_WIRED_LINUX
++	&wpa_driver_wired_linux_ops,
++#endif /* CONFIG_DRIVER_WIRED */
+ #ifdef CONFIG_DRIVER_MACSEC_LINUX
+ 	&wpa_driver_macsec_linux_ops,
+ #endif /* CONFIG_DRIVER_MACSEC_LINUX */
+diff --git a/src/drivers/drivers.mak b/src/drivers/drivers.mak
+index a03d4a034511..5715735d04f8 100644
+--- a/src/drivers/drivers.mak
++++ b/src/drivers/drivers.mak
+@@ -104,6 +104,13 @@ CFLAGS += -DATH_GCM_SUPPORT
+ endif
+ endif
+ 
++ifdef CONFIG_DRIVER_WIRED_LINUX
++DRV_AP_CFLAGS += -DCONFIG_DRIVER_WIRED_LINUX
++DRV_AP_OBJS += src/drivers/driver_wired_linux.o
++NEED_NETLINK=y
++NEED_LINUX_IOCTL=y
++endif
++
+ ##### PURE CLIENT DRIVERS
+ 
+ ifdef CONFIG_DRIVER_WEXT
+diff --git a/src/drivers/drivers.mk b/src/drivers/drivers.mk
+index 10eab6a92e17..00bbb97d7306 100644
+--- a/src/drivers/drivers.mk
++++ b/src/drivers/drivers.mk
+@@ -95,6 +95,13 @@ NEED_NETLINK=y
+ NEED_LINUX_IOCTL=y
+ endif
+ 
++ifdef CONFIG_DRIVER_WIRED_LINUX
++DRV_AP_CFLAGS += -DCONFIG_DRIVER_WIRED_LINUX
++DRV_AP_OBJS += src/drivers/driver_wired_linux.c
++NEED_NETLINK=y
++NEED_LINUX_IOCTL=y
++endif
++
+ ##### PURE CLIENT DRIVERS
+ 
+ ifdef CONFIG_DRIVER_WEXT
+-- 
+2.47.1
+
