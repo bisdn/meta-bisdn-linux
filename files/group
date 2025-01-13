@@ -38,21 +38,21 @@ video:x:44:
 sasl:x:45:
 plugdev:x:46:
 kvm:x:47:
+sgx:x:48:
 staff:x:50:
 games:x:60:
 shutdown:x:70:
+wheel:x:80:
 users:x:100:
 nogroup:x:65534:
 
 # systemd
-wheel:x:984:
 systemd-journal-gateway:x:985:
 systemd-timesync:x:986:
 systemd-resolve:x:987:
 systemd-network:x:988:
 systemd-coredump:x:989:
 systemd-journal:x:990:
-sgx:x:994:
 render:x:995:
 systemd-bus-proxy:x:996:
 
@@ -65,3 +65,7 @@ frrvty:x:992:
 frr:x:993:
 sshd:x:998:
 messagebus:x:999:
+
+# reserved (were used in earlier releases)
+reserved984:x:984:
+reserved994:x:994:
