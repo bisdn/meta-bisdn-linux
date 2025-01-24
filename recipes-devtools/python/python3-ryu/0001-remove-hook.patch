@@ -1,0 +1,67 @@
+From e79eecad6d014d06f3daef2e50bee10eb689dc7e Mon Sep 17 00:00:00 2001
+From: Jonas Gorski <jonas.gorski@bisdn.de>
+Date: Thu, 23 Jan 2025 16:59:58 +0100
+Subject: [PATCH] remove hook
+
+---
+ ryu/hooks.py | 19 -------------------
+ setup.py     |  2 --
+ 2 files changed, 21 deletions(-)
+
+diff --git a/ryu/hooks.py b/ryu/hooks.py
+index d7a2a8ddf860..d3d3fa8a7426 100644
+--- a/ryu/hooks.py
++++ b/ryu/hooks.py
+@@ -28,14 +28,6 @@ from ryu import version
+ def _main_module():
+     return sys.modules['__main__']
+ 
+-
+-def save_orig():
+-    """Save original easy_install.get_script_args.
+-    This is necessary because pbr's setup_hook is sometimes called
+-    before ours."""
+-    _main_module()._orig_get_script_args = easy_install.get_script_args
+-
+-
+ def setup_hook(config):
+     """Filter config parsed from a setup.cfg to inject our defaults."""
+     metadata = config['metadata']
+@@ -46,19 +38,8 @@ def setup_hook(config):
+ 
+     metadata['version'] = str(version)
+ 
+-    # pbr's setup_hook replaces easy_install.get_script_args with
+-    # their own version, override_get_script_args, prefering simpler
+-    # scripts which are not aware of multi-version.
+-    # prevent that by doing the opposite.  it's a horrible hack
+-    # but we are in patching wars already...
+     from pbr import packaging
+ 
+-    def my_get_script_args(*args, **kwargs):
+-        return _main_module()._orig_get_script_args(*args, **kwargs)
+-
+-    packaging.override_get_script_args = my_get_script_args
+-    easy_install.get_script_args = my_get_script_args
+-
+     # another hack to allow setup from tarball.
+     orig_get_version = packaging.get_version
+ 
+diff --git a/setup.py b/setup.py
+index cf2a404d2c0c..768ac73a3285 100644
+--- a/setup.py
++++ b/setup.py
+@@ -21,10 +21,8 @@ except ImportError:
+     pass
+ 
+ import setuptools
+-import ryu.hooks
+ 
+ 
+-ryu.hooks.save_orig()
+ setuptools.setup(name='ryu',
+                  setup_requires=['pbr'],
+                  pbr=True)
+-- 
+2.47.1
+
