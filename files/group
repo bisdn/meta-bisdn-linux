@@ -46,6 +46,9 @@ wheel:x:80:
 users:x:100:
 nogroup:x:65534:
 
+# ptest
+ptest:x:120:
+
 # systemd
 systemd-journal-gateway:x:985:
 systemd-timesync:x:986:
