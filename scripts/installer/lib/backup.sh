@@ -117,6 +117,69 @@ parse_file() {
 	done < $1
 }
 
+backup_systemd_state() {
+	local enabled_services disabled_services service_files service_links
+	local service enabled preset oneshot
+
+	if [ -d "$1/lib/systemd/system" ]; then
+		service_files=$(ls $1/lib/systemd/system)
+	fi
+	if [ -d "$1/etc/systemd/system/multi-user.target.wants" ]; then
+		service_links=$(ls $1/etc/systemd/system/multi-user.target.wants)
+	fi
+
+	# collect explicitly disabled services
+	for service in $service_files; do
+		case "$service" in
+			*@.service)
+				# always disabled by default
+				;;
+			*.service)
+				preset=$(grep "$service" $1/lib/systemd/system-preset/*.preset | cut -d ':' -f 2 | cut -d ' ' -f 1)
+				# check only services enabled by default
+				[ "$preset" = "enable" ] || continue
+
+				wantedby=$(grep "^WantedBy=" $1/lib/systemd/system/$service || true)
+
+				# skip oneshots, these got automatically disabled
+				grep -q "^Type=oneshot" $1/lib/systemd/system/$service && continue
+
+				# for now we only support multi-user services
+				[ "$wantedby" = "WantedBy=multi-user.target" ] || continue
+
+				# check for symlink in multi-user.target.wants
+				enabled=$(find $1/etc/systemd/system/multi-user.target.wants/ -name $service)
+
+				# nothing to do if still enabled
+				[ -z "$enabled" ] || continue
+
+				[ -n "$DEBUG" ] && echo "DEBUG: service disabled by user: $service"
+				disabled_services="$disabled_services ${service%.service}"
+				;;
+		esac
+	done
+
+	# collect explicitly enabled services
+	for service in $service_links; do
+		case "$service" in
+			*.service)
+				service_file=$(readlink $1/etc/systemd/system/multi-user.target.wants/$service)
+				base=$(basename $service_file)
+				preset=$(grep "$base" $1/lib/systemd/system-preset/*.preset | cut -d ':' -f 2 | cut -d ' ' -f 1)
+
+				# check only services disabled by default
+				[ "$preset" != "enable" ] || continue
+
+				[ -n "$DEBUG" ] && echo "DEBUG: service enabled by user: $service"
+				enabled_services="$enabled_services ${service%.service}"
+				;;
+		esac
+	done
+
+	echo "$disabled_services" > $2/.SERVICES_DISABLED
+	echo "$enabled_services" > $2/.SERVICES_ENABLED
+}
+
 # $1 src $2 dst
 apply_fixups() {
 	# releases pre 4.7.0 are missing gshadow in the backup list
@@ -150,20 +213,75 @@ create_backup()
 		parse_file "$1/$USER_BACKUP_FILE" "-" $1 $2
 	fi
 
+	# step 3 - backup changed systemd service states
+	backup_systemd_state $1 $2
+
 	apply_fixups $1 $2
 
-	# step 3 - check if anything is left
+	# step 4 - check if anything is left
 	[ -n "$(find $2 -type f)" ] || return 0
 
-	# step 4 - remove empty directories
+	# step 5 - remove empty directories
 	find $2 -depth -type d -exec rmdir -p --ignore-fail-on-non-empty {} \;
 
 	DO_RESTORE=true
 }
 
+bash_systemctl() {
+	local dst=$1
+	local action=$2
+	local service=$3
+	local base_service=${service/@*/@}
+
+	if  [ "$action" = "enable" ]; then
+		# check that the service exists in the target system
+		if [ ! -f $dst/lib/systemd/system/$base_service.service ]; then
+			echo "WARNING: cannot enable service $service.service: $base_service.service not found" >&2
+		else
+			# for any services to enable, create symlinks
+			[ -n "$DEBUG" ] && echo "DEBUG: enabling service: $service.service"
+			ln -fs /lib/systemd/system/$base_service.service \
+				$dst/etc/systemd/system/multi-user.target.wants/$service.service
+		fi
+	elif [ "$action" = "disable" ]; then
+		# for any services to disable, remove their symlinks
+		[ -n "$DEBUG" ] && echo "DEBUG: disabling service: $service.service"
+		rm -f $dst/etc/systemd/system/multi-user.target.wants/$service.service
+	else
+		echo "WARNING: unknown action $action for service $service" >&2
+	fi
+}
+
+restore_systemd_state()
+{
+	local backup=$1
+	local dst=$2
+	local enabled_services disabled_service service baseservice
+
+	if [ -f "$backup/.SERVICES_ENABLED" ]; then
+		enabled_services=$(cat $backup/.SERVICES_ENABLED)
+	fi
+	if [ -f "$backup/.SERVICES_DISABLED" ]; then
+		disabled_services=$(cat $backup/.SERVICES_DISABLED)
+	fi
+
+	for service in $enabled_services; do
+		bash_systemctl "$dst" "enable" "$service"
+	done
+
+	for service in $disabled_services; do
+		bash_systemctl "$dst" "disable" "$service"
+	done
+
+	rm -f $1/.SERVICES_ENABLED $2/.SERVICES_DISABLED
+}
+
 # $1 backup storage dir $2 restore target
 restore_backup()
 {
+    # restore systemd services state
+    restore_systemd_state $1 $2
+
     # rename existing target files if different
     for file in $(find $1 -type f); do
         basefile="${file#${1}/}"
