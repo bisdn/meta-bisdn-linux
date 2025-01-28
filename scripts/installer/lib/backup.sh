@@ -134,12 +134,21 @@ create_backup()
 		[ -f "$file" ] || break
 		parse_file $file "+" $1 $2
 	done
-	parse_file "$1/$SYSTEM_BACKUP_FILE" "+" $1 $2
-	parse_file "$1/$USER_BACKUP_FILE" "+" $1 $2
+	if [ -f "$1/$SYSTEM_BACKUP_FILE" ]; then
+		parse_file "$1/$SYSTEM_BACKUP_FILE" "+" $1 $2
+	fi
+
+	if [ -f "$1/$USER_BACKUP_FILE" ]; then
+		parse_file "$1/$USER_BACKUP_FILE" "+" $1 $2
+	fi
 
 	# step 2 - remove files to drop
-	parse_file "$1/$SYSTEM_BACKUP_FILE" "-" $1 $2
-	parse_file "$1/$USER_BACKUP_FILE" "-" $1 $2
+	if [ -f "$1/$SYSTEM_BACKUP_FILE" ]; then
+		parse_file "$1/$SYSTEM_BACKUP_FILE" "-" $1 $2
+	fi
+	if [ -f "$1/$SYSTEM_BACKUP_FILE" ]; then
+		parse_file "$1/$USER_BACKUP_FILE" "-" $1 $2
+	fi
 
 	apply_fixups $1 $2
 
@@ -182,6 +191,7 @@ restore_backup()
 
     # now copy the files
     for file in $1/*; do
+	    [ -e "$file" ] || continue
 	    cp -a $file $2
     done
 }
