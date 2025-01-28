@@ -14,7 +14,7 @@ S = "${WORKDIR}/git"
 
 inherit autotools systemd
 
-EXTRA_OECONF = "--sbindir=/sbin"
+EXTRA_OECONF = "--sbindir=${base_sbindir}"
 
 # Uncomment the following lines to enable debug output in the binary.
 # Output is sent as level 4.
