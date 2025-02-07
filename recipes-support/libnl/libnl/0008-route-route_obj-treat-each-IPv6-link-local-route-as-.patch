@@ -1,7 +1,7 @@
-From 391eca8addef1fd4a86ff9ed03ad77423d8add13 Mon Sep 17 00:00:00 2001
+From f14eb025ad7c7dd28bea87983f48081b011be92d Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Tue, 1 Mar 2022 12:59:50 +0100
-Subject: [PATCH 5/7] route/route_obj: treat each IPv6 link-local route as
+Subject: [PATCH 8/9] route/route_obj: treat each IPv6 link-local route as
  different
 
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>

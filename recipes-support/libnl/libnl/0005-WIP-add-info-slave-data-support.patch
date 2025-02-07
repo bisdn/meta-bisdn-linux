@@ -1,7 +1,7 @@
-From 5614b2d5b1c67e36783a7d38456cfb040ed1428c Mon Sep 17 00:00:00 2001
+From 8bb6a2e529580a870033fb937a58a07b0b8747ee Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Tue, 6 Oct 2020 15:25:38 +0200
-Subject: [PATCH 2/7] WIP: add info slave data support
+Subject: [PATCH 5/9] WIP: add info slave data support
 
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---

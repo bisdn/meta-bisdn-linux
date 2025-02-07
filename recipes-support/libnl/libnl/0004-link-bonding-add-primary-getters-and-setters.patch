@@ -1,7 +1,7 @@
-From 8c26319a1a3b404cd96f8a21998f8b6703c39ef2 Mon Sep 17 00:00:00 2001
+From 83c707b7f97961cb8063f8999a88ec72b0678fa6 Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Tue, 6 Oct 2020 10:00:37 +0200
-Subject: [PATCH 1/7] link/bonding: add primary getters and setters
+Subject: [PATCH 4/9] link/bonding: add primary getters and setters
 
 Add getters and setters for the primary attribute of active backup
 bonds.
@@ -10,8 +10,8 @@ Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
  include/netlink/route/link/bonding.h |  3 ++
  lib/route/link/bonding.c             | 53 ++++++++++++++++++++++++++++
- libnl-route-3.sym                    |  6 ++++
- 3 files changed, 62 insertions(+)
+ libnl-route-3.sym                    |  2 ++
+ 3 files changed, 58 insertions(+)
 
 diff --git a/include/netlink/route/link/bonding.h b/include/netlink/route/link/bonding.h
 index a8dce730279f..4a8cfc546dc6 100644
@@ -134,19 +134,17 @@ index 53b70cae7ed5..db46fb59f6de 100644
   * Set hashing type
   * @arg link            Link object of type bond
 diff --git a/libnl-route-3.sym b/libnl-route-3.sym
-index 75883323c8df..b138b9365e22 100644
+index 17e3fde21e3b..7e89dfd7dbd6 100644
 --- a/libnl-route-3.sym
 +++ b/libnl-route-3.sym
-@@ -1364,3 +1364,9 @@ global:
- 	rtnl_neigh_str2extflag;
- 	rtnl_neigh_unset_ext_flags;
- } libnl_3_10;
-+
-+libnl_3_12 {
-+global:
+@@ -1367,5 +1367,7 @@ global:
+ 
+ libnl_3_12 {
+ global:
 +	rtnl_link_bond_get_primary;
 +	rtnl_link_bond_set_primary;
-+} libnl_3_11;
+ 	rtnl_nh_get_oif;
+ } libnl_3_11;
 -- 
 2.47.1
 
