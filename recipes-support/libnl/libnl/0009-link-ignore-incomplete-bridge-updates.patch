@@ -1,7 +1,7 @@
-From ce216cd0a69310bfdf86c2eae62f67cf57251b4c Mon Sep 17 00:00:00 2001
+From 5801a620dae397ea63922c20843621d17cff700f Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Wed, 24 Apr 2024 14:13:22 +0200
-Subject: [PATCH 6/7] link: ignore incomplete bridge updates
+Subject: [PATCH 9/9] link: ignore incomplete bridge updates
 
 For currently unknown reasons, the kernel sends a minimal RTM_NEWLINK
 message for a bridge shortly after attaching a port:

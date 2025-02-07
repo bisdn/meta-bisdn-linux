@@ -1,7 +1,7 @@
-From 1bc1fbcf07c97726d00b9ff2f0f6f96ec68f5e53 Mon Sep 17 00:00:00 2001
+From 06c18660ce4d5e2a320feb1f7b4fd1de3f149e98 Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Tue, 6 Oct 2020 16:53:36 +0200
-Subject: [PATCH 3/7] link/bonding: expose state on enslaved interfaces
+Subject: [PATCH 6/9] link/bonding: expose state on enslaved interfaces
 
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
@@ -227,15 +227,16 @@ index db46fb59f6de..99a9c3db029f 100644
   * Set MII monitoring interval
   * @arg link            Link object of type bond
 diff --git a/libnl-route-3.sym b/libnl-route-3.sym
-index b138b9365e22..f0de995f1eb3 100644
+index 7e89dfd7dbd6..57b2c16cbba9 100644
 --- a/libnl-route-3.sym
 +++ b/libnl-route-3.sym
-@@ -1369,4 +1369,6 @@ libnl_3_12 {
+@@ -1369,5 +1369,7 @@ libnl_3_12 {
  global:
  	rtnl_link_bond_get_primary;
  	rtnl_link_bond_set_primary;
 +	rtnl_link_bond_slave_get_state;
 +	rtnl_link_bond_slave_set_state;
+ 	rtnl_nh_get_oif;
  } libnl_3_11;
 -- 
 2.47.1
