@@ -1,12 +1,13 @@
-From 1f556afcefa668821d5174d4efdb610aa65befd5 Mon Sep 17 00:00:00 2001
+From 82af7d6a5d23dd3ae3e129df0065d8cdf5fe4f64 Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
-Date: Fri, 24 Jan 2025 16:21:31 +0100
+Date: Fri, 24 Jan 2025 13:15:06 +0100
 Subject: [PATCH 3/3] network: bridge: add support for IFLA_BRPORT_MAB
 
-Since linux commit a35ec8e38cdd ("bridge: Add MAC Authentication Bypass
-(MAB) support") it is possible to MAB for bridge ports. In this mode the
-locked port learns again, but the learned fdb entries are locked,
-allowing user space to unlock hosts based on their MAC addresses.
+Since linux commit a35ec8e38cdd1766f29924ca391a01de20163931 ("bridge:
+Add MAC Authentication Bypass (MAB) support"), included since v6.2, it
+is possible to enable MAC Authentication Bypass for bridge ports. In
+this mode the locked port learns again, but the learned fdb entries are
+locked, allowing user space to unlock hosts based seen MAC addresses.
 
 This requires learning to be enabled on the port, and link-local
 learning disabled for the bridge.
@@ -17,30 +18,53 @@ ports.
 Upstream-Status: Backport [https://github.com/systemd/systemd/commit/08a26ecc4733a04fcd763cebd889da1c49672e0e]
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
- src/libsystemd/sd-netlink/netlink-types-rtnl.c | 1 +
- src/network/networkd-network-gperf.gperf       | 1 +
- src/network/networkd-network.c                 | 1 +
- src/network/networkd-network.h                 | 1 +
- src/network/networkd-setlink.c                 | 6 ++++++
- 5 files changed, 10 insertions(+)
+ man/systemd.network.xml                                  | 9 +++++++++
+ src/libsystemd/sd-netlink/netlink-types-rtnl.c           | 1 +
+ src/network/networkd-network-gperf.gperf                 | 1 +
+ src/network/networkd-network.c                           | 1 +
+ src/network/networkd-network.h                           | 1 +
+ src/network/networkd-setlink.c                           | 6 ++++++
+ .../conf/26-bridge-slave-interface-2.network             | 1 +
+ test/test-network/systemd-networkd-tests.py              | 2 ++
+ 8 files changed, 22 insertions(+)
 
+diff --git a/man/systemd.network.xml b/man/systemd.network.xml
+index adbd1a62048a..844776e97048 100644
+--- a/man/systemd.network.xml
++++ b/man/systemd.network.xml
+@@ -1515,6 +1515,15 @@ NFTSet=prefix:netdev:filter:eth_ipv4_prefix</programlisting>
+           <para>Takes a boolean. Configures whether the port is "locked" and does not allow traffic forwarded
+           until fully authenticated, e.g. via 802.1x. When unset, the kernel's default will be used.</para>
+ 
++          <xi:include href="version-info.xml" xpointer="v258"/>
++        </listitem>
++        <term><varname>MACAuthenticationBypass=</varname></term>
++        <listitem>
++          <para>Takes a boolean. Configures whether a locked port has "MAC Authentication Bypass" enabled and
++          creates newly learned fdb entries in a "locked" state. User space can authenticate these entries by
++          clearing the locked flag. Requires Learning to be enabled. When unset, the kernel's default will be
++          used.</para>
++
+           <xi:include href="version-info.xml" xpointer="v258"/>
+         </listitem>
+       </varlistentry>
 diff --git a/src/libsystemd/sd-netlink/netlink-types-rtnl.c b/src/libsystemd/sd-netlink/netlink-types-rtnl.c
-index fd60760e71da..33cf9e79a781 100644
+index d1a7d1bfa5ec..d7fe3ef90dd1 100644
 --- a/src/libsystemd/sd-netlink/netlink-types-rtnl.c
 +++ b/src/libsystemd/sd-netlink/netlink-types-rtnl.c
-@@ -484,6 +484,7 @@ static const struct NLType rtnl_bridge_port_types[] = {
-         [IFLA_BRPORT_MCAST_EHT_HOSTS_LIMIT] = { .type = NETLINK_TYPE_U32 },
-         [IFLA_BRPORT_MCAST_EHT_HOSTS_CNT]   = { .type = NETLINK_TYPE_U32 },
-         [IFLA_BRPORT_LOCKED]                = { .type = NETLINK_TYPE_U8 },
-+        [IFLA_BRPORT_MAB]                   = { .type = NETLINK_TYPE_U8 },
+@@ -481,6 +481,7 @@ static const struct NLAPolicy rtnl_bridge_port_policies[] = {
+         [IFLA_BRPORT_MCAST_EHT_HOSTS_LIMIT] = BUILD_POLICY(U32),
+         [IFLA_BRPORT_MCAST_EHT_HOSTS_CNT]   = BUILD_POLICY(U32),
+         [IFLA_BRPORT_LOCKED]                = BUILD_POLICY(U8),
++        [IFLA_BRPORT_MAB]                   = BUILD_POLICY(U8),
  };
  
- static const NLTypeSystemUnionElement rtnl_link_info_slave_data_type_systems[] = {
+ static const NLAPolicySetUnionElement rtnl_link_info_slave_data_policy_set_union_elements[] = {
 diff --git a/src/network/networkd-network-gperf.gperf b/src/network/networkd-network-gperf.gperf
-index 3c492e637880..75f2829a5127 100644
+index f62fb0885c64..3228d1c87773 100644
 --- a/src/network/networkd-network-gperf.gperf
 +++ b/src/network/networkd-network-gperf.gperf
-@@ -320,6 +320,7 @@ Bridge.ProxyARPWiFi,                         config_parse_tristate,
+@@ -361,6 +361,7 @@ Bridge.ProxyARPWiFi,                         config_parse_tristate,
  Bridge.Priority,                             config_parse_bridge_port_priority,                        0,                             offsetof(Network, priority)
  Bridge.MulticastRouter,                      config_parse_multicast_router,                            0,                             offsetof(Network, multicast_router)
  Bridge.Locked,                               config_parse_tristate,                                    0,                             offsetof(Network, bridge_locked)
@@ -49,7 +73,7 @@ index 3c492e637880..75f2829a5127 100644
  BridgeFDB.VLANId,                            config_parse_fdb_vlan_id,                                 0,                             0
  BridgeFDB.Destination,                       config_parse_fdb_destination,                             0,                             0
 diff --git a/src/network/networkd-network.c b/src/network/networkd-network.c
-index a8da727020f0..e1f213b16343 100644
+index a482cc70a852..6e9015dcc336 100644
 --- a/src/network/networkd-network.c
 +++ b/src/network/networkd-network.c
 @@ -448,6 +448,7 @@ int network_load_one(Manager *manager, OrderedHashmap **networks, const char *fi
@@ -61,10 +85,10 @@ index a8da727020f0..e1f213b16343 100644
                  .lldp_mode = LLDP_MODE_ROUTERS_ONLY,
                  .lldp_multicast_mode = _SD_LLDP_MULTICAST_MODE_INVALID,
 diff --git a/src/network/networkd-network.h b/src/network/networkd-network.h
-index 9793c6f07dc4..67ae31e379dc 100644
+index 62955224a9bf..c440a8ec45bd 100644
 --- a/src/network/networkd-network.h
 +++ b/src/network/networkd-network.h
-@@ -257,6 +257,7 @@ struct Network {
+@@ -288,6 +288,7 @@ struct Network {
          uint16_t priority;
          MulticastRouter multicast_router;
          int bridge_locked;
@@ -73,22 +97,44 @@ index 9793c6f07dc4..67ae31e379dc 100644
          /* Bridge VLAN */
          bool use_br_vlan;
 diff --git a/src/network/networkd-setlink.c b/src/network/networkd-setlink.c
-index 36ae86941fd2..b33ec1a3d53b 100644
+index 3c0eb1e0b3b4..aa4e5e6d979d 100644
 --- a/src/network/networkd-setlink.c
 +++ b/src/network/networkd-setlink.c
-@@ -406,6 +406,12 @@ static int link_configure(
-                                 return log_link_debug_errno(link, r, "Could not append IFLA_BRPORT_LOCKED attribute: %m");
+@@ -327,6 +327,12 @@ static int link_configure_fill_message(
+                                 return r;
                  }
  
 +                if (link->network->bridge_mac_authentication_bypass >= 0) {
 +                        r = sd_netlink_message_append_u8(req, IFLA_BRPORT_MAB, link->network->bridge_mac_authentication_bypass);
 +                        if (r < 0)
-+                                return log_link_debug_errno(link, r, "Could not append IFLA_BRPORT_MAB attribute: %m");
++                                return r;
 +                }
 +
                  r = sd_netlink_message_close_container(req);
                  if (r < 0)
-                         return log_link_debug_errno(link, r, "Could not close IFLA_PROTINFO container: %m");
+                         return r;
+diff --git a/test/test-network/conf/26-bridge-slave-interface-2.network b/test/test-network/conf/26-bridge-slave-interface-2.network
+index 6eb955dc4bc4..c76f17201f35 100644
+--- a/test/test-network/conf/26-bridge-slave-interface-2.network
++++ b/test/test-network/conf/26-bridge-slave-interface-2.network
+@@ -11,3 +11,4 @@ Bridge=bridge99
+ [Bridge]
+ Priority=0
+ Locked=true
++MACAuthenticationBypass=true
+diff --git a/test/test-network/systemd-networkd-tests.py b/test/test-network/systemd-networkd-tests.py
+index 93151fbb00f0..9b274a1579f3 100755
+--- a/test/test-network/systemd-networkd-tests.py
++++ b/test/test-network/systemd-networkd-tests.py
+@@ -4628,6 +4628,8 @@ class NetworkdBridgeTests(unittest.TestCase, Utilities):
+         print(output)
+         self.check_bridge_port_attr('bridge99', 'test1', 'priority',               '0')
+         self.assertIn('locked on', output)
++        if ' mab ' in output: # This is new in kernel and iproute2 v6.2
++            self.assertIn('mab on', output)
+ 
+         check_output('ip address add 192.168.0.16/24 dev bridge99')
+         output = check_output('ip addr show bridge99')
 -- 
-2.47.1
+2.48.1
 
