@@ -1,4 +1,4 @@
-From b5a15385fc6590f05b5c7557495b1dd52af4fe28 Mon Sep 17 00:00:00 2001
+From b88a51cfe0f666aae0a51f13fd5ab80e4e01a5c9 Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Wed, 15 Jun 2022 17:45:38 +0200
 Subject: [PATCH] CMakelists.txt: allow building the grpc_cli utility only
@@ -9,19 +9,19 @@ Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
  1 file changed, 17 insertions(+), 2 deletions(-)
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index df8c3c3dd7ac..f3b1c79e18ba 100644
+index 9e9bd24ee452..3ef4c909f9ee 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -3423,7 +3423,7 @@ foreach(_hdr
+@@ -4490,7 +4490,7 @@ foreach(_hdr
  endforeach()
  
  endif()
 -if(gRPC_BUILD_TESTS)
 +if(gRPC_BUILD_TESTS OR gRPC_BUILD_CLI)
  
+ 
  add_library(grpc++_test_config
-   test/cpp/util/test_config_cc.cc
-@@ -3470,6 +3470,14 @@ target_link_libraries(grpc++_test_config
+@@ -4535,6 +4535,14 @@ target_link_libraries(grpc++_test_config
    gpr
  )
  
@@ -36,7 +36,7 @@ index df8c3c3dd7ac..f3b1c79e18ba 100644
  
  endif()
  if(gRPC_BUILD_TESTS)
-@@ -10864,7 +10872,7 @@ target_link_libraries(grpc_authz_end2end_test
+@@ -13081,7 +13089,7 @@ target_link_libraries(grpc_byte_buffer_reader_test
  
  
  endif()
@@ -45,7 +45,7 @@ index df8c3c3dd7ac..f3b1c79e18ba 100644
  
  add_executable(grpc_cli
    ${_gRPC_PROTO_GENS_DIR}/src/proto/grpc/reflection/v1alpha/reflection.pb.cc
-@@ -10909,6 +10917,13 @@ target_link_libraries(grpc_cli
+@@ -13119,6 +13127,13 @@ target_link_libraries(grpc_cli
    grpc++_test_config
  )
  
@@ -58,7 +58,7 @@ index df8c3c3dd7ac..f3b1c79e18ba 100644
 +endif()
  
  endif()
- if(gRPC_BUILD_CODEGEN AND gRPC_BUILD_GRPC_CPP_PLUGIN)
+ if(gRPC_BUILD_TESTS)
 -- 
-2.39.1
+2.45.2
 
