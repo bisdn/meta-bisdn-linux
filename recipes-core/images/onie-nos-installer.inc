@@ -4,7 +4,7 @@ LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://${COREBASE}/meta/COPYING.MIT;md5=3da9cfbcb788c80a0384361b4de20420"
 INHIBIT_DEFAULT_DEPS = "1"
 
-INSTALL_ROOTFS = "${IMGDEPLOYDIR}/${IMAGE_BASENAME}-${MACHINE}.tar.xz"
+INSTALL_ROOTFS = "${IMGDEPLOYDIR}/${IMAGE_LINK_NAME}.tar.xz"
 INSTALL_KERNEL = "${DEPLOY_DIR_IMAGE}/${KERNEL_IMAGETYPE}"
 
 ONIEIMAGE_DIR ?= "${S}"
@@ -19,6 +19,9 @@ ONIEIMAGE_CONF_DIR ?= "${BISDN_ONIE_ADDITIONS}/installer/machine"
 
 ONIEIMAGE_PAYLOAD_FILE = "${ONIEIMAGE_DIR}/onie_install.tar"
 ONIEIMAGE_OUTPUT_FILE = "${ONIEIMAGE_DIR}/onie-installer.bin"
+
+ONIEIMAGE_LINK_NAME = "${IMAGE_BASENAME}-${MACHINE}"
+ONIEIMAGE_NAME = "${ONIEIMAGE_LINK_NAME}${IMAGE_VERSION_SUFFIX}"
 
 # we only use a tar.xz packed rootfs
 IMAGE_FSTYPES = "tar.xz"
@@ -57,14 +60,14 @@ do_onie_bundle () {
     # Generate the ONIE bin file
     cat "${ONIEIMAGE_PAYLOAD_FILE}" >> "${ONIEIMAGE_OUTPUT_FILE}"
 
-    install -m 0644 "${ONIEIMAGE_OUTPUT_FILE}" "${DEPLOY_DIR_IMAGE}/onie-bisdn-${IMAGE_NAME}.bin"
+    install -m 0644 "${ONIEIMAGE_OUTPUT_FILE}" "${DEPLOY_DIR_IMAGE}/onie-bisdn-${ONIEIMAGE_NAME}.bin"
     cd "${DEPLOY_DIR_IMAGE}"
     # remove old ONIE bin file
-    if [ -L "./onie-bisdn-${IMAGE_LINK_NAME}.bin" ]; then
-        OLD_IMAGE="$(readlink ./onie-bisdn-${IMAGE_LINK_NAME}.bin)"
+    if [ -L "./onie-bisdn-${ONIEIMAGE_LINK_NAME}.bin" ]; then
+        OLD_IMAGE="$(readlink ./onie-bisdn-${ONIEIMAGE_LINK_NAME}.bin)"
         [ -f "$OLD_IMAGE" ] && rm -f "$OLD_IMAGE"
     fi
-    ln -sf "./onie-bisdn-${IMAGE_NAME}.bin" "./onie-bisdn-${IMAGE_LINK_NAME}.bin"
+    ln -sf "./onie-bisdn-${ONIEIMAGE_NAME}.bin" "./onie-bisdn-${ONIEIMAGE_LINK_NAME}.bin"
 }
 
 SSTATE_SKIP_CREATION:task-onie-bundle = '0'
