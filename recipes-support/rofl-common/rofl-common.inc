@@ -11,10 +11,7 @@ DEPENDS = " \
     openssl \
 "
 
-SRC_URI = " \
-	git://github.com/bisdn/rofl-common.git;protocol=https;branch=main \
-	file://001-fix-configure-glog.patch \
-        "
+SRC_URI = "git://github.com/bisdn/rofl-common.git;protocol=https;branch=main"
 
 S = "${WORKDIR}/git"
 
