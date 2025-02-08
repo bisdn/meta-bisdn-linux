@@ -1,0 +1,138 @@
+From 49a50b761ba1ddf03b4e391eca9b3c223e48ce9c Mon Sep 17 00:00:00 2001
+From: Jonas Gorski <jonas.gorski@bisdn.de>
+Date: Mon, 2 Dec 2024 11:54:09 +0100
+Subject: [PATCH 2/3] network: bridge: add support for IFLA_BRPORT_LOCKED
+
+Since linux commit a21d9a670d81103db7f788de1a4a4a6e4b891a0b ("net:
+bridge: Add support for bridge port in locked mode"), included since
+v5.18,  it is possible to set bridge ports to locked.
+
+Locked ports do not learn automatically, and discard any traffic from
+unknown source MACs. To allow traffic, the userspace authenticator is
+expected to create fdb entries for authenticated hosts.
+
+Add support to systemd-network for setting the new attribute for bridge
+ports.
+
+Upstream-Status: Backport [https://github.com/systemd/systemd/commit/a434de60568b0f34c07de4f97af6cdc33d4fd2a2]
+Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
+---
+ man/systemd.network.xml                                  | 9 +++++++++
+ src/libsystemd/sd-netlink/netlink-types-rtnl.c           | 1 +
+ src/network/networkd-network-gperf.gperf                 | 1 +
+ src/network/networkd-network.c                           | 1 +
+ src/network/networkd-network.h                           | 1 +
+ src/network/networkd-setlink.c                           | 6 ++++++
+ .../conf/26-bridge-slave-interface-2.network             | 1 +
+ test/test-network/systemd-networkd-tests.py              | 1 +
+ 8 files changed, 21 insertions(+)
+
+diff --git a/man/systemd.network.xml b/man/systemd.network.xml
+index 7b72a1eba109..adbd1a62048a 100644
+--- a/man/systemd.network.xml
++++ b/man/systemd.network.xml
+@@ -1509,6 +1509,15 @@ NFTSet=prefix:netdev:filter:eth_ipv4_prefix</programlisting>
+           <xi:include href="version-info.xml" xpointer="v234"/>
+         </listitem>
+       </varlistentry>
++      <varlistentry>
++        <term><varname>Locked=</varname></term>
++        <listitem>
++          <para>Takes a boolean. Configures whether the port is "locked" and does not allow traffic forwarded
++          until fully authenticated, e.g. via 802.1x. When unset, the kernel's default will be used.</para>
++
++          <xi:include href="version-info.xml" xpointer="v258"/>
++        </listitem>
++      </varlistentry>
+     </variablelist>
+   </refsect1>
+ 
+diff --git a/src/libsystemd/sd-netlink/netlink-types-rtnl.c b/src/libsystemd/sd-netlink/netlink-types-rtnl.c
+index 0153456d9beb..d1a7d1bfa5ec 100644
+--- a/src/libsystemd/sd-netlink/netlink-types-rtnl.c
++++ b/src/libsystemd/sd-netlink/netlink-types-rtnl.c
+@@ -480,6 +480,7 @@ static const struct NLAPolicy rtnl_bridge_port_policies[] = {
+         [IFLA_BRPORT_MRP_IN_OPEN]           = BUILD_POLICY(U8),
+         [IFLA_BRPORT_MCAST_EHT_HOSTS_LIMIT] = BUILD_POLICY(U32),
+         [IFLA_BRPORT_MCAST_EHT_HOSTS_CNT]   = BUILD_POLICY(U32),
++        [IFLA_BRPORT_LOCKED]                = BUILD_POLICY(U8),
+ };
+ 
+ static const NLAPolicySetUnionElement rtnl_link_info_slave_data_policy_set_union_elements[] = {
+diff --git a/src/network/networkd-network-gperf.gperf b/src/network/networkd-network-gperf.gperf
+index a6593a080ae0..f62fb0885c64 100644
+--- a/src/network/networkd-network-gperf.gperf
++++ b/src/network/networkd-network-gperf.gperf
+@@ -360,6 +360,7 @@ Bridge.ProxyARP,                             config_parse_tristate,
+ Bridge.ProxyARPWiFi,                         config_parse_tristate,                                    0,                             offsetof(Network, bridge_proxy_arp_wifi)
+ Bridge.Priority,                             config_parse_bridge_port_priority,                        0,                             offsetof(Network, priority)
+ Bridge.MulticastRouter,                      config_parse_multicast_router,                            0,                             offsetof(Network, multicast_router)
++Bridge.Locked,                               config_parse_tristate,                                    0,                             offsetof(Network, bridge_locked)
+ BridgeFDB.MACAddress,                        config_parse_fdb_hwaddr,                                  0,                             0
+ BridgeFDB.VLANId,                            config_parse_fdb_vlan_id,                                 0,                             0
+ BridgeFDB.Destination,                       config_parse_fdb_destination,                             0,                             0
+diff --git a/src/network/networkd-network.c b/src/network/networkd-network.c
+index dcd3e5ae12cd..a482cc70a852 100644
+--- a/src/network/networkd-network.c
++++ b/src/network/networkd-network.c
+@@ -447,6 +447,7 @@ int network_load_one(Manager *manager, OrderedHashmap **networks, const char *fi
+                 .bridge_proxy_arp_wifi = -1,
+                 .priority = LINK_BRIDGE_PORT_PRIORITY_INVALID,
+                 .multicast_router = _MULTICAST_ROUTER_INVALID,
++                .bridge_locked = -1,
+ 
+                 .lldp_mode = LLDP_MODE_ROUTERS_ONLY,
+                 .lldp_multicast_mode = _SD_LLDP_MULTICAST_MODE_INVALID,
+diff --git a/src/network/networkd-network.h b/src/network/networkd-network.h
+index 03131b7061cb..62955224a9bf 100644
+--- a/src/network/networkd-network.h
++++ b/src/network/networkd-network.h
+@@ -287,6 +287,7 @@ struct Network {
+         uint32_t cost;
+         uint16_t priority;
+         MulticastRouter multicast_router;
++        int bridge_locked;
+ 
+         /* Bridge VLAN */
+         bool use_br_vlan;
+diff --git a/src/network/networkd-setlink.c b/src/network/networkd-setlink.c
+index 011ea1fe6e62..3c0eb1e0b3b4 100644
+--- a/src/network/networkd-setlink.c
++++ b/src/network/networkd-setlink.c
+@@ -321,6 +321,12 @@ static int link_configure_fill_message(
+                                 return r;
+                 }
+ 
++                if (link->network->bridge_locked >= 0) {
++                        r = sd_netlink_message_append_u8(req, IFLA_BRPORT_LOCKED, link->network->bridge_locked);
++                        if (r < 0)
++                                return r;
++                }
++
+                 r = sd_netlink_message_close_container(req);
+                 if (r < 0)
+                         return r;
+diff --git a/test/test-network/conf/26-bridge-slave-interface-2.network b/test/test-network/conf/26-bridge-slave-interface-2.network
+index 42b197eeef12..6eb955dc4bc4 100644
+--- a/test/test-network/conf/26-bridge-slave-interface-2.network
++++ b/test/test-network/conf/26-bridge-slave-interface-2.network
+@@ -10,3 +10,4 @@ Bridge=bridge99
+ 
+ [Bridge]
+ Priority=0
++Locked=true
+diff --git a/test/test-network/systemd-networkd-tests.py b/test/test-network/systemd-networkd-tests.py
+index 36c03e58aa1d..93151fbb00f0 100755
+--- a/test/test-network/systemd-networkd-tests.py
++++ b/test/test-network/systemd-networkd-tests.py
+@@ -4627,6 +4627,7 @@ class NetworkdBridgeTests(unittest.TestCase, Utilities):
+         output = check_output('bridge -d link show test1')
+         print(output)
+         self.check_bridge_port_attr('bridge99', 'test1', 'priority',               '0')
++        self.assertIn('locked on', output)
+ 
+         check_output('ip address add 192.168.0.16/24 dev bridge99')
+         output = check_output('ip addr show bridge99')
+-- 
+2.48.1
+
