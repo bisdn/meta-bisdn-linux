@@ -1,14 +1,14 @@
-From 91dbec7d1e5df2ce4bb6d38f460def10c1847bbf Mon Sep 17 00:00:00 2001
+From 7d7a0a580ab7527985ba7f2d040a01cede0f9b94 Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Tue, 6 Oct 2020 10:00:37 +0200
-Subject: [PATCH 1/6] link/bonding: parse and expose bonding options
+Subject: [PATCH 10/16] link/bonding: parse and expose bonding options
 
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
  include/netlink/route/link/bonding.h |  12 +
  lib/route/link/bonding.c             | 323 +++++++++++++++++++++++++++
- libnl-route-3.sym                    |  14 +-
- 3 files changed, 348 insertions(+), 1 deletion(-)
+ libnl-route-3.sym                    |  10 +-
+ 3 files changed, 344 insertions(+), 1 deletion(-)
 
 diff --git a/include/netlink/route/link/bonding.h b/include/netlink/route/link/bonding.h
 index 09d495eb570e..56de595e6988 100644
@@ -377,7 +377,7 @@ index 90e647036d50..11f31736fb51 100644
  {
  	rtnl_link_register_info(&bonding_info_ops);
 diff --git a/libnl-route-3.sym b/libnl-route-3.sym
-index e54bc6dd7833..910a4b3c550a 100644
+index 70fbedf61912..f88f3b1f781b 100644
 --- a/libnl-route-3.sym
 +++ b/libnl-route-3.sym
 @@ -232,7 +232,6 @@ global:
@@ -388,13 +388,10 @@ index e54bc6dd7833..910a4b3c550a 100644
  	rtnl_link_bond_release;
  	rtnl_link_bond_release_ifindex;
  	rtnl_link_bridge_add;
-@@ -1268,3 +1267,16 @@ global:
- 	rtnl_nat_set_new_addr;
- 	rtnl_nat_set_old_addr;
- } libnl_3_6;
-+
-+libnl_3_8 {
-+global:
+@@ -1271,6 +1270,15 @@ global:
+ 
+ libnl_3_8 {
+ global:
 +	rtnl_link_bond_enslave_ifindex;
 +	rtnl_link_bond_get_active_slave;
 +	rtnl_link_bond_get_mode;
@@ -404,7 +401,9 @@ index e54bc6dd7833..910a4b3c550a 100644
 +	rtnl_link_bond_set_mode;
 +	rtnl_link_bond_set_primary;
 +	rtnl_link_bond_set_xmit_hash_policy;
-+} libnl_3_7;
+ 	rtnl_neigh_extflags2str;
+ 	rtnl_neigh_get_ext_flags;
+ 	rtnl_neigh_set_ext_flags;
 -- 
-2.37.0
+2.47.1
 
