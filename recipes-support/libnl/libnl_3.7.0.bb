@@ -3,7 +3,7 @@ HOMEPAGE = "http://www.infradead.org/~tgr/libnl/"
 SECTION = "libs/network"
 
 PE = "1"
-PR = "r3"
+PR = "r4"
 
 LICENSE = "LGPL-2.1-only"
 LIC_FILES_CHKSUM = "file://COPYING;md5=4fbd65380cdd255951079008b364516c"
@@ -14,14 +14,16 @@ DEPENDS = "flex-native bison-native"
 
 SRC_URI = " \
     git://github.com/thom311/${BPN}.git;protocol=https;branch=main \
-    file://0001-link-bonding-parse-and-expose-bonding-options.patch \
-    file://0002-WIP-add-info-slave-data-support.patch \
-    file://0003-link-bonding-expose-state-on-enslaved-interfaces.patch \
-    file://0004-sync-linux-headers-with-5.11.patch \
-    file://0005-bridge-vlan-add-per-vlan-stp-state-object-and-cache.patch \
-    file://0006-route-route_obj-treat-each-IPv6-link-local-route-as-.patch \
-    file://0007-lib-attr-handle-default-routes.patch \
-    file://0008-link-ignore-incomplete-bridge-updates.patch \
+    file://0001-lib-attr-handle-default-routes.patch \
+    file://0002-sync-linux-headers-with-6.4.patch \
+    file://0003-lib-route-extend-bridge-flags.patch \
+    file://0004-lib-route-add-rtnl_neigh-ext-flags-support.patch \
+    file://0005-link-bonding-parse-and-expose-bonding-options.patch \
+    file://0006-WIP-add-info-slave-data-support.patch \
+    file://0007-link-bonding-expose-state-on-enslaved-interfaces.patch \
+    file://0008-bridge-vlan-add-per-vlan-stp-state-object-and-cache.patch \
+    file://0009-route-route_obj-treat-each-IPv6-link-local-route-as-.patch \
+    file://0010-link-ignore-incomplete-bridge-updates.patch \
 "
 
 # commit hash of release tag libnl3_7_0
