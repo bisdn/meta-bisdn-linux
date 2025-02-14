@@ -1,7 +1,7 @@
-From d29d4a55bf3d32fab7517be9bce64f07148611bf Mon Sep 17 00:00:00 2001
+From 55ad721b3e8cc75870f4e0bc1bf0712a0768fc09 Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Mon, 20 Jan 2025 09:07:56 +0100
-Subject: [PATCH 2/4] add wired driver extra options
+Subject: [PATCH 3/7] add wired driver extra options
 
 Add two options for for driver_wired_linux:
 
@@ -97,5 +97,5 @@ index d3312a34d8f8..0df283baa4a6 100644
  	u8 *own_addr; /* buffer for writing own MAC address */
  };
 -- 
-2.47.1
+2.48.1
 

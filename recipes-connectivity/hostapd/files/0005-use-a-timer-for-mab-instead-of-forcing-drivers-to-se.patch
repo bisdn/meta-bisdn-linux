@@ -1,0 +1,144 @@
+From 4a1c598884aff4a6c95545f8e4d190032f6fe7dd Mon Sep 17 00:00:00 2001
+From: Jonas Gorski <jonas.gorski@bisdn.de>
+Date: Fri, 14 Feb 2025 10:52:51 +0100
+Subject: [PATCH 5/7] use a timer for mab instead of forcing drivers to set it
+ explicitly
+
+Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
+---
+ src/ap/drv_callbacks.c | 11 ++-------
+ src/ap/ieee802_1x.c    | 55 ++++++++++++++++++++++++++----------------
+ src/drivers/driver.h   |  1 -
+ 3 files changed, 36 insertions(+), 31 deletions(-)
+
+diff --git a/src/ap/drv_callbacks.c b/src/ap/drv_callbacks.c
+index f634ab8890bf..33992331cdcd 100644
+--- a/src/ap/drv_callbacks.c
++++ b/src/ap/drv_callbacks.c
+@@ -1514,8 +1514,7 @@ static void hostapd_mgmt_tx_cb(struct hostapd_data *hapd, const u8 *buf,
+ #endif /* NEED_AP_MLME */
+ 
+ 
+-static int hostapd_event_new_sta(struct hostapd_data *hapd, const u8 *addr,
+-				 bool pae_detected)
++static int hostapd_event_new_sta(struct hostapd_data *hapd, const u8 *addr)
+ {
+ 	struct sta_info *sta = ap_get_sta(hapd, addr);
+ 
+@@ -1526,11 +1525,6 @@ static int hostapd_event_new_sta(struct hostapd_data *hapd, const u8 *addr,
+ 		   " - adding a new STA", MAC2STR(addr));
+ 	sta = ap_sta_add(hapd, addr);
+ 	if (sta) {
+-		if (pae_detected)
+-			sta->pae_detected = 1;
+-		else
+-			sta->mab = 1;
+-
+ 		hostapd_new_assoc_sta(hapd, sta, 0);
+ 	} else {
+ 		wpa_printf(MSG_DEBUG, "Failed to add STA entry for " MACSTR,
+@@ -1944,8 +1938,7 @@ void wpa_supplicant_event(void *ctx, enum wpa_event_type event,
+ 				     data->rx_probe_req.ssi_signal);
+ 		break;
+ 	case EVENT_NEW_STA:
+-		hostapd_event_new_sta(hapd, data->new_sta.addr,
+-				      data->new_sta.pae_detected);
++		hostapd_event_new_sta(hapd, data->new_sta.addr);
+ 		break;
+ 	case EVENT_EAPOL_RX:
+ 		hostapd_event_eapol_rx(hapd, data->eapol_rx.src,
+diff --git a/src/ap/ieee802_1x.c b/src/ap/ieee802_1x.c
+index 6748f0d82dd0..ef3628496ae0 100644
+--- a/src/ap/ieee802_1x.c
++++ b/src/ap/ieee802_1x.c
+@@ -1033,6 +1033,32 @@ static void ieee802_1x_save_eapol(struct sta_info *sta, const u8 *buf,
+ 	os_get_reltime(&sta->pending_eapol_rx->rx_time);
+ }
+ 
++void ieee802_1x_handle_eap_rx_timeout(void *eloop_ctx, void *timeout_ctx)
++{
++        struct hostapd_data *hapd = eloop_ctx;
++        struct sta_info *sta = timeout_ctx;
++	const u8 *eap = NULL;
++	size_t len = 0;
++	char buf[128];
++
++	hostapd_logger(hapd, sta->addr, HOSTAPD_MODULE_IEEE8021X,
++			HOSTAPD_LEVEL_DEBUG,
++			"Falling back to MAB - skipping IEEE 802.1X/EAP");
++	sta->mab = 1;
++	os_snprintf(buf, sizeof(buf), RADIUS_ADDR_FORMAT,
++			MAC2STR(sta->addr));
++	os_free(sta->eapol_sm->identity);
++	sta->eapol_sm->identity = (u8 *) dup_binstr(buf, os_strlen(buf));
++	if (sta->eapol_sm->identity == NULL) {
++		sta->eapol_sm->identity_len = 0;
++		hostapd_logger(hapd, sta->addr, HOSTAPD_MODULE_IEEE8021X,
++				HOSTAPD_LEVEL_DEBUG,
++				"Could not set identity");
++		return;
++	}
++	sta->eapol_sm->identity_len = os_strlen(buf);
++	ieee802_1x_encapsulate_radius(hapd, sta, eap, len);
++}
+ 
+ /**
+  * ieee802_1x_receive - Process the EAPOL frames from the Supplicant
+@@ -1073,6 +1099,12 @@ void ieee802_1x_receive(struct hostapd_data *hapd, const u8 *sa, const u8 *buf,
+ 
+ 		return;
+ 	}
++	if (!sta->pae_detected) {
++		if (hapd->conf->mac_auth)
++			eloop_cancel_timeout(ieee802_1x_handle_eap_rx_timeout, hapd, sta);
++		sta->mab = 0;
++		sta->pae_detected = 1;
++	}
+ 
+ 	if (len < sizeof(*hdr)) {
+ 		wpa_printf(MSG_INFO, "   too short IEEE 802.1X packet");
+@@ -1300,27 +1332,8 @@ void ieee802_1x_new_station(struct hostapd_data *hapd, struct sta_info *sta)
+ 	 * We may have MAC Authentication Bypass (MAB) configured.
+ 	 * If so, skip EAPOL and just authorize with RADIUS.
+ 	 */
+-	if (sta->mab) {
+-		const u8 *eap = NULL;
+-		size_t len = 0;
+-		char buf[128];
+-
+-		hostapd_logger(hapd, sta->addr, HOSTAPD_MODULE_IEEE8021X,
+-				HOSTAPD_LEVEL_DEBUG,
+-				"MAB enabled - skipping IEEE 802.1X/EAP");
+-		os_snprintf(buf, sizeof(buf), RADIUS_ADDR_FORMAT,
+-				MAC2STR(sta->addr));
+-		os_free(sta->eapol_sm->identity);
+-		sta->eapol_sm->identity = (u8 *) dup_binstr(buf, os_strlen(buf));
+-		if (sta->eapol_sm->identity == NULL) {
+-			sta->eapol_sm->identity_len = 0;
+-			hostapd_logger(hapd, sta->addr, HOSTAPD_MODULE_IEEE8021X,
+-					HOSTAPD_LEVEL_DEBUG,
+-					"Could not set identity");
+-			return;
+-		}
+-		sta->eapol_sm->identity_len = os_strlen(buf);
+-		ieee802_1x_encapsulate_radius(hapd, sta, eap, len);
++	if (hapd->conf->mac_auth) {
++		eloop_register_timeout(1, 0, ieee802_1x_handle_eap_rx_timeout, hapd, sta);
+ 		return;
+ 	}
+ 
+diff --git a/src/drivers/driver.h b/src/drivers/driver.h
+index 446c60f79fe4..0df283baa4a6 100644
+--- a/src/drivers/driver.h
++++ b/src/drivers/driver.h
+@@ -5744,7 +5744,6 @@ union wpa_event_data {
+ 	 */
+ 	struct new_sta {
+ 		const u8 *addr;
+-		bool pae_detected;
+ 	} new_sta;
+ 
+ 	/**
+-- 
+2.48.1
+

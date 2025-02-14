@@ -1,0 +1,84 @@
+From 9bd79f395ab06894bd21547fc25bdd583fa455dc Mon Sep 17 00:00:00 2001
+From: Jonas Gorski <jonas.gorski@bisdn.de>
+Date: Fri, 14 Feb 2025 10:59:57 +0100
+Subject: [PATCH 7/7] driver_linux_wired: handle neighs going away
+
+Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
+---
+ src/drivers/driver_wired_linux.c | 53 +++++++++++++++++++++++++++++++-
+ 1 file changed, 52 insertions(+), 1 deletion(-)
+
+diff --git a/src/drivers/driver_wired_linux.c b/src/drivers/driver_wired_linux.c
+index 6d72fcadc41e..8ed3ac7cd5c6 100644
+--- a/src/drivers/driver_wired_linux.c
++++ b/src/drivers/driver_wired_linux.c
+@@ -16,6 +16,7 @@
+ #include "driver_wired_common.h"
+ #include "netlink.h"
+ 
++#include "ap/sta_info.h"
+ 
+ #include <linux/rtnetlink.h>
+ 
+@@ -596,7 +597,57 @@ static void driver_wired_linux_event_rtm_delneigh(void *ctx,
+ 						  struct ndmsg *nd,
+ 						  u8 *buf, size_t len)
+ {
+-	/* TODO: do we care? */
++	struct driver_wired_linux_data *drv = ctx;
++	int attrlen;
++	struct rtattr *attr;
++	u8 *mac_address = NULL;
++	u32 flags_ext = 0;
++	struct sta_info *sta;
++
++	if (nd->ndm_family != AF_BRIDGE)
++		return;
++
++	if (nd->ndm_ifindex != drv->ifindex)
++		return;
++
++	attrlen = len;
++	attr = (struct rtattr *) buf;
++
++	while (RTA_OK(attr, attrlen)) {
++		if (attr->rta_type == NDA_LLADDR) {
++			if (RTA_PAYLOAD(attr) < 6)
++				return;
++
++			mac_address = (u8 *)RTA_DATA(attr);
++		} else if (attr->rta_type == NDA_FLAGS_EXT) {
++			if (RTA_PAYLOAD(attr) < sizeof(u32))
++				return;
++
++			flags_ext = nla_get_u32((struct nlattr *) attr);
++
++		}
++		attr = RTA_NEXT(attr, attrlen);
++	}
++
++	if (!mac_address)
++		return;
++
++	sta = ap_get_sta(drv->common.ctx, mac_address);
++	if (!sta)
++		return;
++
++	if (sta->flags & WLAN_STA_AUTHORIZED) {
++		if (flags_ext & NTF_EXT_LOCKED)
++			wpa_printf(MSG_DEBUG, "neigh " MACSTR " was locked but authorized?!",
++				   MAC2STR(mac_address));
++		ap_sta_deauthenticate(drv->common.ctx, sta, WLAN_REASON_DISASSOC_STA_HAS_LEFT);
++	} else {
++		if (!(flags_ext & NTF_EXT_LOCKED))
++			wpa_printf(MSG_DEBUG, "neigh " MACSTR " was unlocked but not authorized?!",
++				   MAC2STR(mac_address));
++		ap_sta_disassociate(drv->common.ctx, sta, WLAN_REASON_DISASSOC_STA_HAS_LEFT);
++	}
++	ap_free_sta(drv->common.ctx, sta);
+ }
+ 
+ static void wired_driver_hapd_deinit(void *priv);
+-- 
+2.48.1
+

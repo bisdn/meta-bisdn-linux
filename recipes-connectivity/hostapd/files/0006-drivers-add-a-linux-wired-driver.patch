@@ -1,7 +1,7 @@
-From b0dfa9b88b34ee473833503eff04c5bb4e39041d Mon Sep 17 00:00:00 2001
+From cdfa7d24c731916f7c0c74502fe4db82b53de43e Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Mon, 13 Jan 2025 13:04:48 +0100
-Subject: [PATCH 4/4] drivers: add a linux wired driver
+Subject: [PATCH 6/7] drivers: add a linux wired driver
 
 Add a driver making use of the new-ish LOCKED flags for ports and
 neighbors to implement a wired driver for linux.
@@ -9,18 +9,18 @@ neighbors to implement a wired driver for linux.
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
  src/drivers/driver.h             |   3 +
- src/drivers/driver_wired_linux.c | 764 +++++++++++++++++++++++++++++++
+ src/drivers/driver_wired_linux.c | 761 +++++++++++++++++++++++++++++++
  src/drivers/drivers.c            |   3 +
  src/drivers/drivers.mak          |   7 +
  src/drivers/drivers.mk           |   7 +
- 5 files changed, 784 insertions(+)
+ 5 files changed, 781 insertions(+)
  create mode 100644 src/drivers/driver_wired_linux.c
 
 diff --git a/src/drivers/driver.h b/src/drivers/driver.h
-index 446c60f79fe4..3cac1ef684df 100644
+index 0df283baa4a6..a0a1b0dd1ec5 100644
 --- a/src/drivers/driver.h
 +++ b/src/drivers/driver.h
-@@ -6138,6 +6138,9 @@ extern struct wpa_driver_ops wpa_driver_ndis_ops; /* driver_ndis.c */
+@@ -6137,6 +6137,9 @@ extern struct wpa_driver_ops wpa_driver_ndis_ops; /* driver_ndis.c */
  #ifdef CONFIG_DRIVER_WIRED
  extern const struct wpa_driver_ops wpa_driver_wired_ops; /* driver_wired.c */
  #endif /* CONFIG_DRIVER_WIRED */
@@ -32,10 +32,10 @@ index 446c60f79fe4..3cac1ef684df 100644
  extern const struct wpa_driver_ops wpa_driver_macsec_qca_ops;
 diff --git a/src/drivers/driver_wired_linux.c b/src/drivers/driver_wired_linux.c
 new file mode 100644
-index 000000000000..9d1499203329
+index 000000000000..6d72fcadc41e
 --- /dev/null
 +++ b/src/drivers/driver_wired_linux.c
-@@ -0,0 +1,764 @@
+@@ -0,0 +1,761 @@
 +/*
 + * Wired Ethernet driver interface with Linux bridge extensions
 + * Copyright (c) 2025, Jonas Gorski <jonas.gorski@bisdn.de> and BISDN GmbH
@@ -136,7 +136,6 @@ index 000000000000..9d1499203329
 +		sa = hdr->src;
 +		os_memset(&event, 0, sizeof(event));
 +		event.new_sta.addr = sa;
-+		event.new_sta.pae_detected = true;
 +		wpa_supplicant_event(ctx, EVENT_NEW_STA, &event);
 +
 +		pos = (u8 *) (hdr + 1);
@@ -193,7 +192,6 @@ index 000000000000..9d1499203329
 +
 +	os_memset(&event, 0, sizeof(event));
 +	event.new_sta.addr = mac_address;
-+	event.new_sta.pae_detected = false;
 +	wpa_supplicant_event(eloop_ctx, EVENT_NEW_STA, &event);
 +}
 +
@@ -629,7 +627,6 @@ index 000000000000..9d1499203329
 +	/* should we somehow handle the VID? */
 +	os_memset(&event, 0, sizeof(event));
 +	event.new_sta.addr = mac_address;
-+	event.new_sta.pae_detected = false;
 +	wpa_supplicant_event(drv->common.ctx, EVENT_NEW_STA, &event);
 +}
 +
@@ -851,5 +848,5 @@ index 10eab6a92e17..00bbb97d7306 100644
  
  ifdef CONFIG_DRIVER_WEXT
 -- 
-2.47.1
+2.48.1
 
