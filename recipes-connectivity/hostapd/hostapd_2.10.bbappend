@@ -1,10 +1,13 @@
 FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
 SRC_URI:append = "\
-    file://0001-netlink-allow-listening-for-neighbor-events.patch \
-    file://0002-add-wired-driver-extra-options.patch \
-    file://0003-import-base-MAB-handling-code-from-Cumulus.patch \
-    file://0004-drivers-add-a-linux-wired-driver.patch \
+    file://0001-Split-ap_sta_set_authorized-into-two-steps.patch \
+    file://0002-netlink-allow-listening-for-neighbor-events.patch \
+    file://0003-add-wired-driver-extra-options.patch \
+    file://0004-import-base-MAB-handling-code-from-Cumulus.patch \
+    file://0005-use-a-timer-for-mab-instead-of-forcing-drivers-to-se.patch \
+    file://0006-drivers-add-a-linux-wired-driver.patch \
+    file://0007-driver_linux_wired-handle-neighs-going-away.patch \
     file://defconfig \
     file://hostapd-wired.conf \
     file://hostapd-wired@.service \
