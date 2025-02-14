@@ -1,0 +1,195 @@
+From a93fd09c848a181aecaea0c84a0b64e2612075c2 Mon Sep 17 00:00:00 2001
+From: Jouni Malinen <j@w1.fi>
+Date: Sun, 17 Dec 2023 14:09:57 +0200
+Subject: [PATCH 1/7] Split ap_sta_set_authorized() into two steps
+
+This function is both updating the hostapd-internal sta->flags value and
+sending out the AP-STA-CONNECTED control interface message. When
+authorizing a STA, the call to this function is followed by a driver
+command to update the flags of the STA entry in the driver. That has a
+race condition at least for UML time-travel since the AP-STA-CONNECTED
+event is used as a message to wait for before running a connectivity
+test or some other operation that depends on the data connection being
+in working condition.
+
+Split the function into two steps so that the driver STA entry update
+can be done between those two steps for the cases where it matters for
+the race condition. In other words, send the AP-STA-CONNECTED message
+only after having authorized the STA in the driver.
+
+Signed-off-by: Jouni Malinen <j@w1.fi>
+(cherry picked from commit 2ab56694f64b05e9d1ac4170f6b2be7d88444c0f)
+---
+ src/ap/drv_callbacks.c | 10 ++++++++--
+ src/ap/ieee802_1x.c    | 19 ++++++++-----------
+ src/ap/sta_info.c      | 36 ++++++++++++++++++++++++++----------
+ src/ap/sta_info.h      |  4 ++++
+ 4 files changed, 46 insertions(+), 23 deletions(-)
+
+diff --git a/src/ap/drv_callbacks.c b/src/ap/drv_callbacks.c
+index a50e6f2afa77..33992331cdcd 100644
+--- a/src/ap/drv_callbacks.c
++++ b/src/ap/drv_callbacks.c
+@@ -52,6 +52,7 @@ void hostapd_notify_assoc_fils_finish(struct hostapd_data *hapd,
+ 	struct ieee802_11_elems elems;
+ 	u8 buf[IEEE80211_MAX_MMPDU_SIZE], *p = buf;
+ 	int new_assoc;
++	bool updated;
+ 
+ 	wpa_printf(MSG_DEBUG, "%s FILS: Finish association with " MACSTR,
+ 		   __func__, MAC2STR(sta->addr));
+@@ -75,11 +76,13 @@ void hostapd_notify_assoc_fils_finish(struct hostapd_data *hapd,
+ 				      sta->fils_pending_assoc_is_reassoc,
+ 				      WLAN_STATUS_SUCCESS,
+ 				      buf, p - buf);
+-	ap_sta_set_authorized(hapd, sta, 1);
++	updated = ap_sta_set_authorized_flag(hapd, sta, 1);
+ 	new_assoc = (sta->flags & WLAN_STA_ASSOC) == 0;
+ 	sta->flags |= WLAN_STA_AUTH | WLAN_STA_ASSOC;
+ 	sta->flags &= ~WLAN_STA_WNM_SLEEP_MODE;
+ 	hostapd_set_sta_flags(hapd, sta);
++	if (updated)
++		ap_sta_set_authorized_event(hapd, sta, 1);
+ 	wpa_auth_sm_event(sta->wpa_sm, WPA_ASSOC_FILS);
+ 	ieee802_1x_notify_port_enabled(sta->eapol_sm, 1);
+ 	hostapd_new_assoc_sta(hapd, sta, !new_assoc);
+@@ -145,6 +148,7 @@ int hostapd_notif_assoc(struct hostapd_data *hapd, const u8 *addr,
+ 	u16 reason = WLAN_REASON_UNSPECIFIED;
+ 	int status = WLAN_STATUS_SUCCESS;
+ 	const u8 *p2p_dev_addr = NULL;
++	bool updated = false;
+ 
+ 	if (addr == NULL) {
+ 		/*
+@@ -691,7 +695,7 @@ skip_wpa_check:
+ 	    sta->auth_alg == WLAN_AUTH_FILS_SK ||
+ 	    sta->auth_alg == WLAN_AUTH_FILS_SK_PFS ||
+ 	    sta->auth_alg == WLAN_AUTH_FILS_PK)
+-		ap_sta_set_authorized(hapd, sta, 1);
++		updated = ap_sta_set_authorized_flag(hapd, sta, 1);
+ #else /* CONFIG_IEEE80211R_AP || CONFIG_FILS */
+ 	/* Keep compiler silent about unused variables */
+ 	if (status) {
+@@ -703,6 +707,8 @@ skip_wpa_check:
+ 	sta->flags &= ~WLAN_STA_WNM_SLEEP_MODE;
+ 
+ 	hostapd_set_sta_flags(hapd, sta);
++	if (updated)
++		ap_sta_set_authorized_event(hapd, sta, 1);
+ 
+ 	if (reassoc && (sta->auth_alg == WLAN_AUTH_FT))
+ 		wpa_auth_sm_event(sta->wpa_sm, WPA_ASSOC_FT);
+diff --git a/src/ap/ieee802_1x.c b/src/ap/ieee802_1x.c
+index 6e7b75128210..1975be7e7cb4 100644
+--- a/src/ap/ieee802_1x.c
++++ b/src/ap/ieee802_1x.c
+@@ -108,21 +108,18 @@ void ieee802_1x_set_sta_authorized(struct hostapd_data *hapd,
+ 				   struct sta_info *sta, int authorized)
+ {
+ 	int res;
++	bool update;
+ 
+ 	if (sta->flags & WLAN_STA_PREAUTH)
+ 		return;
+ 
+-	if (authorized) {
+-		ap_sta_set_authorized(hapd, sta, 1);
+-		res = hostapd_set_authorized(hapd, sta, 1);
+-		hostapd_logger(hapd, sta->addr, HOSTAPD_MODULE_IEEE8021X,
+-			       HOSTAPD_LEVEL_DEBUG, "authorizing port");
+-	} else {
+-		ap_sta_set_authorized(hapd, sta, 0);
+-		res = hostapd_set_authorized(hapd, sta, 0);
+-		hostapd_logger(hapd, sta->addr, HOSTAPD_MODULE_IEEE8021X,
+-			       HOSTAPD_LEVEL_DEBUG, "unauthorizing port");
+-	}
++	update = ap_sta_set_authorized_flag(hapd, sta, authorized);
++	res = hostapd_set_authorized(hapd, sta, authorized);
++	if (update)
++		ap_sta_set_authorized_event(hapd, sta, authorized);
++	hostapd_logger(hapd, sta->addr, HOSTAPD_MODULE_IEEE8021X,
++		       HOSTAPD_LEVEL_DEBUG, "%sauthorizing port",
++		       authorized ? "" : "un");
+ 
+ 	if (res && errno != ENOENT) {
+ 		wpa_printf(MSG_DEBUG, "Could not set station " MACSTR
+diff --git a/src/ap/sta_info.c b/src/ap/sta_info.c
+index ccd1ed931bad..e65b01a5d2fb 100644
+--- a/src/ap/sta_info.c
++++ b/src/ap/sta_info.c
+@@ -1260,24 +1260,31 @@ const char * ap_sta_wpa_get_keyid(struct hostapd_data *hapd,
+ }
+ 
+ 
+-void ap_sta_set_authorized(struct hostapd_data *hapd, struct sta_info *sta,
+-			   int authorized)
++bool ap_sta_set_authorized_flag(struct hostapd_data *hapd, struct sta_info *sta,
++				int authorized)
+ {
+-	const u8 *dev_addr = NULL;
+-	char buf[100];
+-#ifdef CONFIG_P2P
+-	u8 addr[ETH_ALEN];
+-	u8 ip_addr_buf[4];
+-#endif /* CONFIG_P2P */
+-
+ 	if (!!authorized == !!(sta->flags & WLAN_STA_AUTHORIZED))
+-		return;
++		return false;
+ 
+ 	if (authorized)
+ 		sta->flags |= WLAN_STA_AUTHORIZED;
+ 	else
+ 		sta->flags &= ~WLAN_STA_AUTHORIZED;
+ 
++	return true;
++}
++
++
++void ap_sta_set_authorized_event(struct hostapd_data *hapd,
++				 struct sta_info *sta, int authorized)
++{
++	const u8 *dev_addr = NULL;
++	char buf[100];
++#ifdef CONFIG_P2P
++	u8 addr[ETH_ALEN];
++	u8 ip_addr_buf[4];
++#endif /* CONFIG_P2P */
++
+ #ifdef CONFIG_P2P
+ 	if (hapd->p2p_group == NULL) {
+ 		if (sta->p2p_ie != NULL &&
+@@ -1348,6 +1355,15 @@ void ap_sta_set_authorized(struct hostapd_data *hapd, struct sta_info *sta,
+ }
+ 
+ 
++void ap_sta_set_authorized(struct hostapd_data *hapd, struct sta_info *sta,
++			   int authorized)
++{
++	if (!ap_sta_set_authorized_flag(hapd, sta, authorized))
++		return;
++	ap_sta_set_authorized_event(hapd, sta, authorized);
++}
++
++
+ void ap_sta_disconnect(struct hostapd_data *hapd, struct sta_info *sta,
+ 		       const u8 *addr, u16 reason)
+ {
+diff --git a/src/ap/sta_info.h b/src/ap/sta_info.h
+index 27e72f9a0164..1ad1137ae16a 100644
+--- a/src/ap/sta_info.h
++++ b/src/ap/sta_info.h
+@@ -388,6 +388,10 @@ const char * ap_sta_wpa_get_keyid(struct hostapd_data *hapd,
+ void ap_sta_disconnect(struct hostapd_data *hapd, struct sta_info *sta,
+ 		       const u8 *addr, u16 reason);
+ 
++bool ap_sta_set_authorized_flag(struct hostapd_data *hapd, struct sta_info *sta,
++				int authorized);
++void ap_sta_set_authorized_event(struct hostapd_data *hapd,
++				 struct sta_info *sta, int authorized);
+ void ap_sta_set_authorized(struct hostapd_data *hapd,
+ 			   struct sta_info *sta, int authorized);
+ static inline int ap_sta_is_authorized(struct sta_info *sta)
+-- 
+2.48.1
+
