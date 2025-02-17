@@ -8,6 +8,8 @@ SRC_URI:append = "\
     file://0005-use-a-timer-for-mab-instead-of-forcing-drivers-to-se.patch \
     file://0006-drivers-add-a-linux-wired-driver.patch \
     file://0007-driver_linux_wired-handle-neighs-going-away.patch \
+    file://0008-driver_wired_linux-flush-all-entries-on-start-stop.patch \
+    file://0009-driver_wired_linux-wait-for-bridge-attachment.patch \
     file://defconfig \
     file://hostapd-wired.conf \
     file://hostapd-wired@.service \
