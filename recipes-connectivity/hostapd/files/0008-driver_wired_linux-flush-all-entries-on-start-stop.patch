@@ -1,0 +1,37 @@
+From 8178b8de1661ccd24e9aa7d74448ea12e06414e6 Mon Sep 17 00:00:00 2001
+From: Jonas Gorski <jonas.gorski@bisdn.de>
+Date: Mon, 17 Feb 2025 14:14:16 +0100
+Subject: [PATCH 8/9] driver_wired_linux: flush all entries on start/stop
+
+Make sure that there are no fdb entries left on start or stop that may
+unlock traffic unexpectedly.
+
+Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
+---
+ src/drivers/driver_wired_linux.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/src/drivers/driver_wired_linux.c b/src/drivers/driver_wired_linux.c
+index 8ed3ac7cd5c6..0b929c14811c 100644
+--- a/src/drivers/driver_wired_linux.c
++++ b/src/drivers/driver_wired_linux.c
+@@ -713,6 +713,8 @@ static void * wired_driver_hapd_init(struct hostapd_data *hapd,
+ 	if (wired_init_sockets(drv, params->own_addr))
+ 		goto err_out;
+ 
++	driver_wired_linux_flush_port(drv);
++
+ 	ret = driver_wired_linux_set_port_up(drv, true);
+ 	if (ret)
+ 		goto err_out;
+@@ -734,6 +736,7 @@ static void wired_driver_hapd_deinit(void *priv)
+ 
+ 	driver_wired_linux_set_port_up(drv, false);
+ 	driver_wired_linux_set_port_locked(drv, false);
++	driver_wired_linux_flush_port(drv);
+ 
+ 	if (drv->common.sock >= 0) {
+ 		eloop_unregister_read_sock(drv->common.sock);
+-- 
+2.47.1
+

@@ -1,0 +1,67 @@
+From 0055917ec04ffd2ebe982f826b713a273c7c0a81 Mon Sep 17 00:00:00 2001
+From: Jonas Gorski <jonas.gorski@bisdn.de>
+Date: Mon, 17 Feb 2025 14:36:36 +0100
+Subject: [PATCH 9/9] driver_wired_linux: wait for bridge attachment
+
+If bridge assignment happens in parallel to hostapd bring up, the
+interface may not yet be attached to the bridge when hostapd tries to
+configure the port.
+
+But we cannot configure locked mode while not attached to a bridge, so
+wait until the port has a master (i.e. attached to a bridge).
+
+Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
+---
+ src/drivers/driver_wired_linux.c | 16 +++++++++++++---
+ 1 file changed, 13 insertions(+), 3 deletions(-)
+
+diff --git a/src/drivers/driver_wired_linux.c b/src/drivers/driver_wired_linux.c
+index 0b929c14811c..fbcfd6373e8f 100644
+--- a/src/drivers/driver_wired_linux.c
++++ b/src/drivers/driver_wired_linux.c
+@@ -14,6 +14,7 @@
+ #include "eloop.h"
+ #include "driver.h"
+ #include "driver_wired_common.h"
++#include "linux_ioctl.h"
+ #include "netlink.h"
+ 
+ #include "ap/sta_info.h"
+@@ -658,6 +659,7 @@ static void * wired_driver_hapd_init(struct hostapd_data *hapd,
+ 	struct driver_wired_linux_data *drv;
+ 	struct netlink_config *cfg;
+ 	int ret;
++	char bridge_ifname[IFNAMSIZ];
+ 
+ 	drv = os_zalloc(sizeof(struct driver_wired_linux_data));
+ 	if (drv == NULL) {
+@@ -704,15 +706,23 @@ static void * wired_driver_hapd_init(struct hostapd_data *hapd,
+ 		goto err_out;
+ 	}
+ 
++	if (wired_init_sockets(drv, params->own_addr))
++		goto err_out;
++
++
++	if (linux_master_get(bridge_ifname, params->ifname) < 0) {
++		wpa_printf(MSG_INFO, "driver_linux_wired: waiting for bridge\n");
++		do {
++			sleep(1);
++		} while (linux_master_get(bridge_ifname, params->ifname) < 0);
++	}
++
+ 	ret = driver_wired_linux_set_port_locked(drv, true);
+ 	if (ret) {
+ 		wpa_printf(MSG_INFO, "driver_linux_wired: failed to set port locked: %i\n", ret);
+ 		goto err_out;
+ 	}
+ 
+-	if (wired_init_sockets(drv, params->own_addr))
+-		goto err_out;
+-
+ 	driver_wired_linux_flush_port(drv);
+ 
+ 	ret = driver_wired_linux_set_port_up(drv, true);
+-- 
+2.47.1
+

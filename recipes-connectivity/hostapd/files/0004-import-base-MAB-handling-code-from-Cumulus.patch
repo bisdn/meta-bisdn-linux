@@ -1,7 +1,7 @@
 From 64c83efde9a4fce302913ab12bcd7e40d2479541 Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Wed, 12 Feb 2025 10:49:28 +0100
-Subject: [PATCH 4/7] import base MAB handling code from Cumulus
+Subject: [PATCH 4/9] import base MAB handling code from Cumulus
 
 Import base MAB handling code from Cumulus:
 
@@ -256,5 +256,5 @@ index 6b9dfbca2fbd..4a6339eeeb17 100644
  /* Termination-Action */
  #define RADIUS_TERMINATION_ACTION_DEFAULT 0
 -- 
-2.48.1
+2.47.1
 
