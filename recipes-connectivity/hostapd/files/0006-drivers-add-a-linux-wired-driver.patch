@@ -1,7 +1,7 @@
 From cdfa7d24c731916f7c0c74502fe4db82b53de43e Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Mon, 13 Jan 2025 13:04:48 +0100
-Subject: [PATCH 6/7] drivers: add a linux wired driver
+Subject: [PATCH 6/9] drivers: add a linux wired driver
 
 Add a driver making use of the new-ish LOCKED flags for ports and
 neighbors to implement a wired driver for linux.
@@ -848,5 +848,5 @@ index 10eab6a92e17..00bbb97d7306 100644
  
  ifdef CONFIG_DRIVER_WEXT
 -- 
-2.48.1
+2.47.1
 
