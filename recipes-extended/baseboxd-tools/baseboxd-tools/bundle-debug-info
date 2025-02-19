@@ -149,6 +149,7 @@ function get_network_state() {
   log_cmd_output sysctl net.ipv4.ip_forward
   log_cmd_output sysctl net.ipv6.conf.all.forwarding
   log_cmd_output ip a
+  log_cmd_output ip -d link show
   log_cmd_output ip route list table all
   log_cmd_output ip neigh
   log_cmd_output ip nexthop
