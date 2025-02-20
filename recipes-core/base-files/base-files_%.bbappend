@@ -1,6 +1,8 @@
 FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
 
 SRC_URI += " \
+   file://motd \
+   file://profile \
    file://system-backup.txt \
    file://user-backup.txt \
 "
