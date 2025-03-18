@@ -191,5 +191,5 @@ index 27e72f9a0164..1ad1137ae16a 100644
  			   struct sta_info *sta, int authorized);
  static inline int ap_sta_is_authorized(struct sta_info *sta)
 -- 
-2.47.1
+2.48.1
 
