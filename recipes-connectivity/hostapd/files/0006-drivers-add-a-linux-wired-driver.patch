@@ -1,4 +1,4 @@
-From cdfa7d24c731916f7c0c74502fe4db82b53de43e Mon Sep 17 00:00:00 2001
+From 48f06fe5d5774037d623ea353e49e9e3357b8618 Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Mon, 13 Jan 2025 13:04:48 +0100
 Subject: [PATCH 6/9] drivers: add a linux wired driver
@@ -848,5 +848,5 @@ index 10eab6a92e17..00bbb97d7306 100644
  
  ifdef CONFIG_DRIVER_WEXT
 -- 
-2.47.1
+2.48.1
 
