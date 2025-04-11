@@ -4,7 +4,7 @@ inherit meson
 TARGET_LDFLAGS:remove = "-Wl,--as-needed"
 TARGET_LDFLAGS:append = " -Wl,--no-as-needed"
 
-SRCREV = "0d22b4455666e36334e3faec664ded394d124726"
+SRCREV = "7ef5c29a86d7aebd992a37ff13a7abc50143c668"
 
 # install service and sysconfig
 do_install:append() {
