@@ -18,9 +18,9 @@ RestartSec=5
 Restart=on-abnormal
 LimitNOFILE=1024
 PIDFile=/var/run/frr/watchfrr.pid
-ExecStart=/usr/lib/frr/frrinit.sh start
-ExecStop=/usr/lib/frr/frrinit.sh stop
-ExecReload=/usr/lib/frr/frrinit.sh reload
+ExecStart=/usr/libexec/frr/frrinit.sh start
+ExecStop=/usr/libexec/frr/frrinit.sh stop
+ExecReload=/usr/libexec/frr/frrinit.sh reload
 
 [Install]
 WantedBy=multi-user.target
