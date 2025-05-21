@@ -195,8 +195,12 @@ backup_systemd_state() {
 	enabled_services=$(collect_enabled_services $1)
 	disabled_services=$(collect_disabled_services $1)
 
-	echo "$disabled_services" > $2/.SERVICES_DISABLED
-	echo "$enabled_services" > $2/.SERVICES_ENABLED
+	if [ -n "$disabled_services" ]; then
+		echo "$disabled_services" > $2/.SERVICES_DISABLED
+	fi
+	if [ -n "$enabled_services" ]; then
+		echo "$enabled_services" > $2/.SERVICES_ENABLED
+	fi
 }
 
 # $1 src $2 dst
