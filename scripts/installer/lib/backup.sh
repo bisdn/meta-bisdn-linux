@@ -23,9 +23,9 @@ cp_path_with_attr() {
 	owner="$(stat -c %u:%g $1)"
 	attr="$(stat -c %a $1)"
 
-	[ -n "$DEBUG" ] && echo "DEBUG: setting owner to $owner for file $2"
+	[ -n "$DEBUG" ] && echo "DEBUG: setting owner to $owner for file $2" >&2
 	chown "$owner" "$2"
-	[ -n "$DEBUG" ] && echo "DEBUG: setting attr to $attr for file $2"
+	[ -n "$DEBUG" ] && echo "DEBUG: setting attr to $attr for file $2" >&2
 	chmod "$attr" "$2"
 }
 
@@ -55,7 +55,7 @@ add_to_backup() {
 	relpath="${oldpath#${2}/}"
 	newpath="$3/$relpath"
 
-	[ -n "$DEBUG" ] && echo "DEBUG: adding $relpath to backup"
+	[ -n "$DEBUG" ] && echo "DEBUG: adding $relpath to backup" >&2
 
 	cp_path_with_attr "$(dirname $oldpath)" "$(dirname $newpath)"
 	cp -a "$oldpath" "$(dirname $newpath)"
@@ -87,7 +87,7 @@ remove_from_backup() {
 	relpath="${oldpath#${2}/}"
 	newpath="$3/$relpath"
 
-	[ -n "$DEBUG" ] && echo "DEBUG: removing $relpath from backup"
+	[ -n "$DEBUG" ] && echo "DEBUG: removing $relpath from backup" >&2
 
 	rm -rf "$newpath"
 }
@@ -153,7 +153,7 @@ backup_systemd_state() {
 				# nothing to do if still enabled
 				[ -z "$enabled" ] || continue
 
-				[ -n "$DEBUG" ] && echo "DEBUG: service disabled by user: $service"
+				[ -n "$DEBUG" ] && echo "DEBUG: service disabled by user: $service" >&2
 				disabled_services="$disabled_services ${service%.service}"
 				;;
 		esac
@@ -170,7 +170,7 @@ backup_systemd_state() {
 				# check only services disabled by default
 				[ "$preset" != "enable" ] || continue
 
-				[ -n "$DEBUG" ] && echo "DEBUG: service enabled by user: $service"
+				[ -n "$DEBUG" ] && echo "DEBUG: service enabled by user: $service" >&2
 				enabled_services="$enabled_services ${service%.service}"
 				;;
 		esac
@@ -184,7 +184,7 @@ backup_systemd_state() {
 apply_fixups() {
 	# releases pre 4.7.0 are missing gshadow in the backup list
 	if [ -f "$2/etc/group" ] && [ ! -f "$2/etc/gshadow" ]; then
-		[ -n "$DEBUG" ] && echo "DEBUG: /etc/group found but no /etc/gshadow"
+		[ -n "$DEBUG" ] && echo "DEBUG: /etc/group found but no /etc/gshadow" >&2
 		add_to_backup "/etc/gshadow" $1 $2
 	fi
 }
@@ -239,13 +239,13 @@ bash_systemctl() {
 			echo "WARNING: cannot enable service $service.service: $base_service.service not found" >&2
 		else
 			# for any services to enable, create symlinks
-			[ -n "$DEBUG" ] && echo "DEBUG: enabling service: $service.service"
+			[ -n "$DEBUG" ] && echo "DEBUG: enabling service: $service.service" >&2
 			ln -fs /lib/systemd/system/$base_service.service \
 				$dst/etc/systemd/system/multi-user.target.wants/$service.service
 		fi
 	elif [ "$action" = "disable" ]; then
 		# for any services to disable, remove their symlinks
-		[ -n "$DEBUG" ] && echo "DEBUG: disabling service: $service.service"
+		[ -n "$DEBUG" ] && echo "DEBUG: disabling service: $service.service" >&2
 		rm -f $dst/etc/systemd/system/multi-user.target.wants/$service.service
 	else
 		echo "WARNING: unknown action $action for service $service" >&2
