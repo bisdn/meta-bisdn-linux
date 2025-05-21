@@ -117,15 +117,42 @@ parse_file() {
 	done < $1
 }
 
-backup_systemd_state() {
-	local enabled_services disabled_services service_files service_links
-	local service enabled preset oneshot
+collect_enabled_services() {
+	local enabled_services service_links service_file
+	local service base preset enabled
+
+	if [ -d "$1/etc/systemd/system/multi-user.target.wants" ]; then
+		service_links=$(ls $1/etc/systemd/system/multi-user.target.wants)
+	fi
+
+
+	# collect explicitly enabled services
+	for service in $service_links; do
+		case "$service" in
+			*.service)
+				service_file=$(readlink $1/etc/systemd/system/multi-user.target.wants/$service)
+				base=$(basename $service_file)
+				preset=$(grep "$base" $1/lib/systemd/system-preset/*.preset | cut -d ':' -f 2 | cut -d ' ' -f 1)
+
+				# check only services disabled by default
+				[ "$preset" != "enable" ] || continue
+
+				[ -n "$DEBUG" ] && echo "DEBUG: service enabled by user: $service" >&2
+				enabled_services="$enabled_services ${service%.service}"
+				;;
+		esac
+	done
+
+	echo "$enabled_services"
+}
+
+collect_disabled_services() {
+	local disabled_services service_files
+	local service preset wantedby enabled
+
 
 	if [ -d "$1/lib/systemd/system" ]; then
 		service_files=$(ls $1/lib/systemd/system)
-	fi
-	if [ -d "$1/etc/systemd/system/multi-user.target.wants" ]; then
-		service_links=$(ls $1/etc/systemd/system/multi-user.target.wants)
 	fi
 
 	# collect explicitly disabled services
@@ -159,22 +186,14 @@ backup_systemd_state() {
 		esac
 	done
 
-	# collect explicitly enabled services
-	for service in $service_links; do
-		case "$service" in
-			*.service)
-				service_file=$(readlink $1/etc/systemd/system/multi-user.target.wants/$service)
-				base=$(basename $service_file)
-				preset=$(grep "$base" $1/lib/systemd/system-preset/*.preset | cut -d ':' -f 2 | cut -d ' ' -f 1)
+	echo "$disabled_services"
+}
 
-				# check only services disabled by default
-				[ "$preset" != "enable" ] || continue
+backup_systemd_state() {
+	local enabled_services disabled_services
 
-				[ -n "$DEBUG" ] && echo "DEBUG: service enabled by user: $service" >&2
-				enabled_services="$enabled_services ${service%.service}"
-				;;
-		esac
-	done
+	enabled_services=$(collect_enabled_services $1)
+	disabled_services=$(collect_disabled_services $1)
 
 	echo "$disabled_services" > $2/.SERVICES_DISABLED
 	echo "$enabled_services" > $2/.SERVICES_ENABLED
