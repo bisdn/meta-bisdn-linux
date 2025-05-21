@@ -232,10 +232,10 @@ create_backup()
 		parse_file "$1/$USER_BACKUP_FILE" "-" $1 $2
 	fi
 
+	apply_fixups $1 $2
+
 	# step 3 - backup changed systemd service states
 	backup_systemd_state $1 $2
-
-	apply_fixups $1 $2
 
 	# step 4 - check if anything is left
 	[ -n "$(find $2 -type f)" ] || return 0
