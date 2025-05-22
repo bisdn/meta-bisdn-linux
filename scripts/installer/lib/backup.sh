@@ -31,7 +31,7 @@ cp_path_with_attr() {
 
 # $1 path $2 src $3 dest
 add_to_backup() {
-	local oldpath relpath newpath src_base dst_base
+	local oldpath relpath newpath path src_base dst_base
 
 	# realpath will resolve any symlinks, but symlinks may point to outside
 	# of the temporary filesystem. Busybox's realpath does not support not
@@ -57,8 +57,14 @@ add_to_backup() {
 
 	[ -n "$DEBUG" ] && echo "DEBUG: adding $relpath to backup" >&2
 
-	cp_path_with_attr "$(dirname $oldpath)" "$(dirname $newpath)"
-	cp -a "$oldpath" "$(dirname $newpath)"
+	if [ -d "$oldpath" ]; then
+		for path in $oldpath/*; do
+			[ -e "$path" ] || break
+			add_to_backup "/${path#${2%/}/}" $2 $3
+		done
+	else
+		echo "$1"
+	fi
 }
 
 # $1 path $2 src $3 dest
@@ -89,7 +95,14 @@ remove_from_backup() {
 
 	[ -n "$DEBUG" ] && echo "DEBUG: removing $relpath from backup" >&2
 
-	rm -rf "$newpath"
+	if [ -d "$oldpath" ]; then
+		for path in $oldpath/*; do
+			[ -e "$path" ] || break
+			remove_from_backup "/${path#${2%/}/}" $2 $3
+		done
+	else
+		echo "$1"
+	fi
 }
 
 # $1 file $2 mode (+|-) $3 src $4 dst
@@ -189,6 +202,20 @@ collect_disabled_services() {
 	echo "$disabled_services"
 }
 
+copy_files() {
+	local files=$1
+	local src=${2%/}
+	local dst=${3%/}
+	local file
+
+	for file in $files; do
+		if [ "$(dirname $file)" != "/" ]; then
+			cp_path_with_attr "$(dirname $src/$file)" "$(dirname $dst/$file)"
+		fi
+		cp -a "$src/$file" "$(dirname $dst/$file)"
+	done
+}
+
 backup_systemd_state() {
 	local enabled_services disabled_services
 
@@ -206,37 +233,61 @@ backup_systemd_state() {
 # $1 src $2 dst
 apply_fixups() {
 	# releases pre 4.7.0 are missing gshadow in the backup list
-	if [ -f "$2/etc/group" ] && [ ! -f "$2/etc/gshadow" ]; then
+	if echo "$3" | grep -q '^/etc/group$' && ! echo "$3" | grep -q '^/etc/gshadow$'; then
 		[ -n "$DEBUG" ] && echo "DEBUG: /etc/group found but no /etc/gshadow" >&2
-		add_to_backup "/etc/gshadow" $1 $2
+		echo "/etc/gshadow"
 	fi
+}
+
+diff_lists() {
+	local add=$1
+	local rem=$2
+	local tmpdir=$3
+	local keep=
+
+	echo "$add" | sort -u > $tmpdir/.add
+	echo "$rem" | sort -u > $tmpdir/.rem
+	keep=$(comm -23 $tmpdir/.add $tmpdir/.rem)
+	rm -f $tmpdir/.add $tmpdir/.rem
+
+	echo "$keep"
 }
 
 # $1 backup target $2 backup storage dir
 create_backup()
 {
+	local add_files rem_files backup_files
+	local enabled_services disabled_services
+
 	# step 1 - copy files to keep
 	for file in $1/var/lib/opkg/info/*.conffiles; do
 		[ -f "$file" ] || break
-		parse_file $file "+" $1 $2
+		add_files="$(echo -e "$add_files\n$(parse_file $file "+" $1 $2)")"
 	done
 	if [ -f "$1/$SYSTEM_BACKUP_FILE" ]; then
-		parse_file "$1/$SYSTEM_BACKUP_FILE" "+" $1 $2
+		add_files="$(echo -e "$add_files\n$(parse_file $1/$SYSTEM_BACKUP_FILE "+" $1 $2)")"
 	fi
 
 	if [ -f "$1/$USER_BACKUP_FILE" ]; then
-		parse_file "$1/$USER_BACKUP_FILE" "+" $1 $2
+		add_files="$(echo -e "$add_files\n$(parse_file $1/$USER_BACKUP_FILE "+" $1 $2)")"
 	fi
 
 	# step 2 - remove files to drop
 	if [ -f "$1/$SYSTEM_BACKUP_FILE" ]; then
-		parse_file "$1/$SYSTEM_BACKUP_FILE" "-" $1 $2
+		rem_files="$(echo -e "$rem_files\n$(parse_file $1/$SYSTEM_BACKUP_FILE "-" $1 $2)")"
 	fi
 	if [ -f "$1/$SYSTEM_BACKUP_FILE" ]; then
-		parse_file "$1/$USER_BACKUP_FILE" "-" $1 $2
+		rem_files="$(echo -e "$rem_files\n$(parse_file $1/$USER_BACKUP_FILE "-" $1 $2)")"
 	fi
 
-	apply_fixups $1 $2
+	backup_files=$(diff_lists "$add_files" "$rem_files" $2)
+
+	add_files="$(echo -e "$backup_files\n$(apply_fixups $1 $2 "$backup_files")")"
+
+	backup_files=$(diff_lists "$add_files" "$rem_files" $2)
+
+	# now actually copy the files
+	copy_files "$backup_files" $1 $2
 
 	# step 3 - backup changed systemd service states
 	backup_systemd_state $1 $2
