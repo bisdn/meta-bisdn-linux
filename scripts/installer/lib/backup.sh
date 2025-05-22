@@ -208,6 +208,13 @@ copy_files() {
 	local dst=${3%/}
 	local file
 
+	if [ -n "$DRYRUN" ]; then
+		echo "Files to backup:"
+		[ -z "$files" ] || echo "$files"
+		echo ""
+		return 0
+	fi
+
 	for file in $files; do
 		if [ "$(dirname $file)" != "/" ]; then
 			cp_path_with_attr "$(dirname $src/$file)" "$(dirname $dst/$file)"
@@ -221,6 +228,16 @@ backup_systemd_state() {
 
 	enabled_services=$(collect_enabled_services $1)
 	disabled_services=$(collect_disabled_services $1)
+
+	if [ -n "$DRYRUN" ]; then
+		echo "Services to enable:"
+		[ -z "$enabled_services" ] || echo "$enabled_services"
+		echo ""
+		echo "Services to disable:"
+		[ -z "$disabled_services" ] ||  echo "$disabled_services"
+		echo ""
+		return 0
+	fi
 
 	if [ -n "$disabled_services" ]; then
 		echo "$disabled_services" > $2/.SERVICES_DISABLED
@@ -291,6 +308,10 @@ create_backup()
 
 	# step 3 - backup changed systemd service states
 	backup_systemd_state $1 $2
+
+	if [ -n "$DRYRUN" ]; then
+		return 0
+	fi
 
 	# step 4 - check if anything is left
 	[ -n "$(find $2 -type f)" ] || return 0
