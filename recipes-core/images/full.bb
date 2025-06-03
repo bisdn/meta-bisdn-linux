@@ -48,6 +48,7 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL += "\
     tcpdump \
     tmux \
     vim \
+    wireguard-tools \
     "
 
 IMAGE_LINGUAS = "en-us"
