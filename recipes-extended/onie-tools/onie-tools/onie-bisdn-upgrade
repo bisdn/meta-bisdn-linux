@@ -17,7 +17,7 @@ usage: $(basename "$0") [OPTIONS] [IMAGEURL]
            Example: http://repo.bisdn.de/pub/onie/generic-x86-64/onie-bisdn-generic-x86-64-v5.1.1.bin
 
 Example usage:
-$(basename "$0") http://repo.bisdn.de/pub/onie/generic-x86-64/onie-bisdn-generic-armel-iproc-v5.1.1.bin
+$(basename "$0") http://repo.bisdn.de/pub/onie/generic-x86-64/onie-bisdn-generic-x86-64-v5.1.1.bin
 
 For additional information, see the man page for onie-bisdn-upgrade(1).
 "
