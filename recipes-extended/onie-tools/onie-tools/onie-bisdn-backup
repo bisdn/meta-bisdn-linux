@@ -1,0 +1,75 @@
+#!/bin/bash
+
+# Copyright (C) 2025 Jonas Gorski of BISDN GmbH
+# Bash script to backup or restore BISDN Linux configuration.
+
+set -e
+
+source /usr/libexec/bisdn/backup.sh
+
+USAGE="Create or restore a backup of BISDN Linux configuration
+usage: $(basename "$0") [OPTIONS]
+
+[OPTIONS]
+-h show this message
+-l list backup contents (show only what would be backed up)
+-b <FILENAME> create a tar.gz configuration backup as <FILENAME>
+-r <FILENAME> restore a tar.gz configuraton backup from <FILENAME>
+
+Example usage:
+$(basename "$0") -b bisdn-linux-backup.tgz
+
+For additional information, see the man page for onie-bisdn-backup(1).
+"
+
+BACKUP_FILE=
+MODE=
+
+while getopts "b:hlr:" o; do
+  case $o in
+    b) BACKUP_FILE=$OPTARG
+       MODE=backup;;
+    h) echo "$USAGE";
+       exit 0;;
+    l) MODE=dryrun;;
+    r) BACKUP_FILE=$OPTARG
+       MODE=restore;;
+    *) echo "Unknown parameter passed, printing help"
+       echo "$USAGE";
+       exit 1;;
+  esac
+done
+
+if [ "$MODE" = "restore" ] && [ ! -f "$BACKUP_FILE" ]; then
+   echo -e "Backup $BACKUP_FILE not found" >&2
+fi
+
+if [[ $EUID -ne 0 ]]; then
+   echo -e "Please run this program as root\nExiting" >&2
+   exit 1
+fi
+
+WORKDIR=$(mktemp -d)
+if [ -z "$WORKDIR" ]; then
+   echo "Failed to create temporary work directory" >&2
+   exit 1
+fi
+trap "rm -rf $WORKDIR" EXIT
+
+case "$MODE" in
+  dryrun)
+    DRYRUN=1
+    create_backup "/" "$WORKDIR"
+    ;;
+  backup)
+    create_backup "/" "$WORKDIR"
+    tar czhf "$BACKUP_FILE" -C "$WORKDIR" .
+    echo "Successfully created a configuration backup at $BACKUP_FILE"
+    ;;
+  restore)
+    tar xzf "$BACKUP_FILE" -C "$WORKDIR"
+    restore_backup "$WORKDIR" "/"
+    echo "Successfully restored configuration from $BACKUP_FILE"
+    echo "Some configuration changes may require a reboot."
+    ;;
+esac
