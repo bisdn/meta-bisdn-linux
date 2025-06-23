@@ -7,6 +7,7 @@ inherit packagegroup
 # optional packages as dependencies of this package to allow easy building
 RDEPENDS:${PN} = "\
     fping \
+    frr10 \
     iperf3 \
     ipmitool \
     net-tools \

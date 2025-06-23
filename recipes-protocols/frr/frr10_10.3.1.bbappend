@@ -1,4 +1,4 @@
-FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/files10:"
 
 SRC_URI:append = " \
            file://frr.service \
@@ -6,9 +6,21 @@ SRC_URI:append = " \
            file://support_bundle_commands.conf;subdir=git/tools/etc/frr \
            "
 
-PR = "r2"
+PR = "r1"
 
-RCONFLICTS:${PN} = "frr10"
+# frr 10 as frr10 package workarounds:
+
+# prevent parallel installation
+RCONFLICTS:${PN} = "frr"
+
+# replace frr-native so that the correct one is used
+DEPENDS:class-target:remove = " frr-native"
+DEPENDS:class-target:append = " ${PN}-native"
+
+# yocto auto-packaging only handles ${libdir}/${PN}, which is now different
+FILES:${PN}:append = " \
+    ${libdir}/frr/modules/*.so \
+"
 
 SYSTEMD_AUTO_ENABLE = "enable"
 
