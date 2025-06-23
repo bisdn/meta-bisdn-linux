@@ -14,7 +14,7 @@ SRC_URI = "git://github.com/FRRouting/frr.git;protocol=https;branch=stable/10.3 
            file://frr.pam \
            "
 
-SRCREV = "85cf1ed576deed121751e16a64970f8a652a9e1e"
+SRCREV = "35e662efa7cc9ef3e97a253368950cc1a58f3bc1"
 
 UPSTREAM_CHECK_GITTAGREGEX = "frr-(?P<pver>\d+(\.\d+)+)$"
 
