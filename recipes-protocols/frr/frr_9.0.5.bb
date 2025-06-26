@@ -19,6 +19,20 @@ UPSTREAM_CHECK_GITTAGREGEX = "frr-(?P<pver>\d+(\.\d+)+)$"
 
 CVE_PRODUCT = "frrouting"
 
+# Fixed in 9.0.4 (#15628)
+CVE_CHECK_IGNORE += "CVE-2024-31948"
+# Not an issue in 9.0 and earlier (was introduced in 9.1 with commit
+# bf11a9eb252d ("bgpd: Handle software version capability dynamicaly").
+#
+# Before this commit any continues in the loop were after the increment of pnt,
+# and only after this commit continues were skipping the increment and thus
+# introducing an endless loop.
+CVE_CHECK_IGNORE += "CVE-2024-31949"
+# Fixed in 9.0.4 (#16086)
+CVE_CHECK_IGNORE += "CVE-2024-31950 CVE-2024-31951 CVE-2024-34088"
+# Fixed in 9.0.4 (#16505)
+CVE_CHECK_IGNORE += "CVE-2024-44070"
+
 S = "${WORKDIR}/git"
 
 inherit autotools-brokensep python3native pkgconfig useradd systemd
