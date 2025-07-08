@@ -1,4 +1,4 @@
-FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/files9:"
 
 SRC_URI:append = " \
            file://frr.service \
@@ -7,6 +7,15 @@ SRC_URI:append = " \
            "
 
 PR = "r2"
+
+# replace frr-native so that the correct one is used
+DEPENDS:class-target:remove = " frr-native"
+DEPENDS:class-target:append = " ${PN}-native"
+
+# yocto auto-packaging only handles ${libdir}/${PN}, which is now different
+FILES:${PN}:append = " \
+    ${libdir}/frr/modules/*.so \
+"
 
 SYSTEMD_AUTO_ENABLE = "enable"
 

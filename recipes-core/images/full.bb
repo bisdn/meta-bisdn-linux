@@ -14,7 +14,7 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL += "\
     ethtool \
     file \
     freeradius \
-    frr \
+    frr9 \
     git \
     grpc-cli \
     hostapd \
