@@ -1,7 +1,7 @@
 From 48f06fe5d5774037d623ea353e49e9e3357b8618 Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Mon, 13 Jan 2025 13:04:48 +0100
-Subject: [PATCH 06/11] drivers: add a linux wired driver
+Subject: [PATCH 06/12] drivers: add a linux wired driver
 
 Add a driver making use of the new-ish LOCKED flags for ports and
 neighbors to implement a wired driver for linux.
