@@ -23,6 +23,7 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL += "\
     iptables \
     jq \
     keepalived \
+    keepalived-samples \
     less \
     lmsensors-fancontrol \
     lmsensors-pwmconfig \
