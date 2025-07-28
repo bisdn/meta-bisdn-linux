@@ -1,0 +1,53 @@
+#!/bin/sh
+
+# template script for hostapd auth events related to 802.1x authentication
+#
+# Save this file as wired-auth-events.sh and add your own code to the cases.
+
+# first argument is the interface (e.g. port1)
+IFACE=$1
+# second argument is the event
+EVENT=$2
+# additional arguments depend on the event, most events have the MAC address of
+# the device
+MAC=
+
+# List of events related to 802.1x and MAB authentication
+case "$EVENT" in
+  CTRL-EVENT-EAP-STARTED)
+    MAC=$3
+    # device with MAC $MAC started 802.1x authentication
+    ;;
+  CTRL-EVENT-EAP-SUCCESS |\
+  CTRL-EVENT-EAP-SUCCESS2)
+    MAC=$3
+    # device with MAC $MAC successfully authenticated via 802.1x
+    ;;
+  CTRL-EVENT-EAP-FAILURE |\
+  CTRL-EVENT-EAP-FAILURE2)
+    MAC=$3
+    # device with MAC $MAC failed to authenticate via 802.1x (e.g. wrong
+    # password)
+    ;;
+  CTRL-EVENT-MAB_STARTED)
+    MAC=$3
+    # authentication via MAB was started for device with MAC $MAC
+    ;;
+  CTRL-EVENT-MAB-SUCCESS)
+    MAC=$3
+    # authentication via MAB was successful for device with MAC $MAC
+    ;;
+  CTRL-EVENT-MAB-FAILURE)
+    MAC=$3
+    # authentication via MAB failed for device with MAC $MAC
+    ;;
+  AP-STA-CONNECTED)
+    MAC=$3
+    # device with MAC $MAC successfully authenticated (either via 802.1x or
+    # MAB)
+    ;;
+  AP-STA-DISCONNECTED)
+    MAC=$3
+    # device with MAC $MAC is not authenticated anymore and left
+    ;;
+esac

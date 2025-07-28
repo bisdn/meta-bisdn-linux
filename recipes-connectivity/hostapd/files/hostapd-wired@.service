@@ -8,3 +8,4 @@ ExecStart=/usr/sbin/hostapd /etc/hostapd/hostapd-wired-%i.conf -P /run/hostapd-%
 
 [Install]
 Alias=multi-user.target.wants/hostapd-wired@%i.service
+Also=hostapd-wired-events@%i.service
