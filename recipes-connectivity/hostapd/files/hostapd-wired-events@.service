@@ -1,0 +1,12 @@
+[Unit]
+Description=Hostapd IEEE 802.1X Authentication Event Listener
+Requires=hostapd-wired@%i.service
+After=hostapd-wired@%i.service network.target
+ConditionPathExists=/etc/hostapd/wired-auth-events.sh
+
+[Service]
+ExecStartPre=bash -c "while [ ! -e /var/run/hostapd/%i ]; do sleep 1; done"
+ExecStart=/usr/sbin/hostapd_cli -P /var/run/hostapd -i %i -a /etc/hostapd/wired-auth-events.sh
+
+[Install]
+Alias=multi-user.target.wants/hostapd-wired-events@%i.service
