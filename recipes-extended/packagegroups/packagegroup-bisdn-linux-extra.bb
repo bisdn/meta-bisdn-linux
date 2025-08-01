@@ -25,6 +25,14 @@ RDEPENDS:${PN} += "\
     zstd \
 "
 
+# more text editors as alternatives to vim
+RDEPENDS:${PN} += "\
+    ed \
+    joe \
+    nano \
+    mg \
+"
+
 # Workaround a bug in bitbake where runall does not properly consider all
 # transitive RDEPENDS chains, so add them explicitly.
 # Can be dropped once the fix get backported or we switch to the next LTS Yocto.
