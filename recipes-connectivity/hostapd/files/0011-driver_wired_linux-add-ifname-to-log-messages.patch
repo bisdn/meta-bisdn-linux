@@ -1,0 +1,181 @@
+From acef9009f9b27a58a116bcfef316b60a2bda5730 Mon Sep 17 00:00:00 2001
+From: Jonas Gorski <jonas.gorski@bisdn.de>
+Date: Thu, 24 Jul 2025 16:31:34 +0200
+Subject: [PATCH 11/11] driver_wired_linux: add ifname to log messages
+
+Prefix log messages with the interface name, matching other places in
+hostapd that print messages.
+
+Should make it clearer where things are happening when running auth on
+multiple ports.
+
+Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
+---
+ src/drivers/driver_wired_linux.c | 62 +++++++++++++++++---------------
+ 1 file changed, 34 insertions(+), 28 deletions(-)
+
+diff --git a/src/drivers/driver_wired_linux.c b/src/drivers/driver_wired_linux.c
+index 245f9f9a5178..c6971a5194b0 100644
+--- a/src/drivers/driver_wired_linux.c
++++ b/src/drivers/driver_wired_linux.c
+@@ -337,11 +337,11 @@ static int driver_wired_linux_add_neigh(struct driver_wired_linux_data *drv, con
+ 
+ 	err = nl_wait_for_ack(drv->rtnl_sk);
+ 	if (err < 0) {
+-		wpa_printf(MSG_ERROR, "adding neigh " MACSTR " failed: %s",
+-			   MAC2STR(addr), nl_geterror(err));
++		wpa_printf(MSG_ERROR, "%s: adding neigh " MACSTR " failed: %s",
++			   drv->common.ifname, MAC2STR(addr), nl_geterror(err));
+ 	} else {
+-		wpa_printf(MSG_DEBUG, "added neigh: " MACSTR,
+-			   MAC2STR(addr));
++		wpa_printf(MSG_DEBUG, "%s: added neigh: " MACSTR,
++			   drv->common.ifname, MAC2STR(addr));
+ 	}
+ 
+ err_out:
+@@ -370,11 +370,11 @@ static int driver_wired_linux_del_neigh(struct driver_wired_linux_data *drv, con
+ 
+ 	err = nl_wait_for_ack(drv->rtnl_sk);
+ 	if (err < 0) {
+-		wpa_printf(MSG_ERROR, "deleting neigh " MACSTR " failed: %s",
+-			   MAC2STR(addr), nl_geterror(err));
++		wpa_printf(MSG_ERROR, "%s: deleting neigh " MACSTR " failed: %s",
++			   drv->common.ifname, MAC2STR(addr), nl_geterror(err));
+ 	} else {
+-		wpa_printf(MSG_DEBUG, "deleted neigh: " MACSTR,
+-			   MAC2STR(addr));
++		wpa_printf(MSG_DEBUG, "%s: deleted neigh: " MACSTR,
++			   drv->common.ifname, MAC2STR(addr));
+ 	}
+ 
+ err_out:
+@@ -407,9 +407,10 @@ driver_wired_linux_flush_port(struct driver_wired_linux_data *drv)
+ 
+ out:
+ 	if (err < 0)
+-		wpa_printf(MSG_ERROR, "flushing neighs failed: %s", nl_geterror(err));
++		wpa_printf(MSG_ERROR, "%s: flushing neighs failed: %s",
++			   drv->common.ifname, nl_geterror(err));
+ 	else
+-		wpa_printf(MSG_DEBUG, "flushed neighs");
++		wpa_printf(MSG_DEBUG, "%s: flushed neighs", drv->common.ifname);
+ 	nlmsg_free(msg);
+ 	return err;
+ 
+@@ -428,7 +429,7 @@ driver_wired_linux_set_port_locked(struct driver_wired_linux_data *drv,
+ 	int err;
+ 
+ 	wpa_printf(MSG_DEBUG,
+-		   "driver_linux_wired: setting port %i to %s", drv->ifindex,
++		   "%s: setting port to %s", drv->common.ifname,
+ 		   locked ? "locked" : "unlocked");
+ 
+ 	msg = nlmsg_alloc_simple(RTM_SETLINK, 0);
+@@ -459,7 +460,7 @@ driver_wired_linux_set_port_locked(struct driver_wired_linux_data *drv,
+ 
+ out:
+ 	if (err)
+-		wpa_printf(MSG_ERROR, "failed to set port: %i (%s)", err,
++		wpa_printf(MSG_ERROR, "%s: failed to set port: %i (%s)", drv->common.ifname, err,
+ 			   nl_geterror(err));
+ 	nlmsg_free(msg);
+ 	return err;
+@@ -495,7 +496,7 @@ driver_wired_linux_set_port_up(struct driver_wired_linux_data *drv, bool up)
+ 	err = 0;
+ err_out:
+ 	if (err)
+-		wpa_printf(MSG_ERROR, "failed to set port %s: %i (%s)",
++		wpa_printf(MSG_ERROR, "%s: failed to set port %s: %i (%s)", drv->common.ifname,
+ 			   up ? "up" : "down", err, nl_geterror(err));
+ 	nlmsg_free(msg);
+ 	return err;
+@@ -511,8 +512,8 @@ static void driver_wired_linux_event_rtm_newlink(void *ctx,
+ 	if (drv->ifindex > 0 && ifi->ifi_index != drv->ifindex)
+ 		return;
+ 
+-        wpa_printf(MSG_DEBUG, "RTM_NEWLINK: ifi_index=%d ifi_family=%d ifi_flags=0x%x",
+-                   ifi->ifi_index, ifi->ifi_family,
++        wpa_printf(MSG_DEBUG, "%s: RTM_NEWLINK: ifi_index=%d ifi_family=%d ifi_flags=0x%x",
++                   drv->common.ifname, ifi->ifi_index, ifi->ifi_family,
+                    ifi->ifi_flags);
+ 
+ 	running = (ifi->ifi_flags & (IFF_UP | IFF_RUNNING)) == (IFF_UP | IFF_RUNNING);
+@@ -537,8 +538,8 @@ static void driver_wired_linux_event_rtm_dellink(void *ctx,
+ 	if (ifi->ifi_index != drv->ifindex)
+ 		return;
+ 
+-        wpa_printf(MSG_DEBUG, "RTM_DELLINK: ifi_index=%d ifi_family=%d ifi_flags=0x%x",
+-                   ifi->ifi_index, ifi->ifi_family,
++        wpa_printf(MSG_DEBUG, "%s: RTM_DELLINK: ifi_index=%d ifi_family=%d ifi_flags=0x%x",
++                   drv->common.ifname, ifi->ifi_index, ifi->ifi_family,
+                    ifi->ifi_flags);
+ 
+ 	/* TODO: please do not remove the interface  */
+@@ -580,8 +581,8 @@ static void driver_wired_linux_event_rtm_newneigh(void *ctx,
+ 		attr = RTA_NEXT(attr, attrlen);
+ 	}
+ 
+-	wpa_printf(MSG_DEBUG, "Got new %slocked neigh " MACSTR,
+-		   (flags_ext & NTF_EXT_LOCKED) ? "" : "un",
++	wpa_printf(MSG_DEBUG, "%s: Got new %slocked neigh " MACSTR,
++		   drv->common.ifname, (flags_ext & NTF_EXT_LOCKED) ? "" : "un",
+ 		   MAC2STR(mac_address));
+ 
+ 	/* no need to report unlocked neighs */
+@@ -639,13 +640,13 @@ static void driver_wired_linux_event_rtm_delneigh(void *ctx,
+ 
+ 	if (sta->flags & WLAN_STA_AUTHORIZED) {
+ 		if (flags_ext & NTF_EXT_LOCKED)
+-			wpa_printf(MSG_DEBUG, "neigh " MACSTR " was locked but authorized?!",
+-				   MAC2STR(mac_address));
++			wpa_printf(MSG_DEBUG, "%s: neigh " MACSTR " was locked but authorized?!",
++				   drv->common.ifname, MAC2STR(mac_address));
+ 		ap_sta_deauthenticate(drv->common.ctx, sta, WLAN_REASON_DISASSOC_STA_HAS_LEFT);
+ 	} else {
+ 		if (!(flags_ext & NTF_EXT_LOCKED))
+-			wpa_printf(MSG_DEBUG, "neigh " MACSTR " was unlocked but not authorized?!",
+-				   MAC2STR(mac_address));
++			wpa_printf(MSG_DEBUG, "%s: neigh " MACSTR " was unlocked but not authorized?!",
++				   drv->common.ifname, MAC2STR(mac_address));
+ 		ap_sta_disassociate(drv->common.ctx, sta, WLAN_REASON_DISASSOC_STA_HAS_LEFT);
+ 	}
+ 	ap_free_sta(drv->common.ctx, sta);
+@@ -785,24 +786,29 @@ wired_linux_set_sta_authorized(void *priv, const u8 *addr,
+ 		return 0;
+ 
+ 	if (authorized) {
+-		wpa_printf(MSG_INFO, "authorizing " MACSTR, MAC2STR(addr));
++		wpa_printf(MSG_INFO, "%s: authorizing " MACSTR,
++			   drv->common.ifname, MAC2STR(addr));
+ 		if (drv->multi_auth || drv->mac_auth == ENABLE_KERNEL_MAB) {
+-			wpa_printf(MSG_DEBUG, "creating neigh");
++			wpa_printf(MSG_DEBUG, "%s: creating neigh",
++				   drv->common.ifname);
+ 			driver_wired_linux_add_neigh(priv, addr);
+ 		}
+ 
+ 		if (!drv->multi_auth && drv->locked) {
+-			wpa_printf(MSG_DEBUG, "unlocking port");
++			wpa_printf(MSG_DEBUG, "%s: unlocking port",
++				   drv->common.ifname);
+ 			driver_wired_linux_set_port_locked(drv, false);
+ 		}
+ 	} else {
+-		wpa_printf(MSG_INFO, "de-authorizing " MACSTR, MAC2STR(addr));
++		wpa_printf(MSG_INFO, "%s: de-authorizing " MACSTR,
++			   drv->common.ifname, MAC2STR(addr));
+ 		if (drv->multi_auth) {
+ 			wpa_printf(MSG_DEBUG, "removing neigh");
+ 			driver_wired_linux_del_neigh(priv, addr);
+ 		} else {
+ 			if (!drv->locked) {
+-				wpa_printf(MSG_DEBUG, "locking port");
++				wpa_printf(MSG_DEBUG, "%s: locking port",
++					   drv->common.ifname);
+ 				driver_wired_linux_set_port_locked(drv, true);
+ 				driver_wired_linux_flush_port(drv);
+ 			}
+-- 
+2.50.1
+
