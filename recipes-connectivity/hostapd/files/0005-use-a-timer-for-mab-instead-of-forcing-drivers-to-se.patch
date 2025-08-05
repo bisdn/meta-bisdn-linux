@@ -1,8 +1,8 @@
 From e4e892771d631104476455ef95c41bfe72ffd20b Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Fri, 14 Feb 2025 10:52:51 +0100
-Subject: [PATCH 5/9] use a timer for mab instead of forcing drivers to set it
- explicitly
+Subject: [PATCH 05/10] use a timer for mab instead of forcing drivers to set
+ it explicitly
 
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
@@ -148,5 +148,5 @@ index 446c60f79fe4..0df283baa4a6 100644
  
  	/**
 -- 
-2.48.1
+2.50.1
 

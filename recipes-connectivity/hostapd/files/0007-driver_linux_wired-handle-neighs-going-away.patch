@@ -1,7 +1,7 @@
 From a5ef112d767f7e79c396b5d21982c63d4f919a28 Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Fri, 14 Feb 2025 10:59:57 +0100
-Subject: [PATCH 7/9] driver_linux_wired: handle neighs going away
+Subject: [PATCH 07/10] driver_linux_wired: handle neighs going away
 
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
@@ -80,5 +80,5 @@ index 6d72fcadc41e..8ed3ac7cd5c6 100644
  
  static void wired_driver_hapd_deinit(void *priv);
 -- 
-2.48.1
+2.50.1
 
