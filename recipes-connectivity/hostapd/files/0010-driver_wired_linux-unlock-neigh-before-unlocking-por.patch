@@ -1,7 +1,7 @@
 From 3e2ce55a34681a29dc96b36317e27c615bb33b63 Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Thu, 24 Jul 2025 14:52:53 +0200
-Subject: [PATCH 10/10] driver_wired_linux: unlock neigh before unlocking port
+Subject: [PATCH 10/11] driver_wired_linux: unlock neigh before unlocking port
 
 Unlocking a port will flush all present locked neighs, which will
 trigger us reporting the STA as left, causing hostapd to immediately
