@@ -1,0 +1,46 @@
+From 3e2ce55a34681a29dc96b36317e27c615bb33b63 Mon Sep 17 00:00:00 2001
+From: Jonas Gorski <jonas.gorski@bisdn.de>
+Date: Thu, 24 Jul 2025 14:52:53 +0200
+Subject: [PATCH 10/10] driver_wired_linux: unlock neigh before unlocking port
+
+Unlocking a port will flush all present locked neighs, which will
+trigger us reporting the STA as left, causing hostapd to immediately
+report AP-STA-DISCONNECTED and stopping the accounting session, deleting
+the STA from hostapd, but keeping the port unlocked.
+
+Fix this by unlocking the neigh first before unlocking the port,
+properly keeping the STA active.
+
+Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
+---
+ src/drivers/driver_wired_linux.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/src/drivers/driver_wired_linux.c b/src/drivers/driver_wired_linux.c
+index fbcfd6373e8f..245f9f9a5178 100644
+--- a/src/drivers/driver_wired_linux.c
++++ b/src/drivers/driver_wired_linux.c
+@@ -786,14 +786,14 @@ wired_linux_set_sta_authorized(void *priv, const u8 *addr,
+ 
+ 	if (authorized) {
+ 		wpa_printf(MSG_INFO, "authorizing " MACSTR, MAC2STR(addr));
+-		if (drv->multi_auth) {
++		if (drv->multi_auth || drv->mac_auth == ENABLE_KERNEL_MAB) {
+ 			wpa_printf(MSG_DEBUG, "creating neigh");
+ 			driver_wired_linux_add_neigh(priv, addr);
+-		} else {
+-			if (drv->locked) {
+-				wpa_printf(MSG_DEBUG, "unlocking port");
+-				driver_wired_linux_set_port_locked(drv, false);
+-			}
++		}
++
++		if (!drv->multi_auth && drv->locked) {
++			wpa_printf(MSG_DEBUG, "unlocking port");
++			driver_wired_linux_set_port_locked(drv, false);
+ 		}
+ 	} else {
+ 		wpa_printf(MSG_INFO, "de-authorizing " MACSTR, MAC2STR(addr));
+-- 
+2.50.1
+

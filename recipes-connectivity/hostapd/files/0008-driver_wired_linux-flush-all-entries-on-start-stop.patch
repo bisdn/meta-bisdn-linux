@@ -1,7 +1,7 @@
 From 88fa44e53f3412c5c105f650ff9365f90ce49b50 Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Mon, 17 Feb 2025 14:14:16 +0100
-Subject: [PATCH 8/9] driver_wired_linux: flush all entries on start/stop
+Subject: [PATCH 08/10] driver_wired_linux: flush all entries on start/stop
 
 Make sure that there are no fdb entries left on start or stop that may
 unlock traffic unexpectedly.
@@ -33,5 +33,5 @@ index 8ed3ac7cd5c6..0b929c14811c 100644
  	if (drv->common.sock >= 0) {
  		eloop_unregister_read_sock(drv->common.sock);
 -- 
-2.48.1
+2.50.1
 
