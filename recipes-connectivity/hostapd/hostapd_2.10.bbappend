@@ -10,6 +10,8 @@ SRC_URI:append = "\
     file://0007-driver_linux_wired-handle-neighs-going-away.patch \
     file://0008-driver_wired_linux-flush-all-entries-on-start-stop.patch \
     file://0009-driver_wired_linux-wait-for-bridge-attachment.patch \
+    file://0010-driver_wired_linux-unlock-neigh-before-unlocking-por.patch \
+    file://0011-driver_wired_linux-add-ifname-to-log-messages.patch \
     file://defconfig \
     file://hostapd-wired.conf \
     file://hostapd-wired@.service \
