@@ -1,7 +1,7 @@
 From 55ad721b3e8cc75870f4e0bc1bf0712a0768fc09 Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Mon, 20 Jan 2025 09:07:56 +0100
-Subject: [PATCH 03/10] add wired driver extra options
+Subject: [PATCH 03/11] add wired driver extra options
 
 Add two options for for driver_wired_linux:
 

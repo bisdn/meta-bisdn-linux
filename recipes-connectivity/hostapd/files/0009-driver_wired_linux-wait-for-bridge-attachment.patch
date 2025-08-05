@@ -1,7 +1,7 @@
 From 0750ee63edf16e431d82c205ada10bc468e3d19b Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Mon, 17 Feb 2025 14:36:36 +0100
-Subject: [PATCH 09/10] driver_wired_linux: wait for bridge attachment
+Subject: [PATCH 09/11] driver_wired_linux: wait for bridge attachment
 
 If bridge assignment happens in parallel to hostapd bring up, the
 interface may not yet be attached to the bridge when hostapd tries to
