@@ -53,6 +53,7 @@ SRC_URI += " \
   file://0001-Add-ofdpa_vpws.py-sample-code-for-MPLS-pseudowires.patch \
   file://0002-Add-ryu-app-bisdn-__init__.py-to-help-python-recogni.patch \
   file://0001-Upgrade-eventlet.patch \
+  file://0001-remove-hook.patch \
   file://ryu-manager \
   file://ryu-manager.service \
 "
