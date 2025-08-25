@@ -1,7 +1,7 @@
 From a93fd09c848a181aecaea0c84a0b64e2612075c2 Mon Sep 17 00:00:00 2001
 From: Jouni Malinen <j@w1.fi>
 Date: Sun, 17 Dec 2023 14:09:57 +0200
-Subject: [PATCH 01/11] Split ap_sta_set_authorized() into two steps
+Subject: [PATCH 01/12] Split ap_sta_set_authorized() into two steps
 
 This function is both updating the hostapd-internal sta->flags value and
 sending out the AP-STA-CONNECTED control interface message. When

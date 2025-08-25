@@ -1,7 +1,7 @@
 From acef9009f9b27a58a116bcfef316b60a2bda5730 Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Thu, 24 Jul 2025 16:31:34 +0200
-Subject: [PATCH 11/11] driver_wired_linux: add ifname to log messages
+Subject: [PATCH 11/12] driver_wired_linux: add ifname to log messages
 
 Prefix log messages with the interface name, matching other places in
 hostapd that print messages.

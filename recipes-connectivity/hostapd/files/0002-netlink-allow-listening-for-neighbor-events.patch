@@ -1,7 +1,7 @@
 From 0c14202044d7b10f0a1ed1cffa05068e91c8c75e Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Mon, 13 Jan 2025 11:10:41 +0100
-Subject: [PATCH 02/11] netlink: allow listening for neighbor events
+Subject: [PATCH 02/12] netlink: allow listening for neighbor events
 
 Similar how subscribing to link events works, allow subscribing to
 neighbor events, but only subscribe if any callbacks are populated.

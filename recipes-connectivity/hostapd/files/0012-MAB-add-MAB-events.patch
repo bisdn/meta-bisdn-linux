@@ -1,0 +1,72 @@
+From 4a578bd3b0f6cfe1964fc63e629c03347fbc0fc2 Mon Sep 17 00:00:00 2001
+From: Jonas Gorski <jonas.gorski@bisdn.de>
+Date: Thu, 24 Jul 2025 13:11:46 +0200
+Subject: [PATCH 12/12] MAB: add MAB events
+
+Generate MAB events for STARTED, SUCCESS and FAILURE, so that scripts can
+log and/or react to MAB specific events.
+
+Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
+---
+ src/ap/ieee802_1x.c   | 7 +++++++
+ src/common/wpa_ctrl.h | 5 +++++
+ 2 files changed, 12 insertions(+)
+
+diff --git a/src/ap/ieee802_1x.c b/src/ap/ieee802_1x.c
+index c2b3dce437e3..15ceb3c93e76 100644
+--- a/src/ap/ieee802_1x.c
++++ b/src/ap/ieee802_1x.c
+@@ -11,6 +11,7 @@
+ #include <sqlite3.h>
+ #endif /* CONFIG_SQLITE */
+ 
++#include "common/wpa_ctrl.h"
+ #include "utils/common.h"
+ #include "utils/eloop.h"
+ #include "crypto/md5.h"
+@@ -1044,6 +1045,8 @@ void ieee802_1x_handle_eap_rx_timeout(void *eloop_ctx, void *timeout_ctx)
+ 	hostapd_logger(hapd, sta->addr, HOSTAPD_MODULE_IEEE8021X,
+ 			HOSTAPD_LEVEL_DEBUG,
+ 			"Falling back to MAB - skipping IEEE 802.1X/EAP");
++	wpa_msg(hapd->msg_ctx, MSG_INFO,
++		WPA_EVENT_MAB_STARTED MACSTR, MAC2STR(sta->addr));
+ 	sta->mab = 1;
+ 	os_snprintf(buf, sizeof(buf), RADIUS_ADDR_FORMAT,
+ 			MAC2STR(sta->addr));
+@@ -2075,6 +2078,8 @@ ieee802_1x_receive_auth(struct radius_msg *msg, struct radius_msg *req,
+ 			sm->eap_if->aaaEapReq = true;
+ 			sta->eapol_sm->auth_pae_state = AUTH_PAE_AUTHENTICATED;
+ 			sta->eapol_sm->be_auth_state = BE_AUTH_SUCCESS;
++			wpa_msg(hapd->msg_ctx, MSG_INFO,
++				WPA_EVENT_MAB_SUCCESS MACSTR, MAC2STR(sta->addr));
+ 			ieee802_1x_set_sta_authorized(sm->eapol->conf.ctx,
+ 					sm->sta, 1);
+ 		} else {
+@@ -2093,6 +2098,8 @@ ieee802_1x_receive_auth(struct radius_msg *msg, struct radius_msg *req,
+ 		sm->eap_if->aaaFail = true;
+ 		if (sta->mab) {
+ 			sm->eap_if->aaaEapReq = true;
++			wpa_msg(hapd->msg_ctx, MSG_INFO,
++				WPA_EVENT_MAB_FAILURE MACSTR, MAC2STR(sta->addr));
+ 			ieee802_1x_set_sta_authorized(sm->eapol->conf.ctx,
+ 					sm->sta, 0);
+ 		} else {
+diff --git a/src/common/wpa_ctrl.h b/src/common/wpa_ctrl.h
+index 2c7ec043d409..c80c21b171b5 100644
+--- a/src/common/wpa_ctrl.h
++++ b/src/common/wpa_ctrl.h
+@@ -422,6 +422,11 @@ extern "C" {
+ /* PASN authentication status */
+ #define PASN_AUTH_STATUS "PASN-AUTH-STATUS "
+ 
++/* MAC authentication status */
++#define WPA_EVENT_MAB_STARTED "CTRL-EVENT-MAB-STARTED "
++#define WPA_EVENT_MAB_SUCCESS "CTRL-EVENT-MAB-SUCCESS "
++#define WPA_EVENT_MAB_FAILURE "CTRL-EVENT-MAB-FAILURE "
++
+ /* BSS command information masks */
+ 
+ #define WPA_BSS_MASK_ALL		0xFFFDFFFF
+-- 
+2.50.1
+
