@@ -58,6 +58,7 @@ PACKAGECONFIG[pbrd] = "--enable-pbrd,--disable-pbrd,"
 PACKAGECONFIG[bfdd] = "--enable-bfdd,--disable-bfdd,"
 PACKAGECONFIG[pathd] = "--enable-pathd,--disable-pathd,"
 PACKAGECONFIG[mgmtd] = "--enable-mgmtd,--disable-mgmtd,"
+PACKAGECONFIG[datacenter] = "--enable-datacenter,--disable-datacenter"
 
 do_install:append:class-target () {
     # remove the global config
