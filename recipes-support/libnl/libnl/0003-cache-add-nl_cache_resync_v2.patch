@@ -1,7 +1,7 @@
 From f4996c0832479100b8eb4b78ce0e5ebfbc4dc3c1 Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Mon, 3 Feb 2025 14:57:49 +0100
-Subject: [PATCH 3/9] cache: add nl_cache_resync_v2()
+Subject: [PATCH 03/17] cache: add nl_cache_resync_v2()
 
 When the include callback v2 support was added in 66d032ad443a
 ("cache_mngr: add include callback v2"), resync_cb() was updated to
@@ -102,5 +102,5 @@ index b5a33bba1013..8df31c952bdc 100644
 +	nl_cache_resync_v2;
 +} libnl_3_11;
 -- 
-2.47.1
+2.51.0
 
