@@ -1,0 +1,268 @@
+From 031d6c02568376a7893f5ca612a0c24366823f58 Mon Sep 17 00:00:00 2001
+From: Christoph Paasch <cpaasch@openai.com>
+Date: Wed, 6 Aug 2025 13:50:09 -0700
+Subject: [PATCH 10/17] [link] Avoid leaking rtnl_link object
+
+When dumping and the *_ATTR_LINK flag is present, we do a call to
+link_lookup() which ends up getting a references on the link object.
+
+Thus, if we want to avoid leaking things, we need to actually
+rtnl_link_put the object. Do this with _nl_auto_rtnl_link.
+
+Signed-off-by: Christoph Paasch <cpaasch@openai.com>
+Upstream-Status: Backport [https://github.com/thom311/libnl/commit/75352b796993b264879dd0469325925b09e4c143]
+Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
+---
+ lib/route/link/ip6gre.c | 5 +++--
+ lib/route/link/ip6tnl.c | 6 ++++--
+ lib/route/link/ip6vti.c | 5 +++--
+ lib/route/link/ipgre.c  | 7 +++++--
+ lib/route/link/ipip.c   | 7 +++++--
+ lib/route/link/ipvti.c  | 7 +++++--
+ lib/route/link/sit.c    | 7 +++++--
+ lib/route/link/vxlan.c  | 7 +++++--
+ lib/route/link/xfrmi.c  | 3 ++-
+ 9 files changed, 37 insertions(+), 17 deletions(-)
+
+diff --git a/lib/route/link/ip6gre.c b/lib/route/link/ip6gre.c
+index aeec1c46d2ea..530a48a5154b 100644
+--- a/lib/route/link/ip6gre.c
++++ b/lib/route/link/ip6gre.c
+@@ -26,6 +26,7 @@
+ 
+ #include "nl-route.h"
+ #include "link-api.h"
++#include "nl-aux-route/nl-route.h"
+ 
+ #define IP6GRE_ATTR_LINK          (1 << 0)
+ #define IP6GRE_ATTR_IFLAGS        (1 << 1)
+@@ -242,11 +243,11 @@ static void ip6gre_dump_line(struct rtnl_link *link, struct nl_dump_params *p)
+ static void ip6gre_dump_details(struct rtnl_link *link, struct nl_dump_params *p)
+ {
+ 	struct ip6gre_info *ip6gre = link->l_info;
+-	char *name;
+ 	char addr[INET6_ADDRSTRLEN];
+ 
+ 	if (ip6gre->ip6gre_mask & IP6GRE_ATTR_LINK) {
+-		struct rtnl_link *parent;
++		_nl_auto_rtnl_link struct rtnl_link *parent = NULL;
++		char *name;
+ 
+ 		nl_dump(p, "      link ");
+ 
+diff --git a/lib/route/link/ip6tnl.c b/lib/route/link/ip6tnl.c
+index 7363753fe7c8..e71d4401cc4c 100644
+--- a/lib/route/link/ip6tnl.c
++++ b/lib/route/link/ip6tnl.c
+@@ -29,6 +29,7 @@
+ 
+ #include "nl-route.h"
+ #include "link-api.h"
++#include "nl-aux-route/nl-route.h"
+ 
+ #define IP6_TNL_ATTR_LINK          (1 << 0)
+ #define IP6_TNL_ATTR_LOCAL         (1 << 1)
+@@ -225,10 +226,11 @@ static void ip6_tnl_dump_line(struct rtnl_link *link, struct nl_dump_params *p)
+ static void ip6_tnl_dump_details(struct rtnl_link *link, struct nl_dump_params *p)
+ {
+ 	struct ip6_tnl_info *ip6_tnl = link->l_info;
+-	char *name, addr[INET6_ADDRSTRLEN];
++	char addr[INET6_ADDRSTRLEN];
+ 
+ 	if (ip6_tnl->ip6_tnl_mask & IP6_TNL_ATTR_LINK) {
+-		struct rtnl_link *parent;
++		_nl_auto_rtnl_link struct rtnl_link *parent = NULL;
++		char *name;
+ 
+ 		nl_dump(p, "      link ");
+ 
+diff --git a/lib/route/link/ip6vti.c b/lib/route/link/ip6vti.c
+index a6a533191b11..e27e15fab95f 100644
+--- a/lib/route/link/ip6vti.c
++++ b/lib/route/link/ip6vti.c
+@@ -26,6 +26,7 @@
+ 
+ #include "nl-route.h"
+ #include "link-api.h"
++#include "nl-aux-route/nl-route.h"
+ 
+ #define IP6VTI_ATTR_LINK      (1 << 0)
+ #define IP6VTI_ATTR_IKEY      (1 << 1)
+@@ -176,11 +177,11 @@ static void ip6vti_dump_line(struct rtnl_link *link, struct nl_dump_params *p)
+ static void ip6vti_dump_details(struct rtnl_link *link, struct nl_dump_params *p)
+ {
+ 	struct ip6vti_info *ip6vti = link->l_info;
+-	char *name;
+ 	char addr[INET6_ADDRSTRLEN];
+ 
+ 	if (ip6vti->ip6vti_mask & IP6VTI_ATTR_LINK) {
+-		struct rtnl_link *parent;
++		_nl_auto_rtnl_link struct rtnl_link *parent = NULL;
++		char *name;
+ 
+ 		nl_dump(p, "      link ");
+ 
+diff --git a/lib/route/link/ipgre.c b/lib/route/link/ipgre.c
+index bd3cc40f5b24..264031a4f8b7 100644
+--- a/lib/route/link/ipgre.c
++++ b/lib/route/link/ipgre.c
+@@ -29,6 +29,7 @@
+ 
+ #include "nl-route.h"
+ #include "link-api.h"
++#include "nl-aux-route/nl-route.h"
+ 
+ #define IPGRE_ATTR_LINK          (1 << 0)
+ #define IPGRE_ATTR_IFLAGS        (1 << 1)
+@@ -234,10 +235,12 @@ static void ipgre_dump_line(struct rtnl_link *link, struct nl_dump_params *p)
+ static void ipgre_dump_details(struct rtnl_link *link, struct nl_dump_params *p)
+ {
+ 	struct ipgre_info *ipgre = link->l_info;
+-	char *name, addr[INET_ADDRSTRLEN];
+-	struct rtnl_link *parent;
++	char addr[INET_ADDRSTRLEN];
+ 
+ 	if (ipgre->ipgre_mask & IPGRE_ATTR_LINK) {
++		_nl_auto_rtnl_link struct rtnl_link *parent = NULL;
++		char *name;
++
+ 		nl_dump(p, "      link ");
+ 
+ 		name = NULL;
+diff --git a/lib/route/link/ipip.c b/lib/route/link/ipip.c
+index 74db8901bcbe..0e3c044ca811 100644
+--- a/lib/route/link/ipip.c
++++ b/lib/route/link/ipip.c
+@@ -29,6 +29,7 @@
+ 
+ #include "nl-route.h"
+ #include "link-api.h"
++#include "nl-aux-route/nl-route.h"
+ 
+ #define IPIP_ATTR_LINK          (1 << 0)
+ #define IPIP_ATTR_LOCAL         (1 << 1)
+@@ -189,10 +190,12 @@ static void ipip_dump_line(struct rtnl_link *link, struct nl_dump_params *p)
+ static void ipip_dump_details(struct rtnl_link *link, struct nl_dump_params *p)
+ {
+ 	struct ipip_info *ipip = link->l_info;
+-	char *name, addr[INET_ADDRSTRLEN];
+-	struct rtnl_link *parent;
++	char addr[INET_ADDRSTRLEN];
+ 
+ 	if (ipip->ipip_mask & IPIP_ATTR_LINK) {
++		_nl_auto_rtnl_link struct rtnl_link *parent = NULL;
++		char *name;
++
+ 		nl_dump(p, "      link ");
+ 
+ 		name = NULL;
+diff --git a/lib/route/link/ipvti.c b/lib/route/link/ipvti.c
+index fd578959f666..6bb6a0f07b0a 100644
+--- a/lib/route/link/ipvti.c
++++ b/lib/route/link/ipvti.c
+@@ -29,6 +29,7 @@
+ 
+ #include "nl-route.h"
+ #include "link-api.h"
++#include "nl-aux-route/nl-route.h"
+ 
+ #define IPVTI_ATTR_LINK		 (1 << 0)
+ #define IPVTI_ATTR_IKEY		 (1 << 1)
+@@ -179,10 +180,12 @@ static void ipvti_dump_line(struct rtnl_link *link, struct nl_dump_params *p)
+ static void ipvti_dump_details(struct rtnl_link *link, struct nl_dump_params *p)
+ {
+ 	struct ipvti_info *ipvti = link->l_info;
+-	char *name, addr[INET_ADDRSTRLEN];
+-	struct rtnl_link *parent;
++	char addr[INET_ADDRSTRLEN];
+ 
+ 	if (ipvti->ipvti_mask & IPVTI_ATTR_LINK) {
++		_nl_auto_rtnl_link struct rtnl_link *parent = NULL;
++		char *name;
++
+ 		nl_dump(p, "      link ");
+ 
+ 		name = NULL;
+diff --git a/lib/route/link/sit.c b/lib/route/link/sit.c
+index 69dd3163d459..681b4bfd1e0e 100644
+--- a/lib/route/link/sit.c
++++ b/lib/route/link/sit.c
+@@ -29,6 +29,7 @@
+ 
+ #include "nl-route.h"
+ #include "link-api.h"
++#include "nl-aux-route/nl-route.h"
+ 
+ #define SIT_ATTR_LINK          (1 << 0)
+ #define SIT_ATTR_LOCAL         (1 << 1)
+@@ -257,10 +258,12 @@ static void sit_dump_line(struct rtnl_link *link, struct nl_dump_params *p)
+ static void sit_dump_details(struct rtnl_link *link, struct nl_dump_params *p)
+ {
+ 	struct sit_info *sit = link->l_info;
+-	char *name, addr[INET_ADDRSTRLEN], addr6[INET6_ADDRSTRLEN];
+-	struct rtnl_link *parent;
++	char addr[INET_ADDRSTRLEN], addr6[INET6_ADDRSTRLEN];
+ 
+ 	if (sit->sit_mask & SIT_ATTR_LINK) {
++		_nl_auto_rtnl_link struct rtnl_link *parent = NULL;
++		char *name;
++
+ 		nl_dump(p, "      link ");
+ 
+ 		name = NULL;
+diff --git a/lib/route/link/vxlan.c b/lib/route/link/vxlan.c
+index d0ebc6a81422..ed86cabb8d86 100644
+--- a/lib/route/link/vxlan.c
++++ b/lib/route/link/vxlan.c
+@@ -29,6 +29,7 @@
+ 
+ #include "nl-route.h"
+ #include "link-api.h"
++#include "nl-aux-route/nl-route.h"
+ 
+ /** @cond SKIP */
+ #define VXLAN_ATTR_ID                  (1<<0)
+@@ -312,8 +313,7 @@ static void vxlan_dump_line(struct rtnl_link *link, struct nl_dump_params *p)
+ static void vxlan_dump_details(struct rtnl_link *link, struct nl_dump_params *p)
+ {
+ 	struct vxlan_info *vxi = link->l_info;
+-	char *name, addr[INET6_ADDRSTRLEN];
+-	struct rtnl_link *parent;
++	char addr[INET6_ADDRSTRLEN];
+ 
+ 	nl_dump_line(p, "    vxlan-id %u\n", vxi->vxi_id);
+ 
+@@ -328,6 +328,9 @@ static void vxlan_dump_details(struct rtnl_link *link, struct nl_dump_params *p)
+ 	}
+ 
+ 	if (vxi->ce_mask & VXLAN_ATTR_LINK) {
++		_nl_auto_rtnl_link struct rtnl_link *parent = NULL;
++		char *name;
++
+ 		nl_dump(p, "      link ");
+ 
+ 		name = NULL;
+diff --git a/lib/route/link/xfrmi.c b/lib/route/link/xfrmi.c
+index 09ceb809fd87..5b80037b0633 100644
+--- a/lib/route/link/xfrmi.c
++++ b/lib/route/link/xfrmi.c
+@@ -29,6 +29,7 @@
+ 
+ #include "nl-route.h"
+ #include "link-api.h"
++#include "nl-aux-route/nl-route.h"
+ 
+ #define XFRMI_ATTR_LINK  (1 << 0)
+ #define XFRMI_ATTR_IF_ID (1 << 1)
+@@ -134,7 +135,7 @@ static void xfrmi_dump_details(struct rtnl_link *link, struct nl_dump_params *p)
+ 	struct xfrmi_info *xfrmi = link->l_info;
+ 
+ 	if (xfrmi->xfrmi_mask & XFRMI_ATTR_LINK) {
+-		struct rtnl_link *parent;
++		_nl_auto_rtnl_link struct rtnl_link *parent = NULL;
+ 		char *name;
+ 
+ 		nl_dump(p, "      link ");
+-- 
+2.51.0
+

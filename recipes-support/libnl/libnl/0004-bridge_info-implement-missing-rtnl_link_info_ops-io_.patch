@@ -1,0 +1,66 @@
+From 266ce451b368dbf856b2aac6d3fc84b499ddf2e1 Mon Sep 17 00:00:00 2001
+From: Jonas Gorski <jonas.gorski@bisdn.de>
+Date: Tue, 3 Jun 2025 15:50:27 +0200
+Subject: [PATCH 04/17] bridge_info: implement missing
+ rtnl_link_info_ops::io_clone()
+
+Link info ops that use link info also need to implement
+rtnl_link_info_ops::io_clone(), else cloning the link will result in a
+broken object, and trying to use any rtnl_link_bridge_*() accessors will
+result in a null pointer access due to rtnl_link::l_info not being taken
+over.
+
+So implement the missing rtnl_link_info_ops::io_clone() callback.
+
+Fixes: 7391a38e3d5e ("bridge: Add support for link_info of a bridge")
+Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
+
+https://github.com/thom311/libnl/pull/426
+Upstream-Status: Backport [https://github.com/thom311/libnl/commit/44fab88f49e0a61ec5fdebc8f94d8230f35ac801]
+Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
+---
+ lib/route/link/bridge_info.c | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
+
+diff --git a/lib/route/link/bridge_info.c b/lib/route/link/bridge_info.c
+index c078de5cb2ea..02d94829accf 100644
+--- a/lib/route/link/bridge_info.c
++++ b/lib/route/link/bridge_info.c
+@@ -88,6 +88,26 @@ static int bridge_info_alloc(struct rtnl_link *link)
+ 	return 0;
+ }
+ 
++static int bridge_info_clone(struct rtnl_link *dst, struct rtnl_link *src)
++{
++	struct bridge_info *bi_dst, *bi_src = src->l_info;
++	int err;
++
++	_nl_assert(bi_src);
++
++	err = bridge_info_alloc(dst);
++	if (err)
++		return err;
++
++	bi_dst = dst->l_info;
++
++	_nl_assert(bi_dst);
++
++	*bi_dst = *bi_src;
++
++	return 0;
++}
++
+ static int bridge_info_parse(struct rtnl_link *link, struct nlattr *data,
+ 			     struct nlattr *xstats)
+ {
+@@ -244,6 +264,7 @@ static void bridge_info_free(struct rtnl_link *link)
+ static struct rtnl_link_info_ops bridge_info_ops = {
+ 	.io_name = "bridge",
+ 	.io_alloc = bridge_info_alloc,
++	.io_clone = bridge_info_clone,
+ 	.io_parse = bridge_info_parse,
+ 	.io_put_attrs = bridge_info_put_attrs,
+ 	.io_free = bridge_info_free,
+-- 
+2.51.0
+

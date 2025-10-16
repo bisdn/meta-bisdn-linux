@@ -1,0 +1,93 @@
+From 8fd455b1dfc7811ffa39f0b022c47e028e8fa215 Mon Sep 17 00:00:00 2001
+From: Jonas Gorski <jonas.gorski@bisdn.de>
+Date: Tue, 3 Jun 2025 16:22:08 +0200
+Subject: [PATCH 11/17] bridge_info: implement missing
+ rtnl_link_info_ops::io_compare()
+
+Without rtnl_link_info_ops::io_compare() changes in link info are not
+picked up by the cache and no notificatons are sent out as
+rtnl_link_info_data_compare() returns 0 when the callback is missing.
+
+Fix this by implementing the missing io_compare() for bridge_info.
+
+This allows e.g. changes in ageing time to be seen.
+
+Fixes: 7391a38e3d5e ("bridge: Add support for link_info of a bridge")
+Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
+
+https://github.com/thom311/libnl/pull/427
+Upstream-Status: Backport [https://github.com/thom311/libnl/commit/320b2bd861097e7775c7e62f17b7f3ac2ee3ad90]
+Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
+---
+ lib/route/link/bridge_info.c | 48 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 48 insertions(+)
+
+diff --git a/lib/route/link/bridge_info.c b/lib/route/link/bridge_info.c
+index 02d94829accf..4333c6aa8830 100644
+--- a/lib/route/link/bridge_info.c
++++ b/lib/route/link/bridge_info.c
+@@ -261,6 +261,53 @@ static void bridge_info_free(struct rtnl_link *link)
+ 	_nl_clear_free(&link->l_info);
+ }
+ 
++static int bridge_info_compare(struct rtnl_link *link_a,
++			       struct rtnl_link *link_b, int flags)
++{
++	struct bridge_info *a = link_a->l_info;
++	struct bridge_info *b = link_b->l_info;
++	uint32_t attrs = flags & LOOSE_COMPARISON ? b->ce_mask : ~0u;
++	int diff = 0;
++
++#define _DIFF(ATTR, EXPR) ATTR_DIFF(attrs, ATTR, a, b, EXPR)
++	diff |= _DIFF(BRIDGE_ATTR_VLAN_FILTERING,
++		      a->b_vlan_filtering != b->b_vlan_filtering);
++	diff |= _DIFF(BRIDGE_ATTR_VLAN_PROTOCOL,
++		      a->b_vlan_protocol != b->b_vlan_protocol);
++	diff |= _DIFF(BRIDGE_ATTR_VLAN_STATS_ENABLED,
++		      a->b_vlan_stats_enabled != b->b_vlan_stats_enabled);
++	diff |= _DIFF(BRIDGE_ATTR_AGEING_TIME,
++		      a->b_ageing_time != b->b_ageing_time);
++	diff |= _DIFF(BRIDGE_ATTR_VLAN_DEFAULT_PVID,
++		      a->b_vlan_default_pvid != b->b_vlan_default_pvid);
++	diff |= _DIFF(BRIDGE_ATTR_NF_CALL_IPTABLES,
++		      a->b_nf_call_iptables != b->b_nf_call_iptables);
++	diff |= _DIFF(BRIDGE_ATTR_NF_CALL_IP6TABLES,
++		      a->b_nf_call_ip6tables != b->b_nf_call_ip6tables);
++	diff |= _DIFF(BRIDGE_ATTR_NF_CALL_ARPTABLES,
++		      a->b_nf_call_arptables != b->b_nf_call_arptables);
++	diff |= _DIFF(BRIDGE_ATTR_STP_STATE, a->b_stp_state != b->b_stp_state);
++	diff |= _DIFF(BRIDGE_ATTR_MCAST_ROUTER,
++		      a->b_mcast_router != b->b_mcast_router);
++	diff |= _DIFF(BRIDGE_ATTR_MCAST_SNOOPING,
++		      a->b_mcast_snooping != b->b_mcast_snooping);
++
++	if (flags & LOOSE_COMPARISON)
++		diff |= _DIFF(
++			BRIDGE_ATTR_BOOLOPT,
++			(b->b_boolopts.optmask & ~a->b_boolopts.optmask) ||
++				((a->b_boolopts.optval ^ b->b_boolopts.optval) &
++				 b->b_boolopts.optmask));
++	else
++		diff |= _DIFF(
++			BRIDGE_ATTR_BOOLOPT,
++			(a->b_boolopts.optmask != b->b_boolopts.optmask) ||
++				(a->b_boolopts.optval != b->b_boolopts.optval));
++#undef _DIFF
++
++	return diff;
++}
++
+ static struct rtnl_link_info_ops bridge_info_ops = {
+ 	.io_name = "bridge",
+ 	.io_alloc = bridge_info_alloc,
+@@ -268,6 +315,7 @@ static struct rtnl_link_info_ops bridge_info_ops = {
+ 	.io_parse = bridge_info_parse,
+ 	.io_put_attrs = bridge_info_put_attrs,
+ 	.io_free = bridge_info_free,
++	.io_compare = bridge_info_compare,
+ };
+ 
+ #define IS_BRIDGE_INFO_ASSERT(link)                                                      \
+-- 
+2.51.0
+

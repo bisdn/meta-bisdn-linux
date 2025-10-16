@@ -1,0 +1,29 @@
+From e458f7f7b06f0d2c7d5615bd94d62470dbb739dc Mon Sep 17 00:00:00 2001
+From: Christoph Paasch <cpaasch@openai.com>
+Date: Mon, 4 Aug 2025 20:33:08 -0700
+Subject: [PATCH 07/17] [nexthop] Fix clone'ing of route nexthop
+
+We need to clone rtnh_realms as well.
+
+Signed-off-by: Christoph Paasch <cpaasch@openai.com>
+Upstream-Status: Backport [https://github.com/thom311/libnl/commit/546354590389109303f37fcca95a65fcbc2cbb3f]
+Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
+---
+ lib/route/nexthop.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/lib/route/nexthop.c b/lib/route/nexthop.c
+index 7e0df6136b04..80ea19b6f230 100644
+--- a/lib/route/nexthop.c
++++ b/lib/route/nexthop.c
+@@ -61,6 +61,7 @@ struct rtnl_nexthop *rtnl_route_nh_clone(struct rtnl_nexthop *src)
+ 	nh->rtnh_flag_mask = src->rtnh_flag_mask;
+ 	nh->rtnh_weight = src->rtnh_weight;
+ 	nh->rtnh_ifindex = src->rtnh_ifindex;
++	nh->rtnh_realms = src->rtnh_realms;
+ 	nh->ce_mask = src->ce_mask;
+ 
+ 	if (src->rtnh_gateway) {
+-- 
+2.51.0
+
