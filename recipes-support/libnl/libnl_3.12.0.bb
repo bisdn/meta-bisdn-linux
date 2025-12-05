@@ -3,7 +3,7 @@ HOMEPAGE = "http://www.infradead.org/~tgr/libnl/"
 SECTION = "libs/network"
 
 PE = "1"
-PR = "r3"
+PR = "r0"
 
 LICENSE = "LGPL-2.1-only"
 LIC_FILES_CHKSUM = "file://COPYING;md5=4fbd65380cdd255951079008b364516c"
@@ -14,27 +14,16 @@ DEPENDS = "flex-native bison-native"
 
 SRC_URI = " \
     git://github.com/thom311/${BPN}.git;protocol=https;branch=main \
-    file://0001-cache-cache_include-fix-double-put-for-cloned-object.patch \
-    file://0002-route-add-missing-rtnl_nh_get_oif-symbol.patch \
-    file://0003-cache-add-nl_cache_resync_v2.patch \
-    file://0004-bridge_info-implement-missing-rtnl_link_info_ops-io_.patch \
-    file://0005-nh-Add-missing-free-in-rtnl_nh_grp_put.patch \
-    file://0006-nh-Fix-incorrect-behavior-in-rtnl_nh_set_gateway.patch \
-    file://0007-nexthop-Fix-clone-ing-of-route-nexthop.patch \
-    file://0008-vxlan-Use-proper-u16-for-vxi_port-and-fixes-to-vxlan.patch \
-    file://0009-ip6gre-ip6vti-Fix-printing-of-the-link-name.patch \
-    file://0010-link-Avoid-leaking-rtnl_link-object.patch \
-    file://0011-bridge_info-implement-missing-rtnl_link_info_ops-io_.patch \
-    file://0012-link-bonding-add-primary-getters-and-setters.patch \
-    file://0013-WIP-add-info-slave-data-support.patch \
-    file://0014-link-bonding-expose-state-on-enslaved-interfaces.patch \
-    file://0015-bridge-vlan-add-per-vlan-stp-state-object-and-cache.patch \
-    file://0016-route-route_obj-treat-each-IPv6-link-local-route-as-.patch \
-    file://0017-link-ignore-incomplete-bridge-updates.patch \
+    file://0001-link-bonding-add-primary-getters-and-setters.patch \
+    file://0002-WIP-add-info-slave-data-support.patch \
+    file://0003-link-bonding-expose-state-on-enslaved-interfaces.patch \
+    file://0004-bridge-vlan-add-per-vlan-stp-state-object-and-cache.patch \
+    file://0005-route-route_obj-treat-each-IPv6-link-local-route-as-.patch \
+    file://0006-link-ignore-incomplete-bridge-updates.patch \
 "
 
-# commit hash of release tag libnl3_11_0
-SRCREV = "c7edc38f8e335c18c5e17451d2cb19b9b8d0b48f"
+# commit hash of release tag libnl3_12_0
+SRCREV = "43878680c994989f16637dc47be19bb8dc154985"
 
 S = "${WORKDIR}/git"
 
