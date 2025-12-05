@@ -1,7 +1,7 @@
-From 3e62f3141306b7b8124d8469a6c89826538c683a Mon Sep 17 00:00:00 2001
+From a00e991f2b9ad222be3288d51e8d941d7bfbe51c Mon Sep 17 00:00:00 2001
 From: Rubens Figueiredo <rubens.figueiredo@bisdn.de>
 Date: Tue, 10 Aug 2021 11:23:39 +0200
-Subject: [PATCH 15/17] bridge-vlan: add per vlan stp state object and cache
+Subject: [PATCH 4/6] bridge-vlan: add per vlan stp state object and cache
 
 Signed-off-by: Rubens Figueiredo <rubens.figueiredo@bisdn.de>
 Co-authored-by: Jonas Gorski <jonas.gorski@bisdn.de>
@@ -26,7 +26,7 @@ Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
  create mode 100644 src/nl-bridge.c
 
 diff --git a/.gitignore b/.gitignore
-index cb825cd0bbce..ae56d075718e 100644
+index 7cf6d942db04..6f42dafea24b 100644
 --- a/.gitignore
 +++ b/.gitignore
 @@ -79,6 +79,7 @@ test-suite.log
@@ -38,10 +38,10 @@ index cb825cd0bbce..ae56d075718e 100644
  /src/nl-class-delete
  /src/nl-class-list
 diff --git a/Makefile.am b/Makefile.am
-index 227fa566f550..1597cd32c4ec 100644
+index 2bd0c06e7bcc..c7dc0ef57432 100644
 --- a/Makefile.am
 +++ b/Makefile.am
-@@ -111,6 +111,7 @@ libnlinclude_netlink_routedir = $(libnlincludedir)/netlink/route
+@@ -116,6 +116,7 @@ libnlinclude_netlink_routedir = $(libnlincludedir)/netlink/route
  libnlinclude_netlink_route_HEADERS = \
  	include/netlink/route/action.h \
  	include/netlink/route/addr.h \
@@ -49,7 +49,7 @@ index 227fa566f550..1597cd32c4ec 100644
  	include/netlink/route/class.h \
  	include/netlink/route/classifier.h \
  	include/netlink/route/link.h \
-@@ -215,6 +216,7 @@ if ENABLE_CLI
+@@ -220,6 +221,7 @@ if ENABLE_CLI
  libnlinclude_netlink_clidir = $(libnlincludedir)/netlink/cli
  libnlinclude_netlink_cli_HEADERS = \
  	include/netlink/cli/addr.h \
@@ -57,7 +57,7 @@ index 227fa566f550..1597cd32c4ec 100644
  	include/netlink/cli/class.h \
  	include/netlink/cli/cls.h \
  	include/netlink/cli/ct.h \
-@@ -442,6 +444,7 @@ lib_libnl_route_3_la_SOURCES = \
+@@ -473,6 +475,7 @@ lib_libnl_route_3_la_SOURCES = \
  	lib/route/act/skbedit.c \
  	lib/route/act/vlan.c \
  	lib/route/addr.c \
@@ -65,7 +65,7 @@ index 227fa566f550..1597cd32c4ec 100644
  	lib/route/class.c \
  	lib/route/classid.c \
  	lib/route/cls.c \
-@@ -695,6 +698,7 @@ endif
+@@ -729,6 +732,7 @@ endif
  
  src_lib_libnl_cli_3_la_SOURCES = \
  	src/lib/addr.c \
@@ -73,7 +73,7 @@ index 227fa566f550..1597cd32c4ec 100644
  	src/lib/class.c \
  	src/lib/cls.c \
  	src/lib/ct.c \
-@@ -758,6 +762,7 @@ cli_programs = \
+@@ -788,6 +792,7 @@ cli_programs = \
  	src/nl-addr-add \
  	src/nl-addr-delete \
  	src/nl-addr-list \
@@ -81,7 +81,7 @@ index 227fa566f550..1597cd32c4ec 100644
  	src/nl-class-add \
  	src/nl-class-delete \
  	src/nl-class-list \
-@@ -836,6 +841,8 @@ src_nl_addr_delete_CPPFLAGS =       $(src_cppflags)
+@@ -866,6 +871,8 @@ src_nl_addr_delete_CPPFLAGS =       $(src_cppflags)
  src_nl_addr_delete_LDADD =          $(src_ldadd)
  src_nl_addr_list_CPPFLAGS =         $(src_cppflags)
  src_nl_addr_list_LDADD =            $(src_ldadd)
@@ -553,7 +553,7 @@ index 000000000000..7fe4191e9c79
 +
 +/** @} */
 diff --git a/lib/route/link/vlan.c b/lib/route/link/vlan.c
-index 75842d8c5184..eca49f75cb11 100644
+index 4a055ee98d18..270b41ad0f8f 100644
 --- a/lib/route/link/vlan.c
 +++ b/lib/route/link/vlan.c
 @@ -30,6 +30,16 @@
@@ -589,12 +589,12 @@ index 75f03cd154af..bc10208c8459 100644
 +	nl_cli_bridge_vlan_parse_ifindex;
 +} libnl_3_8;
 diff --git a/libnl-route-3.sym b/libnl-route-3.sym
-index 57b2c16cbba9..d64eda7e6cd3 100644
+index 357b7020bb64..9d471dacc1bc 100644
 --- a/libnl-route-3.sym
 +++ b/libnl-route-3.sym
-@@ -1367,6 +1367,19 @@ global:
+@@ -1435,6 +1435,19 @@ global:
  
- libnl_3_12 {
+ libnl_3_13 {
  global:
 +	rtnl_bridge_vlan_alloc;
 +	rtnl_bridge_vlan_alloc_cache;

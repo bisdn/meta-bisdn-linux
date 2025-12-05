@@ -1,7 +1,7 @@
-From 9959125ff9958a9d21f1effddb93c22ae358c297 Mon Sep 17 00:00:00 2001
+From 9b9aaff5fa56d4938521db86a083c637c03c0885 Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Tue, 6 Oct 2020 15:25:38 +0200
-Subject: [PATCH 13/17] WIP: add info slave data support
+Subject: [PATCH 2/6] WIP: add info slave data support
 
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
@@ -255,7 +255,7 @@ index 0e54057d2604..36b7bd5d0de1 100644
  extern struct rtnl_link *link_lookup(struct nl_cache *cache, int ifindex);
  
 diff --git a/lib/route/nl-route.h b/lib/route/nl-route.h
-index 53d8b9f0cc17..a7023a94ade1 100644
+index aebd88e1b11f..2a37a3c84adb 100644
 --- a/lib/route/nl-route.h
 +++ b/lib/route/nl-route.h
 @@ -55,8 +55,10 @@ struct rtnl_link {

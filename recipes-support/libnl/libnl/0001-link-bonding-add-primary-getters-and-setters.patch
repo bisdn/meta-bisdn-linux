@@ -1,7 +1,7 @@
-From aab751d04aa47a369f21058fb2c1f71a186e41f4 Mon Sep 17 00:00:00 2001
+From 1dea644d5543a4fe68cd1634063e8e6a8e4dcf44 Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Tue, 6 Oct 2020 10:00:37 +0200
-Subject: [PATCH 12/17] link/bonding: add primary getters and setters
+Subject: [PATCH 1/6] link/bonding: add primary getters and setters
 
 Add getters and setters for the primary attribute of active backup
 bonds.
@@ -10,14 +10,14 @@ Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
  include/netlink/route/link/bonding.h |  3 ++
  lib/route/link/bonding.c             | 53 ++++++++++++++++++++++++++++
- libnl-route-3.sym                    |  2 ++
- 3 files changed, 58 insertions(+)
+ libnl-route-3.sym                    |  6 ++++
+ 3 files changed, 62 insertions(+)
 
 diff --git a/include/netlink/route/link/bonding.h b/include/netlink/route/link/bonding.h
-index a8dce730279f..4a8cfc546dc6 100644
+index 5ec191564289..a6ad94ccb058 100644
 --- a/include/netlink/route/link/bonding.h
 +++ b/include/netlink/route/link/bonding.h
-@@ -40,6 +40,9 @@ extern int	rtnl_link_bond_get_miimon(struct rtnl_link *link, uint32_t *miimon);
+@@ -42,6 +42,9 @@ extern int	rtnl_link_bond_get_miimon(struct rtnl_link *link, uint32_t *miimon);
  extern void	rtnl_link_bond_set_min_links(struct rtnl_link *link, uint32_t min_links);
  extern int	rtnl_link_bond_get_min_links(struct rtnl_link *link, uint32_t *min_links);
  
@@ -28,7 +28,7 @@ index a8dce730279f..4a8cfc546dc6 100644
  }
  #endif
 diff --git a/lib/route/link/bonding.c b/lib/route/link/bonding.c
-index 53b70cae7ed5..db46fb59f6de 100644
+index dffc00698da5..5f2effc9f113 100644
 --- a/lib/route/link/bonding.c
 +++ b/lib/route/link/bonding.c
 @@ -27,6 +27,7 @@
@@ -134,17 +134,19 @@ index 53b70cae7ed5..db46fb59f6de 100644
   * Set hashing type
   * @arg link            Link object of type bond
 diff --git a/libnl-route-3.sym b/libnl-route-3.sym
-index 17e3fde21e3b..7e89dfd7dbd6 100644
+index 9e6f1c89356b..0d29d8c6c7fd 100644
 --- a/libnl-route-3.sym
 +++ b/libnl-route-3.sym
-@@ -1367,5 +1367,7 @@ global:
- 
- libnl_3_12 {
- global:
+@@ -1432,3 +1432,9 @@ global:
+ 	rtnl_route_nh_get_encap;
+ 	rtnl_route_nh_set_encap;
+ } libnl_3_11;
++
++libnl_3_13 {
++global:
 +	rtnl_link_bond_get_primary;
 +	rtnl_link_bond_set_primary;
- 	rtnl_nh_get_oif;
- } libnl_3_11;
++} libnl_3_12;
 -- 
 2.51.0
 
