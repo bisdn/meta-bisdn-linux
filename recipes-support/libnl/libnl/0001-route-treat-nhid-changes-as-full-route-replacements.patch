@@ -1,0 +1,63 @@
+From 0e3c6cae9a61193dfc9e6d5c7f0cf68761c6bab3 Mon Sep 17 00:00:00 2001
+From: Jonas Gorski <jonas.gorski@bisdn.de>
+Date: Fri, 19 Dec 2025 14:04:54 +0100
+Subject: [PATCH 1/7] route: treat nhid changes as full route replacements
+
+When updating a route targeting a nexthoup group with id changing its
+nexthop to a single nexthop, we treat this as an update and instead
+add that nexthop to the group instead of replacing the route in the
+cache.
+
+So e.g. with
+
+nexthop id 10 fe80::1 dev eth1
+nexthop id 11 fe80::2 dev eth2
+nexthop id 12 fe80::3 dev eth3
+nexthop id 20 grp 10/11
+
+adding a route
+dst 2001:db8:1:/64 nhid 20
+
+libnl will store this as 2001:db8:1:/64 via fe80::1, fe80::2
+
+if we now update the route with
+
+dst 2001:db8:1:/64 nhid 12
+
+libnl will see a new route with a single nexthop. Since the existing
+route for dst 2001:db8:1:/64 is a multipath route, and the new route has
+a single nexthop, libnl assumes this is a new nexthop for the route, and
+merges it to 2001:db8:1:/64 via fe80::1, fe80::2, fe80::3 instead of
+replacing it.
+
+Fix this by checking the nhid of the routes, and only merge if they
+match.
+
+Upstream-Status: Backport [https://github.com/thom311/libnl/commit/655a638d4e1f74be9256a3108ae2abb84827a9ce]
+Fixes: 29b71371e764 ("route cache: Fix handling of ipv6 multipath routes")
+Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
+---
+ lib/route/route_obj.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/lib/route/route_obj.c b/lib/route/route_obj.c
+index 8448e9a867bd..697dca0c713f 100644
+--- a/lib/route/route_obj.c
++++ b/lib/route/route_obj.c
+@@ -528,6 +528,13 @@ static int route_update(struct nl_object *old_obj, struct nl_object *new_obj)
+ 	if (rtnl_route_get_nnexthops(new_route) != 1)
+ 		return -NLE_OPNOTSUPP;
+ 
++	/*
++	 * If the route's nexthop id has changed, the new route replaces the
++	 * old one
++	 */
++	if (rtnl_route_get_nhid(old_route) != rtnl_route_get_nhid(new_route))
++		return -NLE_OPNOTSUPP;
++
+ 	/*
+ 	 * Get the only nexthop entry from the new route. For
+ 	 * IPv6 we always get a route with a 0th NH
+-- 
+2.52.0
+

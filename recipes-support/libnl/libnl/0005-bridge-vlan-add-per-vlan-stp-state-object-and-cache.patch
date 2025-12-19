@@ -1,7 +1,7 @@
-From a00e991f2b9ad222be3288d51e8d941d7bfbe51c Mon Sep 17 00:00:00 2001
+From d3b78c21c3857be95ed1e5e89f944b22839de149 Mon Sep 17 00:00:00 2001
 From: Rubens Figueiredo <rubens.figueiredo@bisdn.de>
 Date: Tue, 10 Aug 2021 11:23:39 +0200
-Subject: [PATCH 4/6] bridge-vlan: add per vlan stp state object and cache
+Subject: [PATCH 5/7] bridge-vlan: add per vlan stp state object and cache
 
 Signed-off-by: Rubens Figueiredo <rubens.figueiredo@bisdn.de>
 Co-authored-by: Jonas Gorski <jonas.gorski@bisdn.de>
@@ -713,5 +713,5 @@ index 60a02d2b49d4..c85d2323ac36 100644
  };
  
 -- 
-2.51.0
+2.52.0
 
