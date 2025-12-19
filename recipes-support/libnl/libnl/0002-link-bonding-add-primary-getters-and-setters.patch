@@ -1,7 +1,7 @@
-From 1dea644d5543a4fe68cd1634063e8e6a8e4dcf44 Mon Sep 17 00:00:00 2001
+From 833172ef33b92c940e9d771cceb695a82debd7d4 Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Tue, 6 Oct 2020 10:00:37 +0200
-Subject: [PATCH 1/6] link/bonding: add primary getters and setters
+Subject: [PATCH 2/7] link/bonding: add primary getters and setters
 
 Add getters and setters for the primary attribute of active backup
 bonds.
@@ -148,5 +148,5 @@ index 9e6f1c89356b..0d29d8c6c7fd 100644
 +	rtnl_link_bond_set_primary;
 +} libnl_3_12;
 -- 
-2.51.0
+2.52.0
 
