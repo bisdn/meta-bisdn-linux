@@ -283,7 +283,7 @@ cd $(dirname $0)
 
 # check that we support the running platform
 if [ ! -d "./machine/${onie_platform}" ]; then
-    echo "ERROR: Unknown or unsupported platform: $onie_platform" >&2
+    echo "ERROR: Unknown platform: $onie_platform" >&2
     echo "This image only supports the following platforms:" >&2
     platforms="$(ls -1 ./machine)"
     for plat in $platforms; do
@@ -297,6 +297,14 @@ fi
 
 # set up variables for the running platform
 . ./machine/${onie_platform}/platform.conf
+
+# warn if trying to install on un
+if [ "$BISDN_SUPPORTED_PLATFORM" != "1" ]; then
+    echo "#################################################################### " >&2
+    echo "WARNING: unsupported platform: ${onie_platform}                      " >&2
+    echo "  This platform is untested and unsupported and will likely not work." >&2
+    echo "#####################################################################" >&2
+fi
 
 # check if platform forces a certain ONL platform, else calculate from
 # onie platform
