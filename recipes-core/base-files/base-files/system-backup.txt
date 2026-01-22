@@ -18,7 +18,6 @@
 /etc/ssh/ssh_host_rsa_key.pub
 /etc/ofdpa-grpc.conf
 /etc/wireguard
-/etc/frr/frr.conf
 -/etc/modprobe.d/i2c-i801.conf
 -/etc/modprobe.d/i2c-ismt.conf
 -/etc/opkg/opkg.conf
