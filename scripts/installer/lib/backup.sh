@@ -286,6 +286,20 @@ restore_backup()
     for file in $(find $1 -type f); do
         basefile="${file#${1}/}"
 
+	# FRR10 does not support writing per-daemon configuration, but can read
+	# it. Make sure to disable the default frr.conf / vtysh.conf so it will
+	# not load the empty default frr.conf instead.
+	case "$basefile" in
+		"etc/frr/zebra.conf")
+			if [ ! -f $1/etc/frr/frr.conf ]; then
+				echo "WARNING: legacy per-deamon FRR config found" >&2
+				echo "WARNING: disabling default integrated FRR config" >&2
+				mv $2/etc/frr/frr.conf $2/etc/frr/frr.conf$BACKUP_SUFFIX
+				mv $2/etc/frr/vtysh.conf $2/etc/frr/frr.conf$BACKUP_SUFFIX
+			fi
+			;;
+	esac
+
         # nothing to do if it's a new file
         [ -f "$2/$basefile" ] || continue
         # nothing to do if they are the same
