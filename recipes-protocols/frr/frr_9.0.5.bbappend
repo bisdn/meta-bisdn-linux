@@ -90,6 +90,7 @@ do_install:append:class-target () {
 
 # Indicate that the default files are configuration files
 CONFFILES:${PN} = "${sysconfdir}/frr/vtysh.conf ${sysconfdir}/frr/frr.conf ${sysconfdir}/frr/daemons"
+CONFFILES:${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'zebra', '${sysconfdir}/frr/zebra.conf', '', d)}"
 CONFFILES:${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'staticd', '${sysconfdir}/frr/staticd.conf', '', d)}"
 CONFFILES:${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'bgpd', '${sysconfdir}/frr/bgpd.conf', '', d)}"
 CONFFILES:${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'ospfd', '${sysconfdir}/frr/ospfd.conf', '', d)}"
