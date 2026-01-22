@@ -6,7 +6,7 @@ SRC_URI:append = " \
            file://support_bundle_commands.conf;subdir=git/tools/etc/frr \
            "
 
-PR = "r2"
+PR = "r1"
 
 SYSTEMD_AUTO_ENABLE = "enable"
 
@@ -58,20 +58,9 @@ PACKAGECONFIG[pbrd] = "--enable-pbrd,--disable-pbrd,"
 PACKAGECONFIG[bfdd] = "--enable-bfdd,--disable-bfdd,"
 PACKAGECONFIG[pathd] = "--enable-pathd,--disable-pathd,"
 PACKAGECONFIG[mgmtd] = "--enable-mgmtd,--disable-mgmtd,"
+PACKAGECONFIG[datacenter] = "--enable-datacenter,--disable-datacenter"
 
 do_install:append:class-target () {
-    # remove the global config
-    rm ${D}${sysconfdir}/frr/frr.conf
-
-    # remove the integrated config
-    rm ${D}${sysconfdir}/frr/vtysh.conf
-
-    # Install configurations for the daemons
-    install -m 0755 -d ${D}${sysconfdir}/default ${D}${sysconfdir}/frr
-    for f in vtysh ${FRR_DAEMONS}; do
-        touch ${D}${sysconfdir}/frr/$f.conf
-    done
-
     sed -i '/_options/s/-A/--daemon -A/g' ${D}${sysconfdir}/frr/daemons
 
     chown frr:frrvty ${D}${sysconfdir}/frr
@@ -90,20 +79,3 @@ do_install:append:class-target () {
 
 # Indicate that the default files are configuration files
 CONFFILES:${PN} = "${sysconfdir}/frr/vtysh.conf ${sysconfdir}/frr/frr.conf ${sysconfdir}/frr/daemons"
-CONFFILES:${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'staticd', '${sysconfdir}/frr/staticd.conf', '', d)}"
-CONFFILES:${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'bgpd', '${sysconfdir}/frr/bgpd.conf', '', d)}"
-CONFFILES:${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'ospfd', '${sysconfdir}/frr/ospfd.conf', '', d)}"
-CONFFILES:${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'ospf6d', '${sysconfdir}/frr/ospf6d.conf', '', d)}"
-CONFFILES:${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'ripd', '${sysconfdir}/frr/ripd.conf', '', d)}"
-CONFFILES:${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'ripngd', '${sysconfdir}/frr/ripngd.conf', '', d)}"
-CONFFILES:${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'isisd', '${sysconfdir}/frr/isisd.conf', '', d)}"
-CONFFILES:${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'pimd', '${sysconfdir}/frr/pimd.conf', '', d)}"
-CONFFILES:${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'ldpd', '${sysconfdir}/frr/ldpd.conf', '', d)}"
-CONFFILES:${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'nhrpd', '${sysconfdir}/frr/nhrpd.conf', '', d)}"
-CONFFILES:${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'eigrpd', '${sysconfdir}/frr/eigrpd.conf', '', d)}"
-CONFFILES:${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'babeld', '${sysconfdir}/frr/babeld.conf', '', d)}"
-CONFFILES:${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'sharpd', '${sysconfdir}/frr/sharpd.conf', '', d)}"
-CONFFILES:${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'pbrd', '${sysconfdir}/frr/pbrd.conf', '', d)}"
-CONFFILES:${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'bfdd', '${sysconfdir}/frr/bfdd.conf', '', d)}"
-CONFFILES:${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'pathd', '${sysconfdir}/frr/pathd.conf', '', d)}"
-CONFFILES:${PN} += " ${@bb.utils.contains('FRR_DAEMONS', 'mgmtd', '${sysconfdir}/frr/mgmtd.conf', '', d)}"
