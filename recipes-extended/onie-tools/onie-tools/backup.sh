@@ -23,15 +23,15 @@ cp_path_with_attr() {
 	owner="$(stat -c %u:%g $1)"
 	attr="$(stat -c %a $1)"
 
-	[ -n "$DEBUG" ] && echo "DEBUG: setting owner to $owner for file $2"
+	[ -n "$DEBUG" ] && echo "DEBUG: setting owner to $owner for file $2" >&2
 	chown "$owner" "$2"
-	[ -n "$DEBUG" ] && echo "DEBUG: setting attr to $attr for file $2"
+	[ -n "$DEBUG" ] && echo "DEBUG: setting attr to $attr for file $2" >&2
 	chmod "$attr" "$2"
 }
 
 # $1 path $2 src $3 dest
 add_to_backup() {
-	local oldpath relpath newpath src_base dst_base
+	local oldpath relpath newpath path src_base dst_base
 
 	# realpath will resolve any symlinks, but symlinks may point to outside
 	# of the temporary filesystem. Busybox's realpath does not support not
@@ -55,10 +55,16 @@ add_to_backup() {
 	relpath="${oldpath#${2}/}"
 	newpath="$3/$relpath"
 
-	[ -n "$DEBUG" ] && echo "DEBUG: adding $relpath to backup"
+	[ -n "$DEBUG" ] && echo "DEBUG: adding $relpath to backup" >&2
 
-	cp_path_with_attr "$(dirname $oldpath)" "$(dirname $newpath)"
-	cp -a "$oldpath" "$(dirname $newpath)"
+	if [ -d "$oldpath" ]; then
+		for path in $oldpath/*; do
+			[ -e "$path" ] || break
+			add_to_backup "/${path#${2%/}/}" $2 $3
+		done
+	else
+		echo "$1"
+	fi
 }
 
 # $1 path $2 src $3 dest
@@ -87,9 +93,16 @@ remove_from_backup() {
 	relpath="${oldpath#${2}/}"
 	newpath="$3/$relpath"
 
-	[ -n "$DEBUG" ] && echo "DEBUG: removing $relpath from backup"
+	[ -n "$DEBUG" ] && echo "DEBUG: removing $relpath from backup" >&2
 
-	rm -rf "$newpath"
+	if [ -d "$oldpath" ]; then
+		for path in $oldpath/*; do
+			[ -e "$path" ] || break
+			remove_from_backup "/${path#${2%/}/}" $2 $3
+		done
+	else
+		echo "$1"
+	fi
 }
 
 # $1 file $2 mode (+|-) $3 src $4 dst
@@ -117,15 +130,42 @@ parse_file() {
 	done < $1
 }
 
-backup_systemd_state() {
-	local enabled_services disabled_services service_files service_links
-	local service enabled preset oneshot
+collect_enabled_services() {
+	local enabled_services service_links service_file
+	local service base preset enabled
+
+	if [ -d "$1/etc/systemd/system/multi-user.target.wants" ]; then
+		service_links=$(ls $1/etc/systemd/system/multi-user.target.wants)
+	fi
+
+
+	# collect explicitly enabled services
+	for service in $service_links; do
+		case "$service" in
+			*.service)
+				service_file=$(readlink $1/etc/systemd/system/multi-user.target.wants/$service)
+				base=$(basename $service_file)
+				preset=$(grep "$base" $1/lib/systemd/system-preset/*.preset | cut -d ':' -f 2 | cut -d ' ' -f 1)
+
+				# check only services disabled by default
+				[ "$preset" != "enable" ] || continue
+
+				[ -n "$DEBUG" ] && echo "DEBUG: service enabled by user: $service" >&2
+				enabled_services="$enabled_services ${service%.service}"
+				;;
+		esac
+	done
+
+	echo "$enabled_services"
+}
+
+collect_disabled_services() {
+	local disabled_services service_files
+	local service preset wantedby enabled
+
 
 	if [ -d "$1/lib/systemd/system" ]; then
 		service_files=$(ls $1/lib/systemd/system)
-	fi
-	if [ -d "$1/etc/systemd/system/multi-user.target.wants" ]; then
-		service_links=$(ls $1/etc/systemd/system/multi-user.target.wants)
 	fi
 
 	# collect explicitly disabled services
@@ -153,70 +193,125 @@ backup_systemd_state() {
 				# nothing to do if still enabled
 				[ -z "$enabled" ] || continue
 
-				[ -n "$DEBUG" ] && echo "DEBUG: service disabled by user: $service"
+				[ -n "$DEBUG" ] && echo "DEBUG: service disabled by user: $service" >&2
 				disabled_services="$disabled_services ${service%.service}"
 				;;
 		esac
 	done
 
-	# collect explicitly enabled services
-	for service in $service_links; do
-		case "$service" in
-			*.service)
-				service_file=$(readlink $1/etc/systemd/system/multi-user.target.wants/$service)
-				base=$(basename $service_file)
-				preset=$(grep "$base" $1/lib/systemd/system-preset/*.preset | cut -d ':' -f 2 | cut -d ' ' -f 1)
+	echo "$disabled_services"
+}
 
-				# check only services disabled by default
-				[ "$preset" != "enable" ] || continue
+copy_files() {
+	local files=$1
+	local src=${2%/}
+	local dst=${3%/}
+	local file
 
-				[ -n "$DEBUG" ] && echo "DEBUG: service enabled by user: $service"
-				enabled_services="$enabled_services ${service%.service}"
-				;;
-		esac
+	if [ -n "$DRYRUN" ]; then
+		echo "Files to backup:"
+		[ -z "$files" ] || echo "$files"
+		echo ""
+		return 0
+	fi
+
+	for file in $files; do
+		if [ "$(dirname $file)" != "/" ]; then
+			cp_path_with_attr "$(dirname $src/$file)" "$(dirname $dst/$file)"
+		fi
+		cp -a "$src/$file" "$(dirname $dst/$file)"
 	done
+}
 
-	echo "$disabled_services" > $2/.SERVICES_DISABLED
-	echo "$enabled_services" > $2/.SERVICES_ENABLED
+backup_systemd_state() {
+	local enabled_services disabled_services
+
+	enabled_services=$(collect_enabled_services $1)
+	disabled_services=$(collect_disabled_services $1)
+
+	if [ -n "$DRYRUN" ]; then
+		echo "Services to enable:"
+		[ -z "$enabled_services" ] || echo "$enabled_services"
+		echo ""
+		echo "Services to disable:"
+		[ -z "$disabled_services" ] ||  echo "$disabled_services"
+		echo ""
+		return 0
+	fi
+
+	if [ -n "$disabled_services" ]; then
+		echo "$disabled_services" > $2/.SERVICES_DISABLED
+	fi
+	if [ -n "$enabled_services" ]; then
+		echo "$enabled_services" > $2/.SERVICES_ENABLED
+	fi
 }
 
 # $1 src $2 dst
 apply_fixups() {
 	# releases pre 4.7.0 are missing gshadow in the backup list
-	if [ -f "$2/etc/group" ] && [ ! -f "$2/etc/gshadow" ]; then
-		[ -n "$DEBUG" ] && echo "DEBUG: /etc/group found but no /etc/gshadow"
-		add_to_backup "/etc/gshadow" $1 $2
+	if echo "$3" | grep -q '^/etc/group$' && ! echo "$3" | grep -q '^/etc/gshadow$'; then
+		[ -n "$DEBUG" ] && echo "DEBUG: /etc/group found but no /etc/gshadow" >&2
+		echo "/etc/gshadow"
 	fi
+}
+
+diff_lists() {
+	local add=$1
+	local rem=$2
+	local tmpdir=$3
+	local keep=
+
+	echo "$add" | sort -u > $tmpdir/.add
+	echo "$rem" | sort -u > $tmpdir/.rem
+	keep=$(comm -23 $tmpdir/.add $tmpdir/.rem)
+	rm -f $tmpdir/.add $tmpdir/.rem
+
+	echo "$keep"
 }
 
 # $1 backup target $2 backup storage dir
 create_backup()
 {
+	local add_files rem_files backup_files
+	local enabled_services disabled_services
+
 	# step 1 - copy files to keep
 	for file in $1/var/lib/opkg/info/*.conffiles; do
 		[ -f "$file" ] || break
-		parse_file $file "+" $1 $2
+		add_files="$(echo -e "$add_files\n$(parse_file $file "+" $1 $2)")"
 	done
 	if [ -f "$1/$SYSTEM_BACKUP_FILE" ]; then
-		parse_file "$1/$SYSTEM_BACKUP_FILE" "+" $1 $2
+		add_files="$(echo -e "$add_files\n$(parse_file $1/$SYSTEM_BACKUP_FILE "+" $1 $2)")"
 	fi
 
 	if [ -f "$1/$USER_BACKUP_FILE" ]; then
-		parse_file "$1/$USER_BACKUP_FILE" "+" $1 $2
+		add_files="$(echo -e "$add_files\n$(parse_file $1/$USER_BACKUP_FILE "+" $1 $2)")"
 	fi
 
 	# step 2 - remove files to drop
 	if [ -f "$1/$SYSTEM_BACKUP_FILE" ]; then
-		parse_file "$1/$SYSTEM_BACKUP_FILE" "-" $1 $2
+		rem_files="$(echo -e "$rem_files\n$(parse_file $1/$SYSTEM_BACKUP_FILE "-" $1 $2)")"
 	fi
 	if [ -f "$1/$SYSTEM_BACKUP_FILE" ]; then
-		parse_file "$1/$USER_BACKUP_FILE" "-" $1 $2
+		rem_files="$(echo -e "$rem_files\n$(parse_file $1/$USER_BACKUP_FILE "-" $1 $2)")"
 	fi
+
+	backup_files=$(diff_lists "$add_files" "$rem_files" $2)
+
+	add_files="$(echo -e "$backup_files\n$(apply_fixups $1 $2 "$backup_files")")"
+
+	backup_files=$(diff_lists "$add_files" "$rem_files" $2)
+
+	# now actually copy the files
+	copy_files "$backup_files" $1 $2
 
 	# step 3 - backup changed systemd service states
 	backup_systemd_state $1 $2
 
-	apply_fixups $1 $2
+	if [ -n "$DRYRUN" ]; then
+		return 0
+	fi
 
 	# step 4 - check if anything is left
 	[ -n "$(find $2 -type f)" ] || return 0
@@ -239,13 +334,13 @@ bash_systemctl() {
 			echo "WARNING: cannot enable service $service.service: $base_service.service not found" >&2
 		else
 			# for any services to enable, create symlinks
-			[ -n "$DEBUG" ] && echo "DEBUG: enabling service: $service.service"
+			[ -n "$DEBUG" ] && echo "DEBUG: enabling service: $service.service" >&2
 			ln -fs /lib/systemd/system/$base_service.service \
 				$dst/etc/systemd/system/multi-user.target.wants/$service.service
 		fi
 	elif [ "$action" = "disable" ]; then
 		# for any services to disable, remove their symlinks
-		[ -n "$DEBUG" ] && echo "DEBUG: disabling service: $service.service"
+		[ -n "$DEBUG" ] && echo "DEBUG: disabling service: $service.service" >&2
 		rm -f $dst/etc/systemd/system/multi-user.target.wants/$service.service
 	else
 		echo "WARNING: unknown action $action for service $service" >&2

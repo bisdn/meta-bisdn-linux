@@ -11,6 +11,7 @@ ONIEIMAGE_DIR ?= "${S}"
 ONIEIMAGE_DIR_INSTALL = "${ONIEIMAGE_DIR}/installer/"
 
 BISDN_ONIE_ADDITIONS ?= "${THISDIR}/../../scripts"
+BACKUP_LIB ?= "${THISDIR}/../../recipes-extended/onie-tools/onie-tools/backup.sh"
 BISDN_ARCH ?= "x86_64"
 BISDN_ONIE_PLATFORM ?= "${@'${ONIE_PLATFORM}'.replace('_','-')}"
 
@@ -36,7 +37,8 @@ do_onie_bundle () {
 
     cp "${BISDN_ONIE_ADDITIONS}/installer/${BISDN_ARCH}/install.sh" "${ONIEIMAGE_DIR_INSTALL}/platform.sh"
     cp "${BISDN_ONIE_ADDITIONS}/installer/install.sh" "${ONIEIMAGE_DIR_INSTALL}"
-    cp -r "${BISDN_ONIE_ADDITIONS}/installer/lib" "${ONIEIMAGE_DIR_INSTALL}"
+    mkdir -p "${ONIEIMAGE_DIR_INSTALL}/lib"
+    cp "${BACKUP_LIB}" "${ONIEIMAGE_DIR_INSTALL}/lib"
     mkdir -p "${ONIEIMAGE_DIR_INSTALL}/machine"
     for platform in ${ONL_PLATFORM_SUPPORT}; do
         cp -r -L "${ONIEIMAGE_CONF_DIR}/${platform}" "${ONIEIMAGE_DIR_INSTALL}/machine"
