@@ -8,6 +8,8 @@ SRC_URI += " \
     file://10-any_interface_is_enough.conf \
     file://10-disable-llmnr.conf \
     file://20-network-io.conf \
+    file://10-disable-route-mgnt.conf \
+    file://0001-network-nexthop-introduce-ManageForeignNextHops-bool.patch \
 "
 
 FILES:${PN} += "\
@@ -27,6 +29,10 @@ do_install:append() {
    # systemd-resolvd disable llmnr
    install -d ${D}${sysconfdir}/systemd/resolved.conf.d/
    install -m 0644 ${WORKDIR}/10-disable-llmnr.conf ${D}${sysconfdir}/systemd/resolved.conf.d/10-disable-llmnr.conf
+
+   # systemd-networkd disable foreign route management
+   install -d ${D}${sysconfdir}/systemd/networkd.conf.d/
+   install -m 0644 ${WORKDIR}/10-disable-route-mgnt.conf ${D}${sysconfdir}/systemd/networkd.conf.d/10-disable-route-mgnt.conf
 }
 
 USERADD_PARAM:${PN} += "--system --home /dev/null systemd-journal-gateway"
