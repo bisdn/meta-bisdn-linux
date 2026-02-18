@@ -17,8 +17,7 @@ index 75bf0e50..56255f2f 100644
 -After=network-online.target syslog.target @SNMP_SERVICE@
 +After=network-online.target syslog.target @SNMP_SERVICE@ baseboxd.service
  Wants=network-online.target @SNMP_SERVICE@
- 
- [Service]
+ Documentation=man:keepalived(8)
+ Documentation=man:keepalived.conf(5)
 -- 
 2.29.2
-
