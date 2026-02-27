@@ -1,0 +1,48 @@
+From 0deb4630949bfda3c7db5047df27ce343aafe00c Mon Sep 17 00:00:00 2001
+From: Donatas Abraitis <donatas@opensourcerouting.org>
+Date: Mon, 2 Mar 2026 11:34:34 +0200
+Subject: [PATCH] bgpd: Fix condition when evaluating paths
+
+Original commit said:
+
+Let's broaden this scope a tiny bit to allow for matches where the number of
+nexthops is 1 and the nexthop->ifindex is the same as the interfaces ifindex
+for the up/down event.
+
+But the condition was incorrect according to the definition.
+
+That leads to routes being flushed incorrectly.
+
+When nexthop_num > 1, the first clause is false, so the whole continue is
+skipped, and the DOWN processing runs BGP_NEXTHOP_VALID is unset, nexthop_num
+is set to 0, evaluate_paths() is called, which means paths are withdrawn...
+
+Fixes: d1252ec ("bgpd: On interface up/down events allow for more interfaces to be affected")
+
+Upstream-Status: Backport [https://github.com/FRRouting/frr/commit/0deb4630949bfda3c7db5047df27ce343aafe00c]
+
+Signed-off-by: Donatas Abraitis <donatas@opensourcerouting.org>
+(cherry picked from commit 5de395fc8ac476cb17bbc911f527ead60e841fb4)
+Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
+---
+ bgpd/bgp_nht.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/bgpd/bgp_nht.c b/bgpd/bgp_nht.c
+index e78d9fe2059d..32d50e6cc58e 100644
+--- a/bgpd/bgp_nht.c
++++ b/bgpd/bgp_nht.c
+@@ -802,8 +802,8 @@ static void bgp_nht_ifp_table_handle(struct bgp *bgp,
+ 	}
+ 
+ 	frr_each (bgp_nexthop_cache, table, bnc) {
+-		if ((bnc->nexthop_num == 1 && bnc->nexthop &&
+-		     bnc->nexthop->ifindex != ifp->ifindex) &&
++		if (!(bnc->nexthop_num == 1 && bnc->nexthop &&
++		      bnc->nexthop->ifindex == ifp->ifindex) &&
+ 		    (bnc->ifindex_ipv6_ll != ifp->ifindex))
+ 			continue;
+ 
+-- 
+2.53.0
+
