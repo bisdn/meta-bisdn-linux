@@ -1,6 +1,7 @@
 FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
 SRC_URI:append = " \
+           file://0001-bgpd-Fix-condition-when-evaluating-paths.patch \
            file://frr.service \
            file://frr@.service \
            file://support_bundle_commands.conf;subdir=git/tools/etc/frr \
