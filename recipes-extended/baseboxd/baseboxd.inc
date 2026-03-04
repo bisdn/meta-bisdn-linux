@@ -20,7 +20,7 @@ DEPENDS = "\
     systemd \
 "
 
-SRC_URI = "gitsm://github.com/bisdn/basebox.git;protocol=https;branch=main"
+SRC_URI = "gitsm://github.com/bisdn/basebox.git;protocol=https;branch=jogo_no_flush_on_bridge_removal"
 S = "${WORKDIR}/git"
 
 inherit pkgconfig systemd
