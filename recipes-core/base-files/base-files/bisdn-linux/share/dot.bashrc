@@ -3,6 +3,9 @@
 export PS1='\h:\w\$ '
 umask 022
 
+# allow autocomplete with sudo
+complete -cf sudo
+
 # enable automatic color support where supported
 alias ls='ls --color=auto'
 alias ip='ip --color=auto'
