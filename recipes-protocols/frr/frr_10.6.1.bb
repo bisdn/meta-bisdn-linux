@@ -20,8 +20,6 @@ UPSTREAM_CHECK_GITTAGREGEX = "frr-(?P<pver>\d+(\.\d+)+)$"
 
 CVE_PRODUCT = "frrouting"
 
-S = "${WORKDIR}/git"
-
 inherit autotools-brokensep python3native pkgconfig useradd systemd
 
 DEPENDS:class-native = "bison-native elfutils-native"
@@ -105,7 +103,7 @@ do_install:append:class-target () {
 
     if ${@bb.utils.contains('DISTRO_FEATURES', 'pam', 'true', 'false', d)}; then
         install -d ${D}/${sysconfdir}/pam.d
-        install -m 644 ${WORKDIR}/frr.pam ${D}/${sysconfdir}/pam.d/frr
+        install -m 644 ${UNPACKDIR}/frr.pam ${D}/${sysconfdir}/pam.d/frr
     fi
 
     if ${@bb.utils.contains('DISTRO_FEATURES', 'sysvinit', 'true', 'false', d)}; then

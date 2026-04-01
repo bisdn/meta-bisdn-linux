@@ -14,8 +14,8 @@ do_install:append () {
 LABEL=ONIE-BOOT      /mnt/onie-boot       auto       defaults,noauto       0  2
 EOF
   install -d ${D}${sysconfdir}/default
-  install -m 0644 ${WORKDIR}/system-backup.txt ${D}${sysconfdir}/default/system-backup.txt
-  install -m 0644 ${WORKDIR}/user-backup.txt ${D}${sysconfdir}/default/user-backup.txt
+  install -m 0644 ${UNPACKDIR}/system-backup.txt ${D}${sysconfdir}/default/system-backup.txt
+  install -m 0644 ${UNPACKDIR}/user-backup.txt ${D}${sysconfdir}/default/user-backup.txt
 }
 
 # /lib64 is required by tibit-poncntl

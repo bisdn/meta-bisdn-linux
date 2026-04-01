@@ -12,7 +12,7 @@ LIC_FILES_CHKSUM = "file://${COREBASE}/meta/COPYING.MIT;md5=3da9cfbcb788c80a0384
 SRC_URI = "file://run-preinsts \
            file://run-preinsts.service"
 
-S = "${WORKDIR}"
+S = "${UNPACKDIR}"
 
 INITSCRIPT_NAME = "run-preinsts"
 
@@ -29,10 +29,10 @@ SYSTEMD_AUTO_ENABLE:${PN} = "enable"
 
 do_install() {
 	install -d ${D}${sbindir}
-	install -m 0755 ${WORKDIR}/run-preinsts ${D}${sbindir}/
+	install -m 0755 ${UNPACKDIR}/run-preinsts ${D}${sbindir}/
 
 	install -d ${D}${systemd_unitdir}/system/
-	install -m 0644 ${WORKDIR}/run-preinsts.service ${D}${systemd_unitdir}/system/
+	install -m 0644 ${UNPACKDIR}/run-preinsts.service ${D}${systemd_unitdir}/system/
 
 	sed -i -e 's:#SYSCONFDIR#:${sysconfdir}:g' \
                -e 's:#SBINDIR#:${sbindir}:g' \
@@ -44,6 +44,6 @@ do_install() {
 
 # Tell yocto you are adding all files to the package, or else it will see the
 # files as not belonging to any package and give an error.
-FILES:${PN} += "${WORKDIR}/run-preinsts.service"
+FILES:${PN} += "${UNPACKDIR}/run-preinsts.service"
 FILES:${PN} += "${sbindir}/run-preinsts"
 SYSTEMD_SERVICE:${PN} = "run-preinsts.service"

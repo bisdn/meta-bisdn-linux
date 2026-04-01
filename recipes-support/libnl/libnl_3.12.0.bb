@@ -26,8 +26,6 @@ SRC_URI = " \
 # commit hash of release tag libnl3_12_0
 SRCREV = "43878680c994989f16637dc47be19bb8dc154985"
 
-S = "${WORKDIR}/git"
-
 inherit autotools pkgconfig
 
 do_configure:prepend() {

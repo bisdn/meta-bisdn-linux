@@ -13,7 +13,7 @@ SRC_URI = " \
   file://switch_tcpdump \
 "
 
-S = "${WORKDIR}"
+S = "${UNPACKDIR}"
 
 do_install () {
   install -m 0755 -d ${D}${bindir}

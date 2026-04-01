@@ -16,7 +16,7 @@ SRC_URI = " \
           file://COPYING \
           "
 
-S = "${WORKDIR}"
+S = "${UNPACKDIR}"
 
 # Let platform init script load modules as needed
 KERNEL_MODULE_PROBECONF = "fpga_driver"
