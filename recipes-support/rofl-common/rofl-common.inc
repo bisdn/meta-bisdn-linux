@@ -13,6 +13,4 @@ DEPENDS = " \
 
 SRC_URI = "git://github.com/bisdn/rofl-common.git;protocol=https;branch=main"
 
-S = "${WORKDIR}/git"
-
 inherit autotools pkgconfig

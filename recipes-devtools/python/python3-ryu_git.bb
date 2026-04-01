@@ -13,8 +13,6 @@ SRCREV = "c776e4cb68600b2ee0a4f38364f4a355502777f1"
 SRCNAME = "ryu"
 SRC_URI = "git://github.com/osrg/${SRCNAME}.git;protocol=https;branch=master"
 
-S = "${WORKDIR}/git"
-
 inherit setuptools3_legacy
 
 FILES:${PN} += "${datadir}/etc/${SRCNAME}/*"
@@ -66,8 +64,8 @@ do_install:append() {
                ${D}${systemd_unitdir}/system
 
     # install service and config file
-    install -m 0644 ${WORKDIR}/ryu-manager ${D}${sysconfdir}/default
-    install -m 0644 ${WORKDIR}/ryu-manager.service ${D}${systemd_unitdir}/system
+    install -m 0644 ${UNPACKDIR}/ryu-manager ${D}${sysconfdir}/default
+    install -m 0644 ${UNPACKDIR}/ryu-manager.service ${D}${systemd_unitdir}/system
 
 }
 
