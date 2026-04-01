@@ -15,7 +15,7 @@ SRC_URI = " \
 "
 
 
-S = "${WORKDIR}"
+S = "${UNPACKDIR}"
 
 do_install () {
   install -m 0755 -d ${D}${bindir}
