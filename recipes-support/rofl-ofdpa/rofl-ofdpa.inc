@@ -10,6 +10,4 @@ DEPENDS = "rofl-common"
 
 SRC_URI = "git://github.com/bisdn/rofl-ofdpa.git;protocol=https;branch=main"
 
-S = "${WORKDIR}/git"
-
 inherit autotools pkgconfig

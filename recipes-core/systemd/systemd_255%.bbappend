@@ -48,13 +48,13 @@ EXTRA_OEMESON:append = " \
 do_install:append() {
    # systemd-sysctl
    install -d ${D}${sysconfdir}/sysctl.d/
-   install -m 0644 ${WORKDIR}/20-network-io.conf ${D}${sysconfdir}/sysctl.d/
+   install -m 0644 ${UNPACKDIR}/20-network-io.conf ${D}${sysconfdir}/sysctl.d/
 
    # systemd-networkd-wait-online
    install -d ${D}${systemd_system_unitdir}/systemd-networkd-wait-online.service.d/
-   install -m 0644 ${WORKDIR}/10-any_interface_is_enough.conf ${D}${systemd_system_unitdir}/systemd-networkd-wait-online.service.d/10-any_interface_is_enough.conf
+   install -m 0644 ${UNPACKDIR}/10-any_interface_is_enough.conf ${D}${systemd_system_unitdir}/systemd-networkd-wait-online.service.d/10-any_interface_is_enough.conf
 
    # systemd-resolvd disable llmnr
    install -d ${D}${sysconfdir}/systemd/resolved.conf.d/
-   install -m 0644 ${WORKDIR}/10-disable-llmnr.conf ${D}${sysconfdir}/systemd/resolved.conf.d/10-disable-llmnr.conf
+   install -m 0644 ${UNPACKDIR}/10-disable-llmnr.conf ${D}${sysconfdir}/systemd/resolved.conf.d/10-disable-llmnr.conf
 }

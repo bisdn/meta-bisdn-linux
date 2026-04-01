@@ -7,7 +7,7 @@ SRC_URI += " \
 
 do_install:append() {
     install -d ${D}${sysconfdir}/iptables
-    install -m 0644 ${WORKDIR}/iptables.rules \
-                    ${WORKDIR}/ip6tables.rules \
+    install -m 0644 ${UNPACKDIR}/iptables.rules \
+                    ${UNPACKDIR}/ip6tables.rules \
                     ${D}${sysconfdir}/iptables
 }

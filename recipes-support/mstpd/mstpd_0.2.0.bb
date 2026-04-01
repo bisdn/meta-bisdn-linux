@@ -10,8 +10,6 @@ SRC_URI = "\
 PV:append = "+bisdn1"
 SRCREV = "ade1f2f1d3a73ac56a6f1def097c90c164e64321"
 
-S = "${WORKDIR}/git"
-
 inherit autotools systemd
 
 EXTRA_OECONF = "--sbindir=${base_sbindir}"
@@ -37,7 +35,7 @@ do_install:append() {
    rm ${D}${libexecdir}/mstpctl-utils/ifquery
 
    install -d ${D}${systemd_unitdir}/system
-   install -m 0644 ${WORKDIR}/build/utils/mstpd.service ${D}${systemd_unitdir}/system
+   install -m 0644 ${UNPACKDIR}/build/utils/mstpd.service ${D}${systemd_unitdir}/system
 
-   install -m 0644 ${WORKDIR}/bridge-stp.conf ${D}${sysconfdir}/bridge-stp.conf
+   install -m 0644 ${UNPACKDIR}/bridge-stp.conf ${D}${sysconfdir}/bridge-stp.conf
 }
