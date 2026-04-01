@@ -9,6 +9,7 @@ BBLAYERS ?= " \
   ##OEROOT##/meta \
   ##OEROOT##/meta-cloud-services/meta-openstack \
   ##OEROOT##/meta-cloud-services/ \
+  ##OEROOT##/meta-erlang \
   ##OEROOT##/meta-ofdpa \
   ##OEROOT##/meta-open-network-linux \
   ##OEROOT##/meta-openembedded/meta-filesystems \
@@ -18,10 +19,10 @@ BBLAYERS ?= " \
   ##OEROOT##/meta-openembedded/meta-webserver \
   ##OEROOT##/meta-bisdn-linux \
   ##OEROOT##/meta-virtualization \
-  ##OEROOT##/meta-poky \
-  ##OEROOT##/meta-yocto-bsp \
+  ##OEROOT##/meta-yocto/meta-poky \
+  ##OEROOT##/meta-yocto/meta-yocto-bsp \
   "
 BBLAYERS_NON_REMOVABLE ?= " \
   ##OEROOT##/meta \
-  ##OEROOT##/meta-poky \
+  ##OEROOT##/meta-yocto/meta-poky \
   "
