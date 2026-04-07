@@ -19,6 +19,7 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL += "\
     grpc-cli \
     hostapd \
     ipcalc \
+    iproute2-bridge \
     iproute2-ss \
     iptables \
     jq \
