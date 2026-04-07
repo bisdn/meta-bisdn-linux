@@ -11,9 +11,12 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=eb723b61539feef013de476e68b5c50a \
 
 DEPENDS = "flex-native bison-native iptables libcap"
 
-SRC_URI = "${KERNELORG_MIRROR}/linux/utils/net/${BPN}/${BP}.tar.xz"
+SRC_URI = "${KERNELORG_MIRROR}/linux/utils/net/${BPN}/${BP}.tar.xz \
+           file://0001-include-libnetlink.h-add-missing-include-for-htobe64.patch \
+           file://0001-ip-rearrange-and-prune-header-files.patch \
+           "
 
-SRC_URI[sha256sum] = "ff942dd9828d7d1f867f61fe72ce433078c31e5d8e4a78e20f02cb5892e8841d"
+SRC_URI[sha256sum] = "bbd141ef7b5d0127cc2152843ba61f274dc32814fa3e0f13e7d07a080bef53d9"
 
 inherit update-alternatives bash-completion pkgconfig
 
@@ -53,12 +56,16 @@ do_install () {
     install -d ${D}${datadir}
     mv ${D}/share/* ${D}${datadir}/ || true
     rm ${D}/share -rf || true
+
+    # Remove support fot ipt and xt in tc. So tc library directory is not needed.
+    rm ${D}${libdir}/tc -rf
 }
 
 # The .so files in iproute2-tc are modules, not traditional libraries
 INSANE_SKIP:${PN}-tc = "dev-so"
 
 IPROUTE2_PACKAGES =+ "\
+    ${PN}-bridge \
     ${PN}-devlink \
     ${PN}-genl \
     ${PN}-ifstat \
@@ -91,6 +98,7 @@ FILES:${PN}-tipc = "${base_sbindir}/tipc"
 FILES:${PN}-devlink = "${base_sbindir}/devlink"
 FILES:${PN}-rdma = "${base_sbindir}/rdma"
 FILES:${PN}-routel = "${base_sbindir}/routel"
+FILES:${PN}-bridge = "${base_sbindir}/bridge"
 
 RDEPENDS:${PN}-routel = "python3-core"
 
