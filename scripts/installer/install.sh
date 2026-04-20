@@ -262,6 +262,7 @@ get_boolean()
     esac
 }
 
+AUTHORIZED_SSH_KEYS=
 DEFAULT_CONFIG=
 DEFAULT_PASSWORD=
 KEEP_CONFIG=true
@@ -342,6 +343,9 @@ ${line%\"}"
         esac
 
         case "$var" in
+            AUTHORIZED_SSH_KEYS)
+                AUTHORIZED_SSH_KEYS=$value
+                ;;
             DEFAULT_CONFIG)
                 DEFAULT_CONFIG=$value
                 ;;
@@ -372,6 +376,12 @@ print_config()
         echo "<custom>"
     else
         echo "<default>"
+    fi
+    echo -n "  Authorized SSH keys:                  "
+    if [ -n  "$DEFAULT_PASSWORD" ]; then
+        echo "present"
+    else
+        echo "none"
     fi
     echo "#####################################################################"
 }
@@ -628,6 +638,14 @@ else
     if [ -n "$DEFAULT_PASSWORD" ]; then
         # replace password with new hash
         sed -i "s/basebox:[^:]*/basebox:$DEFAULT_PASSWORD/" "${bisdn_linux_mnt}/etc/shadow"
+    fi
+    if [ -n "$AUTHORIZED_SSH_KEYS" ]; then
+        mkdir -p "${bisdn_linux_mnt}/home/basebox/.ssh/"
+        echo "$AUTHORIZED_SSH_KEYS" > "${bisdn_linux_mnt}/home/basebox/.ssh/authorized_keys"
+
+        chmod 0755 "${bisdn_linux_mnt}/home/basebox/.ssh/authorized_keys"
+        chmod 0700 "${bisdn_linux_mnt}/home/basebox/.ssh/"
+        chown -R 1000:1000 "${bisdn_linux_mnt}/home/basebox/.ssh/"
     fi
 fi
 
