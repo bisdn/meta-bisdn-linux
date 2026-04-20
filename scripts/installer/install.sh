@@ -250,6 +250,8 @@ create_bisdn_linux_msdos_partition()
     echo "$part"
 }
 
+DEFAULT_CONFIG=
+
 # parse a config file with FOO=bar assignments
 # supports comments (prefixed with #) and continuation via \
 # at the end.
@@ -326,6 +328,9 @@ ${line%\"}"
         esac
 
         case "$var" in
+            DEFAULT_CONFIG)
+                DEFAULT_CONFIG=$value
+                ;;
             *)
                 echo "WARNING: unknown configuration item '$var'" >&2
                 ;;
@@ -340,6 +345,7 @@ print_config()
 {
     echo "#####################################################################"
     echo "Installing with the following configuration:                         "
+    echo "  Default network configuration:        ${DEFAULT_CONFIG:-none}      "
     echo "#####################################################################"
 }
 
@@ -459,6 +465,10 @@ if [ -f ./install.conf ]; then
     parse_config ./install.conf
 fi
 
+if [ -n "$BISDN_DEFAULT_CONFIG" ]; then
+    DEFAULT_CONFIG=$BISDN_DEFAULT_CONFIG
+fi
+
 print_config
 
 # See if BISDN Linux partition already exists
@@ -466,7 +476,7 @@ old_part=$(eval $detect_bisdn_linux_partition $boot_dev)
 if [ -n "$old_part" ]; then
     # old_part contains partition number of existing BISDN Linux installation
 
-    if [ -z "$BISDN_DEFAULT_CONFIG" ]; then
+    if [ -z "$DEFAULT_CONFIG" ]; then
         # backup existing config
         backup_cfg $boot_dev $old_part
     fi
@@ -577,14 +587,14 @@ if [ "${DO_RESTORE}" = true ]; then
     restore_cfg $backup_tmp_dir $bisdn_linux_mnt
 fi;
 
-if [ -n "$BISDN_DEFAULT_CONFIG" ] && [ "$BISDN_DEFAULT_CONFIG" != "none" ]; then
-    example_path="/usr/share/baseboxd/default_configurations/$BISDN_DEFAULT_CONFIG"
+if [ -n "$DEFAULT_CONFIG" ] && [ "$DEFAULT_CONFIG" != "none" ]; then
+    example_path="/usr/share/baseboxd/default_configurations/$DEFAULT_CONFIG"
     if [ -d "${bisdn_linux_mnt}${example_path}" ]; then
         # copy *.netdev and *.network files, but not e.g. *.md
         cp "${bisdn_linux_mnt}${example_path}/"*.net* \
             "${bisdn_linux_mnt}/${SYSTEMD_NETWORK_CONFDIR}"
     else
-        echo "WARNING: no default config '$BISDN_DEFAULT_CONFIG' found."
+        echo "WARNING: no default config '$DEFAULT_CONFIG' found."
     fi
 fi
 
