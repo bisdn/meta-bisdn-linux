@@ -20,3 +20,11 @@
 # Set a default password hash for the baseboxd user. This can be generated e.g.
 # via mkpasswd or openssl passwd.
 # DEFAULT_PASSWORD="$6$2zTHd7.l2MZBTq5j$LAwBkh6ILoFcqQyKhwzWe/jm.y/R3Mv0tsOhEbssq.ZLNiXivGpQUmKUWJSvoncQMj/jboLCQAH689wRfUy18."
+
+# Prepopulate /etc/basebox/.ssh/authorized_keys with the supplied content.
+# Multiple lines can be set using \ at the end, e.g.
+# AUTHORIZED_SSH_KEYS="key1 \
+# key2 \
+# key3"
+#
+# AUTHORIZED_SSH_KEYS=""
