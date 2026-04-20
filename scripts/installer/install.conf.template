@@ -6,6 +6,12 @@
 # out, then ppending this file to the installer via
 #   cat install.conf.template >> onie-bisdn-linux(...).bin
 
+# Control whether to keep configuration when installing with an existing BISDN
+# Linux installation present:
+#   "true"            take over configiration from previous installation
+#   "false"           reset to defaults
+# KEEP_CONFIG="true"
+
 # Set a default network configuration for the front ports:
 #   "none"             all front ports down, no configuration
 #   "simple-l2-bridge" all front ports up, bridged
