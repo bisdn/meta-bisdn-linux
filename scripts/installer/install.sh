@@ -263,6 +263,7 @@ get_boolean()
 }
 
 DEFAULT_CONFIG=
+DEFAULT_PASSWORD=
 KEEP_CONFIG=true
 
 # parse a config file with FOO=bar assignments
@@ -344,6 +345,9 @@ ${line%\"}"
             DEFAULT_CONFIG)
                 DEFAULT_CONFIG=$value
                 ;;
+            DEFAULT_PASSWORD)
+                DEFAULT_PASSWORD=$value
+                ;;
             KEEP_CONFIG)
                 KEEP_CONFIG=$(get_boolean $value)
                 ;;
@@ -363,6 +367,12 @@ print_config()
     echo "Installing with the following configuration:                         "
     echo "  Keep existing configuration:          ${KEEP_CONFIG}               "
     echo "  Default network configuration:        ${DEFAULT_CONFIG:-none}      "
+    echo -n "  Default password:                     "
+    if [ -n  "$DEFAULT_PASSWORD" ]; then
+        echo "<custom>"
+    else
+        echo "<default>"
+    fi
     echo "#####################################################################"
 }
 
@@ -613,6 +623,11 @@ else
         else
             echo "WARNING: no default config '$DEFAULT_CONFIG' found."
         fi
+    fi
+
+    if [ -n "$DEFAULT_PASSWORD" ]; then
+        # replace password with new hash
+        sed -i "s/basebox:[^:]*/basebox:$DEFAULT_PASSWORD/" "${bisdn_linux_mnt}/etc/shadow"
     fi
 fi
 
