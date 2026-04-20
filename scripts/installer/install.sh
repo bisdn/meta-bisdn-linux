@@ -250,7 +250,20 @@ create_bisdn_linux_msdos_partition()
     echo "$part"
 }
 
+get_boolean()
+{
+    case "$1" in
+        y|Y|yes|true)
+            echo "true"
+            ;;
+        *)
+            echo "false"
+            ;;
+    esac
+}
+
 DEFAULT_CONFIG=
+KEEP_CONFIG=true
 
 # parse a config file with FOO=bar assignments
 # supports comments (prefixed with #) and continuation via \
@@ -331,6 +344,9 @@ ${line%\"}"
             DEFAULT_CONFIG)
                 DEFAULT_CONFIG=$value
                 ;;
+            KEEP_CONFIG)
+                KEEP_CONFIG=$(get_boolean $value)
+                ;;
             *)
                 echo "WARNING: unknown configuration item '$var'" >&2
                 ;;
@@ -345,6 +361,7 @@ print_config()
 {
     echo "#####################################################################"
     echo "Installing with the following configuration:                         "
+    echo "  Keep existing configuration:          ${KEEP_CONFIG}               "
     echo "  Default network configuration:        ${DEFAULT_CONFIG:-none}      "
     echo "#####################################################################"
 }
@@ -467,6 +484,7 @@ fi
 
 if [ -n "$BISDN_DEFAULT_CONFIG" ]; then
     DEFAULT_CONFIG=$BISDN_DEFAULT_CONFIG
+    KEEP_CONFIG=false
 fi
 
 print_config
@@ -476,7 +494,7 @@ old_part=$(eval $detect_bisdn_linux_partition $boot_dev)
 if [ -n "$old_part" ]; then
     # old_part contains partition number of existing BISDN Linux installation
 
-    if [ -z "$DEFAULT_CONFIG" ]; then
+    if [ "$KEEP_CONFIG" = true ]; then
         # backup existing config
         backup_cfg $boot_dev $old_part
     fi
@@ -585,16 +603,16 @@ platform_setup
 # Restore the network configuration from previous installation
 if [ "${DO_RESTORE}" = true ]; then
     restore_cfg $backup_tmp_dir $bisdn_linux_mnt
-fi;
-
-if [ -n "$DEFAULT_CONFIG" ] && [ "$DEFAULT_CONFIG" != "none" ]; then
-    example_path="/usr/share/baseboxd/default_configurations/$DEFAULT_CONFIG"
-    if [ -d "${bisdn_linux_mnt}${example_path}" ]; then
-        # copy *.netdev and *.network files, but not e.g. *.md
-        cp "${bisdn_linux_mnt}${example_path}/"*.net* \
-            "${bisdn_linux_mnt}/${SYSTEMD_NETWORK_CONFDIR}"
-    else
-        echo "WARNING: no default config '$DEFAULT_CONFIG' found."
+else
+    if [ -n "$DEFAULT_CONFIG" ] && [ "$DEFAULT_CONFIG" != "none" ]; then
+        example_path="/usr/share/baseboxd/default_configurations/$DEFAULT_CONFIG"
+        if [ -d "${bisdn_linux_mnt}${example_path}" ]; then
+            # copy *.netdev and *.network files, but not e.g. *.md
+            cp "${bisdn_linux_mnt}${example_path}/"*.net* \
+                "${bisdn_linux_mnt}/${SYSTEMD_NETWORK_CONFDIR}"
+        else
+            echo "WARNING: no default config '$DEFAULT_CONFIG' found."
+        fi
     fi
 fi
 
