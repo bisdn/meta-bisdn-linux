@@ -16,3 +16,7 @@
 #   "none"             all front ports down, no configuration
 #   "simple-l2-bridge" all front ports up, bridged
 # DEFAULT_CONFIG="none"
+
+# Set a default password hash for the baseboxd user. This can be generated e.g.
+# via mkpasswd or openssl passwd.
+# DEFAULT_PASSWORD="$6$2zTHd7.l2MZBTq5j$LAwBkh6ILoFcqQyKhwzWe/jm.y/R3Mv0tsOhEbssq.ZLNiXivGpQUmKUWJSvoncQMj/jboLCQAH689wRfUy18."
