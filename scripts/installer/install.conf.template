@@ -1,0 +1,7 @@
+# install-config 1.0
+#
+# BISDN Linux Installation configuration
+#
+# Customize the installation by uncommenting desired options and filling them
+# out, then ppending this file to the installer via
+#   cat install.conf.template >> onie-bisdn-linux(...).bin
