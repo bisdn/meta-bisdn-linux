@@ -50,6 +50,9 @@ do_onie_bundle () {
         --numeric-owner --owner=0 --group=0 --mtime="@${SOURCE_DATE_EPOCH}" \
         -C "${ONIEIMAGE_DIR}" -cf "${ONIEIMAGE_PAYLOAD_FILE}" "installer"
 
+    # append config marker
+    echo -e "\nconf_marker" >> "${ONIEIMAGE_PAYLOAD_FILE}"
+
     # Populate the shell archive body
     cp "${ONIEIMAGE_SHELL_ARCHIVE_BODY}" "${ONIEIMAGE_OUTPUT_FILE}"
     image_sha1=$(sha1sum "${ONIEIMAGE_PAYLOAD_FILE}" | awk '{print $1}')

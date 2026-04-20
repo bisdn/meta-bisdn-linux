@@ -250,6 +250,99 @@ create_bisdn_linux_msdos_partition()
     echo "$part"
 }
 
+# parse a config file with FOO=bar assignments
+# supports comments (prefixed with #) and continuation via \
+# at the end.
+# Strips enclosing quotes from values.
+parse_config()
+{
+    local config="$1"
+    local var value
+
+    while read -r line; do
+        # strip carriage-return in case of windows format
+        line=${line//$'\r'/}
+
+        case "$line" in
+            \#*)
+                # skip comments
+                continue
+                ;;
+            *\\)
+                if [ -n "$var" ]; then
+                    # continuation of previous multi-line assignment
+                    # strip trailing slash and append
+                    line=${line%\\}
+                    value="${value}
+${line}"
+                else
+                    # beginning of multi-line assignment
+
+                    # split by first = and strip surrounding whitespace
+                    var=$(echo ${line%=*})
+                    value=$(echo ${line#*=})
+
+                    # strip opening quote if present
+                    value=${value#\"}
+                    # strip trailing slash
+                    value=${value%\\}
+                fi
+                continue
+                ;;
+            *=*)
+                if [ -n "$var" ]; then
+                    # end of previous multi-line assignment
+                    # strip closing quote if present and append
+                    line=${line%\"}
+                    value="${value}
+${line}"
+                else
+                    # single-line assignment
+
+                    # split by first = and strip surrounding whitespace
+                    var=$(echo ${line%=*})
+                    value=$(echo ${line#*=})
+
+                    # strip opening quote if present
+                    value=${value#\"}
+                    # strip closing quotes if present
+                    value=${value%\"}
+                fi
+                ;;
+            *)
+                if [ -z "$value" ]; then
+                    if [ -n "$line" ]; then
+                        echo "WARNING: unexpected line '$line'" >&2
+                    fi
+                    continue
+                fi
+
+                # end of previous multi-line assignment
+                # strip closing quote if present and append
+                line=${line%\"}
+                value="${value}
+${line%\"}"
+                ;;
+        esac
+
+        case "$var" in
+            *)
+                echo "WARNING: unknown configuration item '$var'" >&2
+                ;;
+        esac
+
+        var=
+        value=
+    done < $config
+}
+
+print_config()
+{
+    echo "#####################################################################"
+    echo "Installing with the following configuration:                         "
+    echo "#####################################################################"
+}
+
 # default platform functions
 
 platform_check()
@@ -361,6 +454,12 @@ fi
 
 # do only restore if backup has been created
 DO_RESTORE=false
+
+if [ -f ./install.conf ]; then
+    parse_config ./install.conf
+fi
+
+print_config
 
 # See if BISDN Linux partition already exists
 old_part=$(eval $detect_bisdn_linux_partition $boot_dev)
