@@ -9,7 +9,7 @@ SRC_URI:append = " \
 "
 
 # build grpc_cli as well
-EXTRA_OECMAKE:append = " \
+EXTRA_OECMAKE:append:class-target = " \
     -DgRPC_BUILD_CLI=ON \
 "
 
