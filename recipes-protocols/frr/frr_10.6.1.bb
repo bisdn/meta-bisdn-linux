@@ -12,6 +12,7 @@ LIC_FILES_CHKSUM = "file://doc/licenses/GPL-2.0;md5=b234ee4d69f5fce4486a80fdaf4a
 
 SRC_URI = "git://github.com/FRRouting/frr.git;protocol=https;branch=stable/10.6 \
            file://frr.pam \
+           file://0001-lib-fix-mgmt_msg-recv-to-deal-with-mis-alignment.patch \
            "
 SRCREV = "71da51baee6fb2a02b24262defc46591c86e8a81"
 
