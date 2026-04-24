@@ -57,10 +57,6 @@ platform_install_bootloader_entry()
     local bisdn_linux_mnt=$3
     local separator=
 
-    if [ -f fitImage ]; then
-	cp fitImage $bisdn_linux_mnt/boot/fitImage
-    fi
-
     if [ ! -f $bisdn_linux_mnt/boot/fitImage ]; then
         echo "Error: No kernel image in root fs"
         exit 1

@@ -5,7 +5,6 @@ LIC_FILES_CHKSUM = "file://${COREBASE}/meta/COPYING.MIT;md5=3da9cfbcb788c80a0384
 INHIBIT_DEFAULT_DEPS = "1"
 
 INSTALL_ROOTFS = "${IMGDEPLOYDIR}/${IMAGE_LINK_NAME}.tar.xz"
-INSTALL_KERNEL = "${DEPLOY_DIR_IMAGE}/${KERNEL_IMAGETYPE}"
 
 ONIEIMAGE_DIR ?= "${S}"
 ONIEIMAGE_DIR_INSTALL = "${ONIEIMAGE_DIR}/installer/"
@@ -34,7 +33,6 @@ do_onie_bundle[depends] += "virtual/kernel:do_deploy"
 
 do_onie_bundle () {
     mkdir --parent "${ONIEIMAGE_DIR_INSTALL}"
-    cp "${INSTALL_KERNEL}" "${ONIEIMAGE_DIR_INSTALL}/"
     cp "${INSTALL_ROOTFS}" "${ONIEIMAGE_DIR_INSTALL}/rootfs.tar.xz"
 
     cp "${BISDN_ONIE_ADDITIONS}/installer/${BISDN_ARCH}/install.sh" "${ONIEIMAGE_DIR_INSTALL}/platform.sh"
