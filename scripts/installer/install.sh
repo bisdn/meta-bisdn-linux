@@ -250,6 +250,142 @@ create_bisdn_linux_msdos_partition()
     echo "$part"
 }
 
+get_boolean()
+{
+    case "$1" in
+        y|Y|yes|true)
+            echo "true"
+            ;;
+        *)
+            echo "false"
+            ;;
+    esac
+}
+
+AUTHORIZED_SSH_KEYS=
+DEFAULT_CONFIG=
+DEFAULT_PASSWORD=
+KEEP_CONFIG=true
+
+# parse a config file with FOO=bar assignments
+# supports comments (prefixed with #) and continuation via \
+# at the end.
+# Strips enclosing quotes from values.
+parse_config()
+{
+    local config="$1"
+    local var value
+
+    while read -r line; do
+        # strip carriage-return in case of windows format
+        line=${line//$'\r'/}
+
+        case "$line" in
+            \#*)
+                # skip comments
+                continue
+                ;;
+            *\\)
+                if [ -n "$var" ]; then
+                    # continuation of previous multi-line assignment
+                    # strip trailing slash and append
+                    line=${line%\\}
+                    value="${value}
+${line}"
+                else
+                    # beginning of multi-line assignment
+
+                    # split by first = and strip surrounding whitespace
+                    var=$(echo ${line%=*})
+                    value=$(echo ${line#*=})
+
+                    # strip opening quote if present
+                    value=${value#\"}
+                    # strip trailing slash
+                    value=${value%\\}
+                fi
+                continue
+                ;;
+            *=*)
+                if [ -n "$var" ]; then
+                    # end of previous multi-line assignment
+                    # strip closing quote if present and append
+                    line=${line%\"}
+                    value="${value}
+${line}"
+                else
+                    # single-line assignment
+
+                    # split by first = and strip surrounding whitespace
+                    var=$(echo ${line%=*})
+                    value=$(echo ${line#*=})
+
+                    # strip opening quote if present
+                    value=${value#\"}
+                    # strip closing quotes if present
+                    value=${value%\"}
+                fi
+                ;;
+            *)
+                if [ -z "$value" ]; then
+                    if [ -n "$line" ]; then
+                        echo "WARNING: unexpected line '$line'" >&2
+                    fi
+                    continue
+                fi
+
+                # end of previous multi-line assignment
+                # strip closing quote if present and append
+                line=${line%\"}
+                value="${value}
+${line%\"}"
+                ;;
+        esac
+
+        case "$var" in
+            AUTHORIZED_SSH_KEYS)
+                AUTHORIZED_SSH_KEYS=$value
+                ;;
+            DEFAULT_CONFIG)
+                DEFAULT_CONFIG=$value
+                ;;
+            DEFAULT_PASSWORD)
+                DEFAULT_PASSWORD=$value
+                ;;
+            KEEP_CONFIG)
+                KEEP_CONFIG=$(get_boolean $value)
+                ;;
+            *)
+                echo "WARNING: unknown configuration item '$var'" >&2
+                ;;
+        esac
+
+        var=
+        value=
+    done < $config
+}
+
+print_config()
+{
+    echo "#####################################################################"
+    echo "Installing with the following configuration:                         "
+    echo "  Keep existing configuration:          ${KEEP_CONFIG}               "
+    echo "  Default network configuration:        ${DEFAULT_CONFIG:-none}      "
+    echo -n "  Default password:                     "
+    if [ -n  "$DEFAULT_PASSWORD" ]; then
+        echo "<custom>"
+    else
+        echo "<default>"
+    fi
+    echo -n "  Authorized SSH keys:                  "
+    if [ -n  "$DEFAULT_PASSWORD" ]; then
+        echo "present"
+    else
+        echo "none"
+    fi
+    echo "#####################################################################"
+}
+
 # default platform functions
 
 platform_check()
@@ -362,12 +498,23 @@ fi
 # do only restore if backup has been created
 DO_RESTORE=false
 
+if [ -f ./install.conf ]; then
+    parse_config ./install.conf
+fi
+
+if [ -n "$BISDN_DEFAULT_CONFIG" ]; then
+    DEFAULT_CONFIG=$BISDN_DEFAULT_CONFIG
+    KEEP_CONFIG=false
+fi
+
+print_config
+
 # See if BISDN Linux partition already exists
 old_part=$(eval $detect_bisdn_linux_partition $boot_dev)
 if [ -n "$old_part" ]; then
     # old_part contains partition number of existing BISDN Linux installation
 
-    if [ -z "$BISDN_DEFAULT_CONFIG" ]; then
+    if [ "$KEEP_CONFIG" = true ]; then
         # backup existing config
         backup_cfg $boot_dev $old_part
     fi
@@ -476,16 +623,29 @@ platform_setup
 # Restore the network configuration from previous installation
 if [ "${DO_RESTORE}" = true ]; then
     restore_cfg $backup_tmp_dir $bisdn_linux_mnt
-fi;
+else
+    if [ -n "$DEFAULT_CONFIG" ] && [ "$DEFAULT_CONFIG" != "none" ]; then
+        example_path="/usr/share/baseboxd/default_configurations/$DEFAULT_CONFIG"
+        if [ -d "${bisdn_linux_mnt}${example_path}" ]; then
+            # copy *.netdev and *.network files, but not e.g. *.md
+            cp "${bisdn_linux_mnt}${example_path}/"*.net* \
+                "${bisdn_linux_mnt}/${SYSTEMD_NETWORK_CONFDIR}"
+        else
+            echo "WARNING: no default config '$DEFAULT_CONFIG' found."
+        fi
+    fi
 
-if [ -n "$BISDN_DEFAULT_CONFIG" ] && [ "$BISDN_DEFAULT_CONFIG" != "none" ]; then
-    example_path="/usr/share/baseboxd/default_configurations/$BISDN_DEFAULT_CONFIG"
-    if [ -d "${bisdn_linux_mnt}${example_path}" ]; then
-        # copy *.netdev and *.network files, but not e.g. *.md
-        cp "${bisdn_linux_mnt}${example_path}/"*.net* \
-            "${bisdn_linux_mnt}/${SYSTEMD_NETWORK_CONFDIR}"
-    else
-        echo "WARNING: no default config '$BISDN_DEFAULT_CONFIG' found."
+    if [ -n "$DEFAULT_PASSWORD" ]; then
+        # replace password with new hash
+        sed -i "s/basebox:[^:]*/basebox:$DEFAULT_PASSWORD/" "${bisdn_linux_mnt}/etc/shadow"
+    fi
+    if [ -n "$AUTHORIZED_SSH_KEYS" ]; then
+        mkdir -p "${bisdn_linux_mnt}/home/basebox/.ssh/"
+        echo "$AUTHORIZED_SSH_KEYS" > "${bisdn_linux_mnt}/home/basebox/.ssh/authorized_keys"
+
+        chmod 0755 "${bisdn_linux_mnt}/home/basebox/.ssh/authorized_keys"
+        chmod 0700 "${bisdn_linux_mnt}/home/basebox/.ssh/"
+        chown -R 1000:1000 "${bisdn_linux_mnt}/home/basebox/.ssh/"
     fi
 fi
 
