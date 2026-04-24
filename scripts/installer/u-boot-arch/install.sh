@@ -58,10 +58,10 @@ platform_install_bootloader_entry()
     local separator=
 
     if [ -f fitImage ]; then
-	cp fitImage $bisdn_linux_mnt/boot/uImage
+	cp fitImage $bisdn_linux_mnt/boot/fitImage
     fi
 
-    if [ ! -f $bisdn_linux_mnt/boot/uImage ]; then
+    if [ ! -f $bisdn_linux_mnt/boot/fitImage ]; then
         echo "Error: No kernel image in root fs"
         exit 1
     fi
@@ -70,7 +70,7 @@ platform_install_bootloader_entry()
     machine_fixups
 
     # Work-around to support yocto warrior-style fit node names which used '@'.
-    if grep -q "kernel@1" $bisdn_linux_mnt/boot/uImage; then
+    if grep -q "kernel@1" $bisdn_linux_mnt/boot/fitImage; then
         separator="@"
     else
         separator="-"
