@@ -5,7 +5,7 @@
 FILESEXTRAPATHS:append := "${THISDIR}/files:"
 
 SRC_URI:append = " \
-           file://1.60.1/0001-CMakelists.txt-allow-building-the-grpc_cli-utility-o.patch \
+           file://0001-CMakelists.txt-allow-building-the-grpc_cli-utility-o.patch \
 "
 
 # build grpc_cli as well
