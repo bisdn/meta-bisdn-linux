@@ -3,6 +3,8 @@ From: Rubens Figueiredo <rubens.figueiredo@bisdn.de>
 Date: Tue, 10 Aug 2021 11:23:39 +0200
 Subject: [PATCH 5/7] bridge-vlan: add per vlan stp state object and cache
 
+Upstream-Status: Pending
+
 Signed-off-by: Rubens Figueiredo <rubens.figueiredo@bisdn.de>
 Co-authored-by: Jonas Gorski <jonas.gorski@bisdn.de>
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>

@@ -3,6 +3,8 @@ From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Tue, 6 Oct 2020 16:53:36 +0200
 Subject: [PATCH 4/7] link/bonding: expose state on enslaved interfaces
 
+Upstream-Status: Pending
+
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
  include/netlink/route/link/bonding.h |   3 +
