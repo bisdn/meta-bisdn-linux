@@ -3,6 +3,8 @@ From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Wed, 15 Jun 2022 17:45:38 +0200
 Subject: [PATCH] CMakelists.txt: allow building the grpc_cli utility only
 
+Upstream-Status: Pending
+
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
  CMakeLists.txt | 19 +++++++++++++++++--
