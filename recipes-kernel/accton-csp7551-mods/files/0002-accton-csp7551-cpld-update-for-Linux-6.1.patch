@@ -12,6 +12,8 @@ spatch --sp-file ./scripts/coccinelle/modules/6.1-i2c_remove_sig.cocci \
 
 [1] https://github.com/bisdn/meta-open-network-linux/blob/main/scripts/coccinelle/modules/6.1-i2c_remove_sig.cocci
 
+Upstream-Status: Pending
+
 Signed-off-by: Roger Luethi <roger.luethi@bisdn.de>
 ---
  .../accton-csp7551-mods/files/accton_i2c_cpld.c       | 11 +++++++++++

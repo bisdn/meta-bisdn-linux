@@ -10,6 +10,8 @@ fix was created manually.
 
 [1] https://github.com/bisdn/meta-open-network-linux/blob/main/scripts/coccinelle/modules/6.1-i2c_remove_sig.cocci
 
+Upstream-Status: Pending
+
 Signed-off-by: Roger Luethi <roger.luethi@bisdn.de>
 ---
  .../files/x86-64-accton-csp7551-sfp.c                 | 11 +++++++++++
