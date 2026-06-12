@@ -43,7 +43,8 @@ information about the bridge interface from the cache.
 
 Work around for now by ignoring these updates.
 
-Upstream-Status: Reported [https://github.com/thom311/libnl/issues/377]
+Upstream-Status: Inappropriate [https://github.com/thom311/libnl/issues/377]
+
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
  lib/route/link.c | 7 +++++++

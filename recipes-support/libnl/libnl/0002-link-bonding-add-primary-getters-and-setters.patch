@@ -6,6 +6,8 @@ Subject: [PATCH 2/7] link/bonding: add primary getters and setters
 Add getters and setters for the primary attribute of active backup
 bonds.
 
+Upstream-Status: Pending
+
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
  include/netlink/route/link/bonding.h |  3 ++

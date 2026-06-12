@@ -3,6 +3,8 @@ From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Tue, 6 Oct 2020 15:25:38 +0200
 Subject: [PATCH 3/7] WIP: add info slave data support
 
+Upstream-Status: Pending
+
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
  lib/route/link.c          | 71 +++++++++++++++++++++++++++++++++++++++

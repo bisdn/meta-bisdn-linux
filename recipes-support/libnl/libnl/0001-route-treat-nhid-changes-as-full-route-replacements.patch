@@ -34,6 +34,7 @@ Fix this by checking the nhid of the routes, and only merge if they
 match.
 
 Upstream-Status: Backport [https://github.com/thom311/libnl/commit/655a638d4e1f74be9256a3108ae2abb84827a9ce]
+
 Fixes: 29b71371e764 ("route cache: Fix handling of ipv6 multipath routes")
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
