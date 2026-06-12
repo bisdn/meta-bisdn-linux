@@ -6,6 +6,8 @@ Subject: [PATCH 06/12] drivers: add a linux wired driver
 Add a driver making use of the new-ish LOCKED flags for ports and
 neighbors to implement a wired driver for linux.
 
+Upstream-Status: Pending
+
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
  src/drivers/driver.h             |   3 +

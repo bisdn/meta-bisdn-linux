@@ -6,6 +6,8 @@ Subject: [PATCH 12/12] MAB: add MAB events
 Generate MAB events for STARTED, SUCCESS and FAILURE, so that scripts can
 log and/or react to MAB specific events.
 
+Upstream-Status: Pending
+
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
  src/ap/ieee802_1x.c   | 7 +++++++

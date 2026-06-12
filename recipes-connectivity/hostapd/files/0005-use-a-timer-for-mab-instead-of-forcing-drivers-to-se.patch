@@ -4,6 +4,8 @@ Date: Fri, 14 Feb 2025 10:52:51 +0100
 Subject: [PATCH 05/12] use a timer for mab instead of forcing drivers to set
  it explicitly
 
+Upstream-Status: Pending
+
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
  src/ap/drv_callbacks.c | 11 ++-------

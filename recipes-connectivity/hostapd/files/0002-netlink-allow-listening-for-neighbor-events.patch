@@ -6,6 +6,8 @@ Subject: [PATCH 02/12] netlink: allow listening for neighbor events
 Similar how subscribing to link events works, allow subscribing to
 neighbor events, but only subscribe if any callbacks are populated.
 
+Upstream-Status: Pending
+
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
  src/drivers/netlink.c      | 22 ++++++++++++++++++++++
