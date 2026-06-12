@@ -10,6 +10,8 @@ configure the port.
 But we cannot configure locked mode while not attached to a bridge, so
 wait until the port has a master (i.e. attached to a bridge).
 
+Upstream-Status: Pending
+
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
  src/drivers/driver_wired_linux.c | 16 +++++++++++++---

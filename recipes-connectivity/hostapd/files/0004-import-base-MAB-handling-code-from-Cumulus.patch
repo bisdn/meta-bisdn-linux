@@ -23,6 +23,8 @@ TODO:
   detected
 * make mab configurable
 
+Upstream-Status: Pending
+
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
  src/ap/drv_callbacks.c | 11 +++++-

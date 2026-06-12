@@ -9,6 +9,8 @@ hostapd that print messages.
 Should make it clearer where things are happening when running auth on
 multiple ports.
 
+Upstream-Status: Pending
+
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
  src/drivers/driver_wired_linux.c | 62 +++++++++++++++++---------------

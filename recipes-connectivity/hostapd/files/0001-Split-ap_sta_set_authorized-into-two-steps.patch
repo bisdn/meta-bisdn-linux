@@ -19,6 +19,10 @@ only after having authorized the STA in the driver.
 
 Signed-off-by: Jouni Malinen <j@w1.fi>
 (cherry picked from commit 2ab56694f64b05e9d1ac4170f6b2be7d88444c0f)
+
+Upstream-Status: Backport [https://git.w1.fi/cgit/hostap/commit/?id=2ab56694f64b05e9d1ac4170f6b2be7d88444c0f]
+
+Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
  src/ap/drv_callbacks.c | 10 ++++++++--
  src/ap/ieee802_1x.c    | 19 ++++++++-----------

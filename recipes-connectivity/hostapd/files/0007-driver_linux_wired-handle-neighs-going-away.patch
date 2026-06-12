@@ -3,6 +3,8 @@ From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Fri, 14 Feb 2025 10:59:57 +0100
 Subject: [PATCH 07/12] driver_linux_wired: handle neighs going away
 
+Upstream-Status: Pending
+
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
  src/drivers/driver_wired_linux.c | 53 +++++++++++++++++++++++++++++++-

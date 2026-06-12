@@ -6,6 +6,8 @@ Subject: [PATCH 08/12] driver_wired_linux: flush all entries on start/stop
 Make sure that there are no fdb entries left on start or stop that may
 unlock traffic unexpectedly.
 
+Upstream-Status: Pending
+
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
  src/drivers/driver_wired_linux.c | 3 +++

@@ -9,6 +9,8 @@ Add two options for for driver_wired_linux:
 * mac_auth: use MAB (0 = disabled, 1 = kernel MAB, 2 = software
   MAB)
 
+Upstream-Status: Pending
+
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
  hostapd/config_file.c | 13 +++++++++++++

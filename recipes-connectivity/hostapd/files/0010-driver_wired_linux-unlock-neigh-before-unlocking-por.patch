@@ -11,6 +11,8 @@ the STA from hostapd, but keeping the port unlocked.
 Fix this by unlocking the neigh first before unlocking the port,
 properly keeping the STA active.
 
+Upstream-Status: Pending
+
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
  src/drivers/driver_wired_linux.c | 12 ++++++------
