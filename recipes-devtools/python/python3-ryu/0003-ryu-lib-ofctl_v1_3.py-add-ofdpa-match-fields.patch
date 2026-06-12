@@ -12,6 +12,8 @@ ofdpa_mpls_l2_port.
 
 [1] https://github.com/Broadcom-Switch/of-dpa.git
 
+Upstream-Status: Inactive-Upstream [lastcommit: 2022-06-09]
+
 Signed-off-by: Roger Luethi <roger.luethi@bisdn.de>
 
 ryu/lib/ofctl_v1_3.py: rm unused field names, sort by field number

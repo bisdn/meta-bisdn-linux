@@ -1,10 +1,10 @@
-Upstream-Status: backport [https://github.com/faucetsdn/ryu/commit/dfe583bd837902af0276b31eedbc340adc695815]
 
 From dfe583bd837902af0276b31eedbc340adc695815 Mon Sep 17 00:00:00 2001
 From: Josh Bailey <josh@vandervecken.com>
 Date: Tue, 1 Jun 2021 08:02:07 +1200
 Subject: [PATCH] Upgrade eventlet.
 
+Upstream-Status: Backport [https://github.com/faucetsdn/ryu/commit/dfe583bd837902af0276b31eedbc340adc695815]
 ---
  ryu/app/wsgi.py | 11 +++++++++--
  1 file changed, 9 insertions(+), 2 deletions(-)

@@ -4,6 +4,9 @@ Date: Wed, 23 Jun 2021 14:10:27 +0200
 Subject: [PATCH 6/7] Add ryu/ofproto/ofdpa_actions.py
 
 Code based on nx_actions.py.
+
+Upstream-Status: Inactive-Upstream [lastcommit: 2022-06-09]
+
 ---
  ryu/ofproto/ofdpa_actions.py | 226 +++++++++++++++++++++++++++++++++++
  1 file changed, 226 insertions(+)

@@ -3,6 +3,8 @@ From: Roger Luethi <roger.luethi@bisdn.de>
 Date: Wed, 23 Jun 2021 13:26:04 +0200
 Subject: [PATCH 2/7] ryu/ofproto/oxm_fields.py: add class OfdpaExperimenter
 
+Upstream-Status: Inactive-Upstream [lastcommit: 2022-06-09]
+
 Signed-off-by: Roger Luethi <roger.luethi@bisdn.de>
 ---
  ryu/ofproto/oxm_fields.py | 4 ++++

@@ -9,6 +9,8 @@ Reference:
 - ofdpa-2.02-15-jun-2016.json
 - vpws_test_initiation.py (for external names)
 
+Upstream-Status: Inactive-Upstream [lastcommit: 2022-06-09]
+
 Signed-off-by: Roger Luethi <roger.luethi@bisdn.de>
 ---
  ryu/ofproto/ofdpa_ext.py | 18 ++++++++++++++++++
