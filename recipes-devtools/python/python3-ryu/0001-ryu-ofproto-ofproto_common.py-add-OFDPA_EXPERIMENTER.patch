@@ -4,6 +4,8 @@ Date: Wed, 23 Jun 2021 12:55:23 +0200
 Subject: [PATCH 1/7] ryu/ofproto/ofproto_common.py: add OFDPA_EXPERIMENTER_ID
 
 Identical to OF_EXPERIMENTER_ID_OFDPA in ofdpa-odp.
+
+Upstream-Status: Inactive-Upstream [lastcommit: 2022-06-09]
 ---
  ryu/ofproto/ofproto_common.py | 1 +
  1 file changed, 1 insertion(+)

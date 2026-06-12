@@ -52,6 +52,8 @@ mac_peer) and the outer labels.
 This ryu application writes incoming ARP and IP packets to a pcap
 file. Note that outgoing packets are invisible to the controller.
 
+Upstream-Status: Inactive-Upstream [lastcommit: 2022-06-09]
+
 Signed-off-by: Roger Luethi <roger.luethi@bisdn.de>
 ---
  ryu/app/bisdn/ofdpa_vpws.py | 1297 +++++++++++++++++++++++++++++++++++

@@ -12,6 +12,8 @@ For compatibility with existing users, keep the old name around.
 
 [1] https://github.com/Broadcom-Switch/of-dpa/blob/master/src/Ryu/OFDPA_TE_2.0/ofdpa/matches.py
 
+Upstream-Status: Inactive-Upstream [lastcommit: 2022-06-09]
+
 Signed-off-by: Roger Luethi <roger.luethi@bisdn.de>
 ---
  ryu/ofproto/ofproto_v1_3.py | 1 +

@@ -8,7 +8,8 @@ change. It was only needed for windows, and we don't build for windows,
 and PBR likely won't do the change anymore since easy_install does not
 have a get_script_args anymore in python 3.12.
 
-Upstream-Status: Unsubmitted [Upstream dead]
+Upstream-Status: Inactive-Upstream [lastcommit: 2022-06-09]
+
 Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
 ---
  ryu/hooks.py | 19 -------------------
