@@ -3,6 +3,8 @@ From: Rubens Figueiredo <rubens.figueiredo@bisdn.de>
 Date: Mon, 22 Mar 2021 18:49:54 +0100
 Subject: [PATCH] add for baseboxd in service file
 
+Upstream-Status: Inappropriate [baseboxd is a BISDN-Linux package]
+
 ---
  keepalived/keepalived.service.in | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
