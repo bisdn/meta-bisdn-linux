@@ -50,6 +50,7 @@ nogroup:x:65534:
 ptest:x:120:
 
 # systemd
+empower:x:982:
 systemd-journal-gateway:x:985:
 systemd-timesync:x:986:
 systemd-resolve:x:987:
