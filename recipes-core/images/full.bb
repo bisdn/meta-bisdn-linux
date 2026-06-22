@@ -16,7 +16,6 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL += "\
     freeradius \
     frr \
     git \
-    grpc-cli \
     hostapd \
     ipcalc \
     iproute2-bridge \
