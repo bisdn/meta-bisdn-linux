@@ -1,7 +1,7 @@
-From 48f06fe5d5774037d623ea353e49e9e3357b8618 Mon Sep 17 00:00:00 2001
+From 000792b08d29bfb9bd0b257f4d114811d8b63f40 Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Mon, 13 Jan 2025 13:04:48 +0100
-Subject: [PATCH 06/12] drivers: add a linux wired driver
+Subject: [PATCH 05/11] drivers: add a linux wired driver
 
 Add a driver making use of the new-ish LOCKED flags for ports and
 neighbors to implement a wired driver for linux.
@@ -19,10 +19,10 @@ Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
  create mode 100644 src/drivers/driver_wired_linux.c
 
 diff --git a/src/drivers/driver.h b/src/drivers/driver.h
-index 0df283baa4a6..a0a1b0dd1ec5 100644
+index 1ffef6cc3d99..e35a83edf9f4 100644
 --- a/src/drivers/driver.h
 +++ b/src/drivers/driver.h
-@@ -6137,6 +6137,9 @@ extern struct wpa_driver_ops wpa_driver_ndis_ops; /* driver_ndis.c */
+@@ -6973,6 +6973,9 @@ extern struct wpa_driver_ops wpa_driver_ndis_ops; /* driver_ndis.c */
  #ifdef CONFIG_DRIVER_WIRED
  extern const struct wpa_driver_ops wpa_driver_wired_ops; /* driver_wired.c */
  #endif /* CONFIG_DRIVER_WIRED */
@@ -34,7 +34,7 @@ index 0df283baa4a6..a0a1b0dd1ec5 100644
  extern const struct wpa_driver_ops wpa_driver_macsec_qca_ops;
 diff --git a/src/drivers/driver_wired_linux.c b/src/drivers/driver_wired_linux.c
 new file mode 100644
-index 000000000000..6d72fcadc41e
+index 000000000000..e8bafd27d83b
 --- /dev/null
 +++ b/src/drivers/driver_wired_linux.c
 @@ -0,0 +1,761 @@
@@ -316,7 +316,7 @@ index 000000000000..6d72fcadc41e
 +
 +static int wired_send_eapol(void *priv, const u8 *addr,
 +			    const u8 *data, size_t data_len, int encrypt,
-+			    const u8 *own_addr, u32 flags)
++			    const u8 *own_addr, u32 flags, int link_id)
 +{
 +	struct driver_wired_linux_data *drv = priv;
 +	struct ieee8023_hdr *hdr;
@@ -850,5 +850,5 @@ index 10eab6a92e17..00bbb97d7306 100644
  
  ifdef CONFIG_DRIVER_WEXT
 -- 
-2.50.1
+2.53.0
 

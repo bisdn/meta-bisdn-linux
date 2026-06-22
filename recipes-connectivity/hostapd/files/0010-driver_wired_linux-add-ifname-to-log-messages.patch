@@ -1,7 +1,7 @@
-From acef9009f9b27a58a116bcfef316b60a2bda5730 Mon Sep 17 00:00:00 2001
+From c4b35b6a6393a8be32ea49396e1fcc99bb31a2b3 Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Thu, 24 Jul 2025 16:31:34 +0200
-Subject: [PATCH 11/12] driver_wired_linux: add ifname to log messages
+Subject: [PATCH 10/11] driver_wired_linux: add ifname to log messages
 
 Prefix log messages with the interface name, matching other places in
 hostapd that print messages.
@@ -17,7 +17,7 @@ Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
  1 file changed, 34 insertions(+), 28 deletions(-)
 
 diff --git a/src/drivers/driver_wired_linux.c b/src/drivers/driver_wired_linux.c
-index 245f9f9a5178..c6971a5194b0 100644
+index 244e354f03fe..1a36b08489bc 100644
 --- a/src/drivers/driver_wired_linux.c
 +++ b/src/drivers/driver_wired_linux.c
 @@ -337,11 +337,11 @@ static int driver_wired_linux_add_neigh(struct driver_wired_linux_data *drv, con
@@ -179,5 +179,5 @@ index 245f9f9a5178..c6971a5194b0 100644
  				driver_wired_linux_flush_port(drv);
  			}
 -- 
-2.50.1
+2.53.0
 
