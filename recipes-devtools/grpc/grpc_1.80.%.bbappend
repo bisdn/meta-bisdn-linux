@@ -1,7 +1,3 @@
-# gRPC does not provide a way to use an external googletest package, so
-# we need to use the submodule way. For some reason, this hangs on
-# checkout so do the checkout manually. Luckily we only need googletest.
-
 FILESEXTRAPATHS:append := "${THISDIR}/files:"
 
 SRC_URI:append = " \
