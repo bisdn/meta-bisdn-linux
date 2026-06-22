@@ -1,7 +1,7 @@
-From 4a578bd3b0f6cfe1964fc63e629c03347fbc0fc2 Mon Sep 17 00:00:00 2001
+From 6033bc64bc2a1ac6b8a8b693d4304a103d3fcb6a Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Thu, 24 Jul 2025 13:11:46 +0200
-Subject: [PATCH 12/12] MAB: add MAB events
+Subject: [PATCH 11/11] MAB: add MAB events
 
 Generate MAB events for STARTED, SUCCESS and FAILURE, so that scripts can
 log and/or react to MAB specific events.
@@ -15,7 +15,7 @@ Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
  2 files changed, 12 insertions(+)
 
 diff --git a/src/ap/ieee802_1x.c b/src/ap/ieee802_1x.c
-index c2b3dce437e3..15ceb3c93e76 100644
+index 5530ad639530..3785fb06f860 100644
 --- a/src/ap/ieee802_1x.c
 +++ b/src/ap/ieee802_1x.c
 @@ -11,6 +11,7 @@
@@ -26,7 +26,7 @@ index c2b3dce437e3..15ceb3c93e76 100644
  #include "utils/common.h"
  #include "utils/eloop.h"
  #include "crypto/md5.h"
-@@ -1044,6 +1045,8 @@ void ieee802_1x_handle_eap_rx_timeout(void *eloop_ctx, void *timeout_ctx)
+@@ -1113,6 +1114,8 @@ void ieee802_1x_handle_eap_rx_timeout(void *eloop_ctx, void *timeout_ctx)
  	hostapd_logger(hapd, sta->addr, HOSTAPD_MODULE_IEEE8021X,
  			HOSTAPD_LEVEL_DEBUG,
  			"Falling back to MAB - skipping IEEE 802.1X/EAP");
@@ -35,7 +35,7 @@ index c2b3dce437e3..15ceb3c93e76 100644
  	sta->mab = 1;
  	os_snprintf(buf, sizeof(buf), RADIUS_ADDR_FORMAT,
  			MAC2STR(sta->addr));
-@@ -2075,6 +2078,8 @@ ieee802_1x_receive_auth(struct radius_msg *msg, struct radius_msg *req,
+@@ -2181,6 +2184,8 @@ ieee802_1x_receive_auth(struct radius_msg *msg, struct radius_msg *req,
  			sm->eap_if->aaaEapReq = true;
  			sta->eapol_sm->auth_pae_state = AUTH_PAE_AUTHENTICATED;
  			sta->eapol_sm->be_auth_state = BE_AUTH_SUCCESS;
@@ -44,7 +44,7 @@ index c2b3dce437e3..15ceb3c93e76 100644
  			ieee802_1x_set_sta_authorized(sm->eapol->conf.ctx,
  					sm->sta, 1);
  		} else {
-@@ -2093,6 +2098,8 @@ ieee802_1x_receive_auth(struct radius_msg *msg, struct radius_msg *req,
+@@ -2199,6 +2204,8 @@ ieee802_1x_receive_auth(struct radius_msg *msg, struct radius_msg *req,
  		sm->eap_if->aaaFail = true;
  		if (sta->mab) {
  			sm->eap_if->aaaEapReq = true;
@@ -54,10 +54,10 @@ index c2b3dce437e3..15ceb3c93e76 100644
  					sm->sta, 0);
  		} else {
 diff --git a/src/common/wpa_ctrl.h b/src/common/wpa_ctrl.h
-index 2c7ec043d409..c80c21b171b5 100644
+index f6142501e440..f28cbe357521 100644
 --- a/src/common/wpa_ctrl.h
 +++ b/src/common/wpa_ctrl.h
-@@ -422,6 +422,11 @@ extern "C" {
+@@ -455,6 +455,11 @@ extern "C" {
  /* PASN authentication status */
  #define PASN_AUTH_STATUS "PASN-AUTH-STATUS "
  
@@ -70,5 +70,5 @@ index 2c7ec043d409..c80c21b171b5 100644
  
  #define WPA_BSS_MASK_ALL		0xFFFDFFFF
 -- 
-2.50.1
+2.53.0
 

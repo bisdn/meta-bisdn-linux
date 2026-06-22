@@ -1,7 +1,7 @@
-From e4e892771d631104476455ef95c41bfe72ffd20b Mon Sep 17 00:00:00 2001
+From 7e71d930c98f8783b83c73ddc47530dcfb5cc8c5 Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Fri, 14 Feb 2025 10:52:51 +0100
-Subject: [PATCH 05/12] use a timer for mab instead of forcing drivers to set
+Subject: [PATCH 04/11] use a timer for mab instead of forcing drivers to set
  it explicitly
 
 Upstream-Status: Pending
@@ -14,10 +14,10 @@ Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
  3 files changed, 37 insertions(+), 31 deletions(-)
 
 diff --git a/src/ap/drv_callbacks.c b/src/ap/drv_callbacks.c
-index f634ab8890bf..33992331cdcd 100644
+index 4060daa97022..8b49b531e915 100644
 --- a/src/ap/drv_callbacks.c
 +++ b/src/ap/drv_callbacks.c
-@@ -1514,8 +1514,7 @@ static void hostapd_mgmt_tx_cb(struct hostapd_data *hapd, const u8 *buf,
+@@ -1957,8 +1957,7 @@ static void hostapd_mgmt_tx_cb(struct hostapd_data *hapd, const u8 *buf,
  #endif /* NEED_AP_MLME */
  
  
@@ -27,7 +27,7 @@ index f634ab8890bf..33992331cdcd 100644
  {
  	struct sta_info *sta = ap_get_sta(hapd, addr);
  
-@@ -1526,11 +1525,6 @@ static int hostapd_event_new_sta(struct hostapd_data *hapd, const u8 *addr,
+@@ -1969,11 +1968,6 @@ static int hostapd_event_new_sta(struct hostapd_data *hapd, const u8 *addr,
  		   " - adding a new STA", MAC2STR(addr));
  	sta = ap_sta_add(hapd, addr);
  	if (sta) {
@@ -39,7 +39,7 @@ index f634ab8890bf..33992331cdcd 100644
  		hostapd_new_assoc_sta(hapd, sta, 0);
  	} else {
  		wpa_printf(MSG_DEBUG, "Failed to add STA entry for " MACSTR,
-@@ -1944,8 +1938,7 @@ void wpa_supplicant_event(void *ctx, enum wpa_event_type event,
+@@ -2529,8 +2523,7 @@ void wpa_supplicant_event(void *ctx, enum wpa_event_type event,
  				     data->rx_probe_req.ssi_signal);
  		break;
  	case EVENT_NEW_STA:
@@ -50,10 +50,10 @@ index f634ab8890bf..33992331cdcd 100644
  	case EVENT_EAPOL_RX:
  		hostapd_event_eapol_rx(hapd, data->eapol_rx.src,
 diff --git a/src/ap/ieee802_1x.c b/src/ap/ieee802_1x.c
-index 6748f0d82dd0..c2b3dce437e3 100644
+index 652ad3f82f00..5530ad639530 100644
 --- a/src/ap/ieee802_1x.c
 +++ b/src/ap/ieee802_1x.c
-@@ -1033,6 +1033,32 @@ static void ieee802_1x_save_eapol(struct sta_info *sta, const u8 *buf,
+@@ -1102,6 +1102,32 @@ static void ieee802_1x_save_eapol(struct sta_info *sta, const u8 *buf,
  	os_get_reltime(&sta->pending_eapol_rx->rx_time);
  }
  
@@ -84,9 +84,9 @@ index 6748f0d82dd0..c2b3dce437e3 100644
 +	ieee802_1x_encapsulate_radius(hapd, sta, eap, len);
 +}
  
- /**
-  * ieee802_1x_receive - Process the EAPOL frames from the Supplicant
-@@ -1073,6 +1099,12 @@ void ieee802_1x_receive(struct hostapd_data *hapd, const u8 *sa, const u8 *buf,
+ static bool ieee802_1x_check_encryption(struct sta_info *sta,
+ 					enum frame_encryption encrypted,
+@@ -1160,6 +1186,12 @@ void ieee802_1x_receive(struct hostapd_data *hapd, const u8 *sa, const u8 *buf,
  
  		return;
  	}
@@ -99,7 +99,7 @@ index 6748f0d82dd0..c2b3dce437e3 100644
  
  	if (len < sizeof(*hdr)) {
  		wpa_printf(MSG_INFO, "   too short IEEE 802.1X packet");
-@@ -1300,27 +1332,8 @@ void ieee802_1x_new_station(struct hostapd_data *hapd, struct sta_info *sta)
+@@ -1393,27 +1425,8 @@ void ieee802_1x_new_station(struct hostapd_data *hapd, struct sta_info *sta)
  	 * We may have MAC Authentication Bypass (MAB) configured.
  	 * If so, skip EAPOL and just authorize with RADIUS.
  	 */
@@ -129,7 +129,7 @@ index 6748f0d82dd0..c2b3dce437e3 100644
  		return;
  	}
  
-@@ -1423,6 +1436,7 @@ void ieee802_1x_free_station(struct hostapd_data *hapd, struct sta_info *sta)
+@@ -1516,6 +1529,7 @@ void ieee802_1x_free_station(struct hostapd_data *hapd, struct sta_info *sta)
  #ifdef CONFIG_HS20
  	eloop_cancel_timeout(ieee802_1x_wnm_notif_send, hapd, sta);
  #endif /* CONFIG_HS20 */
@@ -138,10 +138,10 @@ index 6748f0d82dd0..c2b3dce437e3 100644
  	if (sta->pending_eapol_rx) {
  		wpabuf_free(sta->pending_eapol_rx->buf);
 diff --git a/src/drivers/driver.h b/src/drivers/driver.h
-index 446c60f79fe4..0df283baa4a6 100644
+index 4b7bbf704881..1ffef6cc3d99 100644
 --- a/src/drivers/driver.h
 +++ b/src/drivers/driver.h
-@@ -5744,7 +5744,6 @@ union wpa_event_data {
+@@ -6489,7 +6489,6 @@ union wpa_event_data {
  	 */
  	struct new_sta {
  		const u8 *addr;
@@ -150,5 +150,5 @@ index 446c60f79fe4..0df283baa4a6 100644
  
  	/**
 -- 
-2.50.1
+2.53.0
 
