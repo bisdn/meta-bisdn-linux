@@ -1,7 +1,7 @@
-From 3e2ce55a34681a29dc96b36317e27c615bb33b63 Mon Sep 17 00:00:00 2001
+From ab48e68f2d07bf2d62506b4c6315f500865f9d66 Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Thu, 24 Jul 2025 14:52:53 +0200
-Subject: [PATCH 10/12] driver_wired_linux: unlock neigh before unlocking port
+Subject: [PATCH 09/11] driver_wired_linux: unlock neigh before unlocking port
 
 Unlocking a port will flush all present locked neighs, which will
 trigger us reporting the STA as left, causing hostapd to immediately
@@ -19,7 +19,7 @@ Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
  1 file changed, 6 insertions(+), 6 deletions(-)
 
 diff --git a/src/drivers/driver_wired_linux.c b/src/drivers/driver_wired_linux.c
-index fbcfd6373e8f..245f9f9a5178 100644
+index f3cef10ff27a..244e354f03fe 100644
 --- a/src/drivers/driver_wired_linux.c
 +++ b/src/drivers/driver_wired_linux.c
 @@ -786,14 +786,14 @@ wired_linux_set_sta_authorized(void *priv, const u8 *addr,
@@ -44,5 +44,5 @@ index fbcfd6373e8f..245f9f9a5178 100644
  	} else {
  		wpa_printf(MSG_INFO, "de-authorizing " MACSTR, MAC2STR(addr));
 -- 
-2.50.1
+2.53.0
 

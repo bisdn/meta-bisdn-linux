@@ -1,7 +1,7 @@
-From 55ad721b3e8cc75870f4e0bc1bf0712a0768fc09 Mon Sep 17 00:00:00 2001
+From be6f133a0f7cd2498d14f0770f234fac4a5d272e Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Mon, 20 Jan 2025 09:07:56 +0100
-Subject: [PATCH 03/12] add wired driver extra options
+Subject: [PATCH 02/11] add wired driver extra options
 
 Add two options for for driver_wired_linux:
 
@@ -21,10 +21,10 @@ Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
  5 files changed, 25 insertions(+)
 
 diff --git a/hostapd/config_file.c b/hostapd/config_file.c
-index af1e81d1ddb6..4d13b8a3907f 100644
+index 3fb059770d49..e50ac782a05e 100644
 --- a/hostapd/config_file.c
 +++ b/hostapd/config_file.c
-@@ -2477,6 +2477,19 @@ static int hostapd_config_fill(struct hostapd_config *conf,
+@@ -2590,6 +2590,19 @@ static int hostapd_config_fill(struct hostapd_config *conf,
  		conf->ieee80211h = atoi(pos);
  	} else if (os_strcmp(buf, "ieee8021x") == 0) {
  		bss->ieee802_1x = atoi(pos);
@@ -45,10 +45,10 @@ index af1e81d1ddb6..4d13b8a3907f 100644
  		int eapol_version = atoi(pos);
  #ifdef CONFIG_MACSEC
 diff --git a/hostapd/main.c b/hostapd/main.c
-index c9ec38d19f88..34479aa38683 100644
+index 00e02bb034c9..6ff805401885 100644
 --- a/hostapd/main.c
 +++ b/hostapd/main.c
-@@ -191,6 +191,8 @@ static int hostapd_driver_init(struct hostapd_iface *iface)
+@@ -241,6 +241,8 @@ static int hostapd_driver_init(struct hostapd_iface *iface)
  	params.ifname = hapd->conf->iface;
  	params.driver_params = hapd->iconf->driver_params;
  	params.use_pae_group_addr = hapd->conf->use_pae_group_addr;
@@ -58,10 +58,10 @@ index c9ec38d19f88..34479aa38683 100644
  	params.num_bridge = hapd->iface->num_bss;
  	params.bridge = os_calloc(hapd->iface->num_bss, sizeof(char *));
 diff --git a/src/ap/ap_config.h b/src/ap/ap_config.h
-index 22ad617f4de6..02636ff8e978 100644
+index ced2181ab8ae..18916196450f 100644
 --- a/src/ap/ap_config.h
 +++ b/src/ap/ap_config.h
-@@ -453,6 +453,8 @@ struct hostapd_bss_config {
+@@ -464,6 +464,8 @@ struct hostapd_bss_config {
  				 * address instead of individual address
  				 * (for driver_wired.c).
  				 */
@@ -69,13 +69,13 @@ index 22ad617f4de6..02636ff8e978 100644
 +	enum mac_auth mac_auth;
  
  	int ap_max_inactivity;
- 	int ignore_broadcast_ssid;
+ 	int bss_max_idle;
 diff --git a/src/common/defs.h b/src/common/defs.h
-index f43bdb5d1b15..90f7c1057349 100644
+index 8cca094e8f14..f3d28feb2010 100644
 --- a/src/common/defs.h
 +++ b/src/common/defs.h
-@@ -475,4 +475,10 @@ enum ptk0_rekey_handling {
- 	PTK0_REKEY_ALLOW_NEVER
+@@ -532,4 +532,10 @@ enum sae_pwe {
+ 	SAE_PWE_NOT_SET = 4,
  };
  
 +enum mac_auth {
@@ -86,10 +86,10 @@ index f43bdb5d1b15..90f7c1057349 100644
 +
  #endif /* DEFS_H */
 diff --git a/src/drivers/driver.h b/src/drivers/driver.h
-index d3312a34d8f8..0df283baa4a6 100644
+index 3e77474899eb..1ffef6cc3d99 100644
 --- a/src/drivers/driver.h
 +++ b/src/drivers/driver.h
-@@ -2229,6 +2229,8 @@ struct wpa_init_params {
+@@ -2576,6 +2576,8 @@ struct wpa_init_params {
  	int use_pae_group_addr;
  	char **bridge;
  	size_t num_bridge;
@@ -99,5 +99,5 @@ index d3312a34d8f8..0df283baa4a6 100644
  	u8 *own_addr; /* buffer for writing own MAC address */
  };
 -- 
-2.50.1
+2.53.0
 

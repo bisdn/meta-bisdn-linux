@@ -1,7 +1,7 @@
-From 0c14202044d7b10f0a1ed1cffa05068e91c8c75e Mon Sep 17 00:00:00 2001
+From 8fecc11cea0ac2a082b7262bc463d4597693e64c Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Mon, 13 Jan 2025 11:10:41 +0100
-Subject: [PATCH 02/12] netlink: allow listening for neighbor events
+Subject: [PATCH 01/11] netlink: allow listening for neighbor events
 
 Similar how subscribing to link events works, allow subscribing to
 neighbor events, but only subscribe if any callbacks are populated.
@@ -16,7 +16,7 @@ Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
  3 files changed, 41 insertions(+)
 
 diff --git a/src/drivers/netlink.c b/src/drivers/netlink.c
-index 0e960f48c0ad..6e1d4f18d6c8 100644
+index 7780479c3e91..5fe55a90355a 100644
 --- a/src/drivers/netlink.c
 +++ b/src/drivers/netlink.c
 @@ -32,6 +32,17 @@ static void netlink_receive_link(struct netlink_data *netlink,
@@ -123,5 +123,5 @@ index d3f091c392b0..53813ad85554 100644
  {
  	unsigned short rta_len;
 -- 
-2.50.1
+2.53.0
 

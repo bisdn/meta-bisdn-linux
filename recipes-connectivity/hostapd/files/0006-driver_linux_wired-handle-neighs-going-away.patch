@@ -1,7 +1,7 @@
-From a5ef112d767f7e79c396b5d21982c63d4f919a28 Mon Sep 17 00:00:00 2001
+From 409538df6913622910b493443afd545164b3da93 Mon Sep 17 00:00:00 2001
 From: Jonas Gorski <jonas.gorski@bisdn.de>
 Date: Fri, 14 Feb 2025 10:59:57 +0100
-Subject: [PATCH 07/12] driver_linux_wired: handle neighs going away
+Subject: [PATCH 06/11] driver_linux_wired: handle neighs going away
 
 Upstream-Status: Pending
 
@@ -11,7 +11,7 @@ Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
  1 file changed, 52 insertions(+), 1 deletion(-)
 
 diff --git a/src/drivers/driver_wired_linux.c b/src/drivers/driver_wired_linux.c
-index 6d72fcadc41e..8ed3ac7cd5c6 100644
+index e8bafd27d83b..6a4eb51d497e 100644
 --- a/src/drivers/driver_wired_linux.c
 +++ b/src/drivers/driver_wired_linux.c
 @@ -16,6 +16,7 @@
@@ -82,5 +82,5 @@ index 6d72fcadc41e..8ed3ac7cd5c6 100644
  
  static void wired_driver_hapd_deinit(void *priv);
 -- 
-2.50.1
+2.53.0
 
