@@ -12,7 +12,7 @@
 
 echo "Image build date: %%BUILD_DATE%%"
 echo -n "Verifying image checksum ..."
-sha1=$(sed -e '1,/^exit_marker$/d' "$0" | sha1sum | awk '{ print $1 }')
+sha1=$(sed -e '1,/^exit_marker$/d;/^conf_marker$/q' "$0" | sha1sum | awk '{ print $1 }')
 
 payload_sha1=%%IMAGE_SHA1%%
 
@@ -37,14 +37,32 @@ cd $tmp_dir
 echo -n "Preparing image archive ..."
 sed -e '1,/^exit_marker$/d' $archive_path | tar xf - || exit 1
 echo " OK."
+payload_conf="$(sed -e '1,/^conf_marker$/d' $archive_path)"
+
 cd $cur_wd
 if [ -n "$extract" ] ; then
     # stop here
     echo "Image extracted to: $tmp_dir"
+    if [ -n "$payload_conf" ]; then
+       echo "$payload_conf" > $tmp_dir/installer/install.conf
+       echo "Integrated config extracted to: $tmp_dir/installer/install.conf"
+    fi
+
     if [ "$(id -u)" = "0" ] && [ ! -d "$extract" ] ; then
         echo "To un-mount the tmpfs when finished type:  umount $tmp_dir"
     fi
     exit 0
+fi
+
+echo -n "Checking for configuration ... "
+if [ -f "$cur_wd/install.conf" ]; then
+    echo " found install.conf."
+    cp "$cur_wd/install.conf" "$tmp_dir/installer/install.conf"
+elif [ -n "$payload_conf" ]; then
+    echo " found integrated."
+    echo "$payload_conf" > $tmp_dir/installer/install.conf
+else
+    echo " not found, using defaults."
 fi
 
 $tmp_dir/installer/install.sh
