@@ -1,0 +1,92 @@
+From 2604ea9f0ae2653d90b907e79cf72522a8ffae51 Mon Sep 17 00:00:00 2001
+From: Jonas Gorski <jonas.gorski@bisdn.de>
+Date: Tue, 5 May 2026 13:10:39 +0200
+Subject: [PATCH 2/2] baseboxd: allow configuring OpenFlow connection timeouts
+
+Allow configuring two OpenFlow connection timeouts:
+
+* of_timeout_echo: timeout of sent echo requests
+* of_timeout_lifecheck: delay of sending echo requests if rx is idle
+
+This allows overriding the defaults in case the selected values are too
+tight.
+
+Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
+---
+ pkg/systemd/sysconfig.template | 6 ++++++
+ src/baseboxd.cc                | 8 ++++++--
+ src/of-dpa/controller.cc       | 8 ++++++--
+ 3 files changed, 18 insertions(+), 4 deletions(-)
+
+diff --git a/pkg/systemd/sysconfig.template b/pkg/systemd/sysconfig.template
+index d54bd920cde2..fb3b2eb94c2c 100644
+--- a/pkg/systemd/sysconfig.template
++++ b/pkg/systemd/sysconfig.template
+@@ -26,6 +26,12 @@
+ #   0 = force unlimited
+ # Default is auto.
+ # FLAGS_rx_rate_limit=-1
++#
++# Set OpenFlow echo request timeout in seconds:
++# FLAGS_of_timeout_echo=6
++#
++# Set OpenFlow idle delay for sending echo requests:
++# FLAGS_of_timeout_lifecheck=10
+ 
+ ### glog logging configuration
+ #
+diff --git a/src/baseboxd.cc b/src/baseboxd.cc
+index 11ec138abc14..da8fcf96783f 100644
+--- a/src/baseboxd.cc
++++ b/src/baseboxd.cc
+@@ -27,6 +27,8 @@ DEFINE_int32(port_untagged_vid, 1,
+ DEFINE_int32(
+     rx_rate_limit, -1,
+     "PPS limit for traffic to controller (-1 = auto, 0 = force unlimited)");
++DEFINE_int32(of_timeout_echo, 6, "timeout of sent echo requests");
++DEFINE_int32(of_timeout_lifecheck, 10, "delay of life check after last rx");
+ 
+ static bool validate_port(const char *flagname, gflags::int32 value) {
+   VLOG(3) << __FUNCTION__ << ": flagname=" << flagname << ", value=" << value;
+@@ -67,8 +69,10 @@ int main(int argc, char **argv) {
+   }
+ 
+   // all variables can be set from env
+-  FLAGS_tryfromenv = std::string("multicast,port,ofdpa_grpc_port,use_knet,mark_"
+-                                 "fwd_offload,port_untagged_vid");
++  FLAGS_tryfromenv =
++      std::string("multicast,port,ofdpa_grpc_port,use_knet,mark_"
++                  "fwd_offload,port_untagged_vid,of_timeout_lifecheck,of_"
++                  "timeout_echo");
+   gflags::SetUsageMessage("");
+   gflags::SetVersionString(PROJECT_VERSION);
+ 
+diff --git a/src/of-dpa/controller.cc b/src/of-dpa/controller.cc
+index 5d426c93e18e..fe6343ea3c2b 100644
+--- a/src/of-dpa/controller.cc
++++ b/src/of-dpa/controller.cc
+@@ -24,6 +24,9 @@ DECLARE_bool(clear_switch_configuration);
+ DECLARE_bool(use_knet);
+ DECLARE_int32(rx_rate_limit);
+ 
++DECLARE_int32(of_timeout_echo);
++DECLARE_int32(of_timeout_lifecheck);
++
+ namespace basebox {
+ 
+ void controller::handle_conn_established(rofl::crofdpt &dpt,
+@@ -54,8 +57,9 @@ void controller::handle_dpt_open(rofl::crofdpt &dpt) {
+   // set max queue size in rofl
+   dpt.set_conn(rofl::cauxid(0)).set_txqueue_max_size(128 * 1024);
+   // set timeout limits
+-  dpt.set_conn(rofl::cauxid(0)).set_timeout_echo(6);
+-  dpt.set_conn(rofl::cauxid(0)).set_timeout_lifecheck(10);
++  dpt.set_conn(rofl::cauxid(0)).set_timeout_echo(FLAGS_of_timeout_echo);
++  dpt.set_conn(rofl::cauxid(0))
++      .set_timeout_lifecheck(FLAGS_of_timeout_lifecheck);
+ 
+   rofl::csockaddr raddr = dpt.set_conn(rofl::cauxid(0)).get_raddr();
+   std::string buf;
+-- 
+2.54.0
+

@@ -6,6 +6,11 @@ TARGET_LDFLAGS:append = " -Wl,--no-as-needed"
 
 SRCREV = "9afd482a40b72f874a27c390e4e0ebf99f0da32f"
 
+SRC_URI:append = "\
+    file://0001-baseboxd-significantly-increase-default-timeout-limi.patch \
+    file://0002-baseboxd-allow-configuring-OpenFlow-connection-timeo.patch \
+"
+
 # install service and sysconfig
 do_install:append() {
    # add directories

@@ -1,0 +1,50 @@
+From 7d136474f16a66ef409a63c266a2eb641f99eaa3 Mon Sep 17 00:00:00 2001
+From: Jonas Gorski <jonas.gorski@bisdn.de>
+Date: Fri, 8 May 2026 12:35:08 +0200
+Subject: [PATCH 1/2] baseboxd: significantly increase default timeout limits
+
+OpenFlow says:
+
+"OpenFlow messages are processed out of order (see 6.2), and the
+processing of some requests by the switch may take a long time,
+therefore a controller must never terminate a connection because a
+request is taking too much time. An exception to that rule is for echo
+replies, a controller or a switch may terminate a connection if the
+reply for an echo request it sent takes too much time, however there
+must be a way to disable that feature and the timeout should be large
+enough to accommodate a wide variety of conditions."
+
+A maximum of 4 seconds (1 lifetime + 3 echo) is not much if the OpenFlow
+connection is conguested due to a large amount of messages to process,
+so double the echo timout.
+
+Since rofl-common also sends out echo requests on long-standing barrier
+requests, but barrier-requests inhibit processing messages until
+completed, also increase the lifetime check significantly to allow
+barrier_requests to take up to 16 seconds, not 4.
+
+This should significantly increase the stability of the OpenFlow
+connection under stress conditions.
+
+Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
+---
+ src/of-dpa/controller.cc | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/src/of-dpa/controller.cc b/src/of-dpa/controller.cc
+index d9a2e1c6908a..5d426c93e18e 100644
+--- a/src/of-dpa/controller.cc
++++ b/src/of-dpa/controller.cc
+@@ -53,6 +53,9 @@ void controller::handle_dpt_open(rofl::crofdpt &dpt) {
+ 
+   // set max queue size in rofl
+   dpt.set_conn(rofl::cauxid(0)).set_txqueue_max_size(128 * 1024);
++  // set timeout limits
++  dpt.set_conn(rofl::cauxid(0)).set_timeout_echo(6);
++  dpt.set_conn(rofl::cauxid(0)).set_timeout_lifecheck(10);
+ 
+   rofl::csockaddr raddr = dpt.set_conn(rofl::cauxid(0)).get_raddr();
+   std::string buf;
+-- 
+2.54.0
+
