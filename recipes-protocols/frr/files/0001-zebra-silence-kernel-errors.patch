@@ -1,0 +1,168 @@
+From 68df37d7610c2ff824e397561e85384bb197bb27 Mon Sep 17 00:00:00 2001
+From: Jonas Gorski <jonas.gorski@bisdn.de>
+Date: Fri, 3 Jul 2026 15:39:12 +0200
+Subject: [PATCH] zebra: silence kernel errors
+
+With enabled route and nexthop deletion notification FRR treats each
+notification as interference and tries to re-add the routes and
+nexthops, which fail, since you cannot add nexthops to a down interface,
+and consequently re-adding routes fail because they reference a
+non-existing nexthop.
+
+This spawns a lot of errors in the log, so demote those errors to debug.
+
+Upstream-Status: Inappropriate
+
+Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
+---
+ zebra/kernel_netlink.c | 89 +++++++++++++++++++++++-------------------
+ 1 file changed, 48 insertions(+), 41 deletions(-)
+
+diff --git a/zebra/kernel_netlink.c b/zebra/kernel_netlink.c
+index ea1337d3c143..7fcbf28dd691 100644
+--- a/zebra/kernel_netlink.c
++++ b/zebra/kernel_netlink.c
+@@ -652,7 +652,7 @@ const char *nl_rttype_to_str(uint8_t rttype)
+ 	return lookup_msg(rttype_str, rttype, "");
+ }
+ 
+-static void netlink_parse_extended_ack(struct nlmsghdr *h)
++static void netlink_parse_extended_ack(struct nlmsghdr *h, bool log_error)
+ {
+ 	struct nlattr *tb[NLMSGERR_ATTR_MAX + 1] = {};
+ 	const struct nlmsgerr *err = (const struct nlmsgerr *)NLMSG_DATA(h);
+@@ -696,11 +696,15 @@ static void netlink_parse_extended_ack(struct nlmsghdr *h)
+ 	if (msg && *msg != '\0') {
+ 		bool is_err = !!err->error;
+ 
+-		if (is_err)
+-			flog_err(EC_ZEBRA_NETLINK_EXTENDED_ERROR, "Extended Error: %s", msg);
+-		else
++		if (is_err) {
++			if (log_error)
++				flog_err(EC_ZEBRA_NETLINK_EXTENDED_ERROR,"Extended Error: %s", msg);
++			else if (IS_ZEBRA_DEBUG_KERNEL)
++				zlog_debug("Extended Error: %s", msg);
++		} else {
+ 			flog_warn(EC_ZEBRA_NETLINK_EXTENDED_WARNING,
+ 				  "Extended Warning: %s", msg);
++		}
+ 	}
+ }
+ 
+@@ -830,33 +834,14 @@ static int netlink_parse_error(const struct nlsock *nl, struct nlmsghdr *h,
+ 	struct nlmsgerr *err = (struct nlmsgerr *)NLMSG_DATA(h);
+ 	int errnum = err->error;
+ 	int msg_type = err->msg.nlmsg_type;
++	bool ignore_error = false;
++	bool log_error = true;
+ 
+ 	if (h->nlmsg_len < NLMSG_LENGTH(sizeof(struct nlmsgerr))) {
+ 		flog_err(EC_ZEBRA_NETLINK_LENGTH_ERROR,
+ 			 "%s error: message truncated", nl->name);
+ 		return -1;
+ 	}
+-
+-	/*
+-	 * Parse the extended information before we actually handle it. At this
+-	 * point in time we do not do anything other than report the issue.
+-	 */
+-	if (h->nlmsg_flags & NLM_F_ACK_TLVS)
+-		netlink_parse_extended_ack(h);
+-
+-	/* If the error field is zero, then this is an ACK. */
+-	if (err->error == 0) {
+-		if (IS_ZEBRA_DEBUG_KERNEL) {
+-			zlog_debug("%s: %s ACK: type=%s(%u), seq=%u, pid=%u",
+-				   __func__, nl->name,
+-				   nl_msg_type_to_str(err->msg.nlmsg_type),
+-				   err->msg.nlmsg_type, err->msg.nlmsg_seq,
+-				   err->msg.nlmsg_pid);
+-		}
+-
+-		return 1;
+-	}
+-
+ 	/*
+ 	 * Deal with errors that occur because of races in link handling
+ 	 * or types are not supported in kernel.
+@@ -865,18 +850,15 @@ static int netlink_parse_error(const struct nlsock *nl, struct nlmsghdr *h,
+ 	    ((msg_type == RTM_DELROUTE &&
+ 	      (-errnum == ENODEV || -errnum == ESRCH)) ||
+ 	     (msg_type == RTM_NEWROUTE &&
++	      (-errnum == ENETDOWN || -errnum == EEXIST || -errnum == EINVAL)) ||
++	     (msg_type == RTM_NEWNEXTHOP &&
+ 	      (-errnum == ENETDOWN || -errnum == EEXIST)) ||
+ 	     ((msg_type == RTM_NEWTUNNEL || msg_type == RTM_DELTUNNEL ||
+ 	       msg_type == RTM_GETTUNNEL) &&
+ 	      (-errnum == EOPNOTSUPP)))) {
+-		if (IS_ZEBRA_DEBUG_KERNEL)
+-			zlog_debug("%s: error: %s type=%s(%u), seq=%u, pid=%u",
+-				   nl->name, safe_strerror(-errnum),
+-				   nl_msg_type_to_str(msg_type), msg_type,
+-				   err->msg.nlmsg_seq, err->msg.nlmsg_pid);
+-		return 0;
++		ignore_error = true;
++		log_error = false;
+ 	}
+-
+ 	/*
+ 	 * We see RTM_DELNEIGH when shutting down an interface with an IPv4
+ 	 * link-local.  The kernel should have already deleted the neighbor so
+@@ -889,19 +871,44 @@ static int netlink_parse_error(const struct nlsock *nl, struct nlmsghdr *h,
+ 		 * This is known to happen in some situations, don't log as
+ 		 * error.
+ 		 */
++		log_error = false;
++	}
++
++	/*
++	 * Parse the extended information before we actually handle it. At this
++	 * point in time we do not do anything other than report the issue.
++	 */
++	if (h->nlmsg_flags & NLM_F_ACK_TLVS)
++		netlink_parse_extended_ack(h, log_error);
++
++	/* If the error field is zero, then this is an ACK. */
++	if (err->error == 0) {
++		if (IS_ZEBRA_DEBUG_KERNEL) {
++			zlog_debug("%s: %s ACK: type=%s(%u), seq=%u, pid=%u",
++				   __func__, nl->name,
++				   nl_msg_type_to_str(err->msg.nlmsg_type),
++				   err->msg.nlmsg_type, err->msg.nlmsg_seq,
++				   err->msg.nlmsg_pid);
++		}
++
++		return 1;
++	}
++
++	if (!log_error) {
+ 		if (IS_ZEBRA_DEBUG_KERNEL)
+-			zlog_debug("%s error: %s, type=%s(%u), seq=%u, pid=%u",
++			zlog_debug("%s: error: %s type=%s(%u), seq=%u, pid=%u",
+ 				   nl->name, safe_strerror(-errnum),
+ 				   nl_msg_type_to_str(msg_type), msg_type,
+ 				   err->msg.nlmsg_seq, err->msg.nlmsg_pid);
+-	} else {
+-		if ((msg_type != RTM_GETNEXTHOP && msg_type != RTM_GETVLAN) ||
+-		    !startup)
+-			flog_err(EC_ZEBRA_UNEXPECTED_MESSAGE,
+-				 "%s error: %s, type=%s(%u), seq=%u, pid=%u",
+-				 nl->name, safe_strerror(-errnum),
+-				 nl_msg_type_to_str(msg_type), msg_type,
+-				 err->msg.nlmsg_seq, err->msg.nlmsg_pid);
++		if (ignore_error)
++			return 0;
++	} else if ((msg_type != RTM_GETNEXTHOP && msg_type != RTM_GETVLAN) ||
++		   !startup) {
++		flog_err(EC_ZEBRA_UNEXPECTED_MESSAGE,
++			 "%s error: %s, type=%s(%u), seq=%u, pid=%u",
++			 nl->name, safe_strerror(-errnum),
++			 nl_msg_type_to_str(msg_type), msg_type,
++			 err->msg.nlmsg_seq, err->msg.nlmsg_pid);
+ 	}
+ 
+ 	return -1;
+-- 
+2.54.0
+
