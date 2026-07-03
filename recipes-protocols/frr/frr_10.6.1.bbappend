@@ -4,6 +4,7 @@ SRC_URI:append = " \
            file://frr.service \
            file://frr@.service \
            file://support_bundle_commands.conf;subdir=git/tools/etc/frr \
+           file://0001-zebra-silence-kernel-errors.patch \
            "
 
 PR = "r1"
