@@ -1,0 +1,46 @@
+From 0e8b1a276c2c1c66aefd195b2dcfc0be5d407ca9 Mon Sep 17 00:00:00 2001
+From: Jonas Gorski <jonas.gorski@bisdn.de>
+Date: Wed, 1 Jul 2026 13:21:30 +0200
+Subject: [PATCH] nl_l3: also compare prefix length in duplicate route check
+
+When checking for duplicate routes, we also need to check the prefix
+lengths, else e.g. a route 10.0.0.0/8 will match with a 10.0.10.0/24
+route. This can lead to routes falsely being identified as duplicates
+and not added or removed as expected.
+
+So switch from nl_addr_cmp_prefix() to nl_addr_cmp() to ensure that
+different prefix lengths will be treated as different routes.
+
+Fixes: 96e14a879fde ("nl_l3: ignore duplicated link routes from FRR")
+Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
+---
+ src/netlink/nl_l3.cc | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/src/netlink/nl_l3.cc b/src/netlink/nl_l3.cc
+index e36a0d3949d7..032da9ea1cd4 100644
+--- a/src/netlink/nl_l3.cc
++++ b/src/netlink/nl_l3.cc
+@@ -1818,8 +1818,7 @@ int nl_l3::add_l3_unicast_route(rtnl_route *r, bool update_route) {
+       VLOG(2) << __FUNCTION__ << ": got route " << route << " for dst "
+               << rtnl_route_get_dst(r);
+       if (rtnl_route_get_protocol(route) == RTPROT_KERNEL &&
+-          nl_addr_cmp_prefix(rtnl_route_get_dst(r),
+-                             rtnl_route_get_dst(route)) == 0) {
++          nl_addr_cmp(rtnl_route_get_dst(r), rtnl_route_get_dst(route)) == 0) {
+         // we already have a kernel route for the same dst
+         duplicate = true;
+       }
+@@ -1993,8 +1992,7 @@ int nl_l3::del_l3_unicast_route(rtnl_route *r, bool keep_route) {
+       VLOG(2) << __FUNCTION__ << ": got route " << route << " for dst "
+               << rtnl_route_get_dst(r);
+       if (rtnl_route_get_protocol(route) == RTPROT_KERNEL &&
+-          nl_addr_cmp_prefix(rtnl_route_get_dst(r),
+-                             rtnl_route_get_dst(route)) == 0) {
++          nl_addr_cmp(rtnl_route_get_dst(r), rtnl_route_get_dst(route)) == 0) {
+         // we have a kernel route for the same dst
+         duplicate = true;
+       }
+-- 
+2.55.0
+

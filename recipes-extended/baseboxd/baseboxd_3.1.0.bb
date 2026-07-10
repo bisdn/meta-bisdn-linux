@@ -9,6 +9,7 @@ SRCREV = "9afd482a40b72f874a27c390e4e0ebf99f0da32f"
 SRC_URI:append = "\
     file://0001-baseboxd-significantly-increase-default-timeout-limi.patch \
     file://0002-baseboxd-allow-configuring-OpenFlow-connection-timeo.patch \
+    file://0001-nl_l3-also-compare-prefix-length-in-duplicate-route-.patch \
 "
 
 # install service and sysconfig
