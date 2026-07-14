@@ -9,6 +9,7 @@ BBLAYERS ?= " \
   ##OEROOT##/meta \
   ##OEROOT##/meta-cloud-services/meta-openstack \
   ##OEROOT##/meta-cloud-services/ \
+  ##OEROOT##/meta-lts-collab \
   ##OEROOT##/meta-ofdpa \
   ##OEROOT##/meta-open-network-linux \
   ##OEROOT##/meta-openembedded/meta-filesystems \
