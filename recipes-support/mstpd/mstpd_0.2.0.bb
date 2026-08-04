@@ -35,7 +35,7 @@ do_install:append() {
    rm ${D}${libexecdir}/mstpctl-utils/ifquery
 
    install -d ${D}${systemd_unitdir}/system
-   install -m 0644 ${UNPACKDIR}/build/utils/mstpd.service ${D}${systemd_unitdir}/system
+   install -m 0644 ${B}/utils/mstpd.service ${D}${systemd_unitdir}/system
 
    install -m 0644 ${UNPACKDIR}/bridge-stp.conf ${D}${sysconfdir}/bridge-stp.conf
 }
