@@ -72,10 +72,6 @@ do_install:append:class-target () {
     if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'true', 'false', d)}; then
         install -m 0644 ${UNPACKDIR}/frr*.service ${D}${systemd_system_unitdir}
     fi
-
-    # create default log directory for frr
-    install -m 0755 -d ${D}/var/log/frr
-    chown frr:frr ${D}/var/log/frr
 }
 
 # Indicate that the default files are configuration files
