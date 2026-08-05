@@ -1,0 +1,43 @@
+From 084a5789061920131504183454bf3969bc3d7f0c Mon Sep 17 00:00:00 2001
+From: Donatas Abraitis <donatas@opensourcerouting.org>
+Date: Thu, 5 Sep 2024 12:35:51 +0300
+Subject: [PATCH] bgpd: Retry connecting to label manager if failed
+
+Fixes: https://github.com/FRRouting/frr/issues/16747
+
+Upstream-Status: Backport [https://github.com/FRRouting/frr/commit/befffb2d51258fb43cbb9352c269570cd92f88ab]
+Signed-off-by: Donatas Abraitis <donatas@opensourcerouting.org>
+Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
+---
+ bgpd/bgp_zebra.c | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
+
+diff --git a/bgpd/bgp_zebra.c b/bgpd/bgp_zebra.c
+index bc51d14b392b..fa792355cab4 100644
+--- a/bgpd/bgp_zebra.c
++++ b/bgpd/bgp_zebra.c
+@@ -3396,14 +3396,17 @@ void bgp_if_init(void)
+ 	hook_register_prio(if_del, 0, bgp_if_delete_hook);
+ }
+ 
+-static void bgp_start_label_manager(struct event *start)
++static bool bgp_zebra_label_manager_ready(void)
+ {
+-	bgp_zebra_label_manager_connect();
++	return (zclient_sync->sock > 0);
+ }
+ 
+-static bool bgp_zebra_label_manager_ready(void)
++static void bgp_start_label_manager(struct event *start)
+ {
+-	return (zclient_sync->sock > 0);
++	if (!bgp_zebra_label_manager_ready() &&
++	    !bgp_zebra_label_manager_connect())
++		event_add_timer(bm->master, bgp_start_label_manager, NULL, 1,
++				&bm->t_bgp_start_label_manager);
+ }
+ 
+ static bool bgp_zebra_label_manager_connect(void)
+-- 
+2.46.1
+
