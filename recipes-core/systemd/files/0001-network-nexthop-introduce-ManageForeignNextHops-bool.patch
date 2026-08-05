@@ -1,0 +1,148 @@
+From 911a486a398c0829a9f30a9fe3ba51d96e7be587 Mon Sep 17 00:00:00 2001
+From: Yu Watanabe <watanabe.yu+github@gmail.com>
+Date: Tue, 12 Dec 2023 02:29:25 +0900
+Subject: [PATCH] network/nexthop: introduce ManageForeignNextHops= boolean
+ setting
+
+Closes #29034.
+---
+ man/networkd.conf.xml            | 11 +++++++++++
+ man/systemd.network.xml          |  8 ++++++--
+ src/network/networkd-gperf.gperf |  1 +
+ src/network/networkd-manager.c   |  4 ++++
+ src/network/networkd-manager.h   |  1 +
+ src/network/networkd-nexthop.c   | 11 +++++++++++
+ src/network/networkd.conf        |  1 +
+ 7 files changed, 35 insertions(+), 2 deletions(-)
+
+diff --git a/man/networkd.conf.xml b/man/networkd.conf.xml
+index 85b21ee7f981..d0845764a4a6 100644
+--- a/man/networkd.conf.xml
++++ b/man/networkd.conf.xml
+@@ -82,6 +82,17 @@
+         Defaults to yes.</para></listitem>
+       </varlistentry>
+ 
++      <varlistentry>
++        <term><varname>ManageForeignNextHops=</varname></term>
++        <listitem><para>A boolean. When true, <command>systemd-networkd</command> will remove nexthops
++        that are not configured in .network files (except for routes with protocol
++        <literal>kernel</literal>). When false, it will
++        not remove any foreign nexthops, keeping them even if they are not configured in a .network file.
++        Defaults to yes.</para>
++
++        <xi:include href="version-info.xml" xpointer="v256"/></listitem>
++      </varlistentry>
++
+       <varlistentry>
+         <term><varname>RouteTable=</varname></term>
+         <listitem><para>Defines the route table name. Takes a whitespace-separated list of the pairs of
+diff --git a/man/systemd.network.xml b/man/systemd.network.xml
+index 3e8e5357cc38..aa1675e6341b 100644
+--- a/man/systemd.network.xml
++++ b/man/systemd.network.xml
+@@ -1397,8 +1397,12 @@ Table=1234</programlisting></para>
+       <varlistentry>
+         <term><varname>Id=</varname></term>
+         <listitem>
+-          <para>The id of the next hop. Takes an integer in the range 1…4294967295. If unspecified,
+-          then automatically chosen by kernel.</para>
++          <para>The id of the next hop. Takes an integer in the range 1…4294967295.
++          This is mandatory if <varname>ManageForeignNextHops=no</varname> is specified in
++          <citerefentry><refentrytitle>networkd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>.
++          Otherwise, if unspecified, an unused ID will be automatically picked.</para>
++
++          <xi:include href="version-info.xml" xpointer="v244"/>
+         </listitem>
+       </varlistentry>
+ 
+diff --git a/src/network/networkd-gperf.gperf b/src/network/networkd-gperf.gperf
+index 8ed90f0e4b84..a6eab6acf38d 100644
+--- a/src/network/networkd-gperf.gperf
++++ b/src/network/networkd-gperf.gperf
+@@ -25,6 +25,7 @@ Network.SpeedMeter,                      config_parse_bool,
+ Network.SpeedMeterIntervalSec,           config_parse_sec,                       0,          offsetof(Manager, speed_meter_interval_usec)
+ Network.ManageForeignRoutingPolicyRules, config_parse_bool,                      0,          offsetof(Manager, manage_foreign_rules)
+ Network.ManageForeignRoutes,             config_parse_bool,                      0,          offsetof(Manager, manage_foreign_routes)
++Network.ManageForeignNextHops,           config_parse_bool,                      0,          offsetof(Manager, manage_foreign_nexthops)
+ Network.RouteTable,                      config_parse_route_table_names,         0,          0
+ DHCPv4.DUIDType,                         config_parse_duid_type,                 0,          offsetof(Manager, dhcp_duid)
+ DHCPv4.DUIDRawData,                      config_parse_duid_rawdata,              0,          offsetof(Manager, dhcp_duid)
+diff --git a/src/network/networkd-manager.c b/src/network/networkd-manager.c
+index e1696d6d422a..3e6005f3518a 100644
+--- a/src/network/networkd-manager.c
++++ b/src/network/networkd-manager.c
+@@ -503,6 +503,7 @@ int manager_new(Manager **ret, bool test_mode) {
+                 .online_state = _LINK_ONLINE_STATE_INVALID,
+                 .manage_foreign_routes = true,
+                 .manage_foreign_rules = true,
++                .manage_foreign_nexthops = true,
+                 .ethtool_fd = -1,
+                 .dhcp_duid.type = DUID_TYPE_EN,
+                 .dhcp6_duid.type = DUID_TYPE_EN,
+@@ -741,6 +742,9 @@ static int manager_enumerate_nexthop(Manager *m) {
+         assert(m);
+         assert(m->rtnl);
+ 
++        if (!m->manage_foreign_nexthops)
++                return 0;
++
+         r = sd_rtnl_message_new_nexthop(m->rtnl, &req, RTM_GETNEXTHOP, 0, 0);
+         if (r < 0)
+                 return r;
+diff --git a/src/network/networkd-manager.h b/src/network/networkd-manager.h
+index 86de5291244a..1b2fcf7d4f8e 100644
+--- a/src/network/networkd-manager.h
++++ b/src/network/networkd-manager.h
+@@ -36,6 +36,7 @@ struct Manager {
+         bool restarting;
+         bool manage_foreign_routes;
+         bool manage_foreign_rules;
++        bool manage_foreign_nexthops;
+ 
+         Set *dirty_links;
+ 
+diff --git a/src/network/networkd-nexthop.c b/src/network/networkd-nexthop.c
+index b829aaab90ad..c57e71102b5d 100644
+--- a/src/network/networkd-nexthop.c
++++ b/src/network/networkd-nexthop.c
+@@ -318,6 +318,10 @@ static int nexthop_acquire_id(Manager *manager, NextHop *nexthop) {
+         if (nexthop->id > 0)
+                 return 0;
+ 
++        /* If ManageForeignNextHops=no, nexthop with id == 0 should be already filtered by
++         * nexthop_section_verify(). */
++        assert(manager->manage_foreign_nexthops);
++
+         /* Find the lowest unused ID. */
+ 
+         ORDERED_HASHMAP_FOREACH(network, manager->networks) {
+@@ -1016,6 +1020,13 @@ static int nexthop_section_verify(NextHop *nh) {
+         if (section_is_invalid(nh->section))
+                 return -EINVAL;
+ 
++        if (!nh->network->manager->manage_foreign_nexthops && nh->id == 0)
++                return log_warning_errno(SYNTHETIC_ERRNO(EINVAL),
++                                         "%s: [NextHop] section without specifying Id= is not supported "
++                                         "if ManageForeignNextHops=no is set in networkd.conf. "
++                                         "Ignoring [NextHop] section from line %u.",
++                                         nh->section->filename, nh->section->line);
++
+         if (!hashmap_isempty(nh->group)) {
+                 if (in_addr_is_set(nh->family, &nh->gw))
+                         return log_warning_errno(SYNTHETIC_ERRNO(EINVAL),
+diff --git a/src/network/networkd.conf b/src/network/networkd.conf
+index 38dc9f1f79d9..ac31be85d752 100644
+--- a/src/network/networkd.conf
++++ b/src/network/networkd.conf
+@@ -17,6 +17,7 @@
+ #SpeedMeterIntervalSec=10sec
+ #ManageForeignRoutingPolicyRules=yes
+ #ManageForeignRoutes=yes
++#ManageForeignNextHops=yes
+ #RouteTable=
+ 
+ [DHCPv4]
+-- 
+2.46.0
+
