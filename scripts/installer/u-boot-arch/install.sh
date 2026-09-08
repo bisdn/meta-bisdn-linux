@@ -80,7 +80,8 @@ platform_install_bootloader_entry()
     (cat <<EOF
 hw_load $hw_load_str
 copy_img echo "Loading BISDN Linux image..." && run hw_load
-nos_bootcmd run copy_img && setenv bootargs quiet console=\$consoledev,\$baudrate && bootm \$loadaddr
+bisdn_bootcmd run copy_img && setenv bootargs quiet console=\$consoledev,\$baudrate && bootm \$loadaddr
+nos_bootcmd run bisdn_bootcmd
 EOF
     ) > /tmp/env.txt
 
