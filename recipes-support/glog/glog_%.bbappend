@@ -1,0 +1,3 @@
+EXTRA_OECMAKE:append = " \
+    -DWITH_PKGCONFIG=ON \
+"
