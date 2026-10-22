@@ -51,6 +51,7 @@ EXTRA_OECONF:class-target = "--sbindir=${libexecdir}/frr \
                              --enable-vty-group=frrvty \
                              --enable-configfile-mask=0640 \
                              --enable-logfile-mask=0640 \
+                             --disable-backtrace \
                              --disable-doc \
                              --with-clippy=${RECIPE_SYSROOT_NATIVE}/usr/lib/clippy \
                             "
