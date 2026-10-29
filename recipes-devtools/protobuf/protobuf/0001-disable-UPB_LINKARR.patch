@@ -1,0 +1,36 @@
+From 2e30f412ba935255a9b8ae83ba164728348702a1 Mon Sep 17 00:00:00 2001
+From: Jonas Gorski <jonas.gorski@bisdn.de>
+Date: Fri, 23 Oct 2026 15:13:46 +0200
+Subject: [PATCH] disable UPB_LINKARR
+
+Disable UPB_LINKARR for now as it leads to linking errors with gRPC and
+C++.
+
+According to [1], this is only needed for Ruby and PHP, which we neither
+use.
+
+[1] https://github.com/protocolbuffers/protobuf/issues/21755#issuecomment-3786362604
+
+Upstream-Status: Inappropriate
+
+Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
+---
+ upb/port/def.inc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/upb/port/def.inc b/upb/port/def.inc
+index cd1eed663e3f..6fe8b834ab7c 100644
+--- a/upb/port/def.inc
++++ b/upb/port/def.inc
+@@ -529,7 +529,7 @@ Error, UINTPTR_MAX is undefined
+ //     }
+ //   }
+ 
+-#if defined(__ELF__) || defined(__wasm__)
++#if 0
+ 
+ #define UPB_LINKARR_APPEND(name) \
+   __attribute__((section("linkarr_" #name))) UPB_NO_SANITIZE_ADDRESS
+-- 
+2.56.0
+
