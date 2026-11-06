@@ -36,7 +36,7 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL += "\
     man-pages \
     mstpd \
     procps \
-    packagegroup-ofdpa \
+    ${@bb.utils.contains('MACHINE_FEATURES', 'bcm-xgs', 'packagegroup-ofdpa', '', d)} \
     python3 \
     python3-docker \
     python3-pip \
