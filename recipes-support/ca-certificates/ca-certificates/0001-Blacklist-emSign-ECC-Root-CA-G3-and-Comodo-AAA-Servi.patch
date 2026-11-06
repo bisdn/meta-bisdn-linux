@@ -1,0 +1,31 @@
+From 90a748263f6b6fbaf4e5643bb0c3755d9664da20 Mon Sep 17 00:00:00 2001
+From: Salvatore Bonaccorso <carnil@debian.org>
+Date: Tue, 20 Oct 2026 16:39:15 +0200
+Subject: [PATCH] Blacklist "emSign ECC Root CA - G3" and "Comodo AAA Services
+ root"
+
+Upstream-Status: Backport [https://salsa.debian.org/debian/ca-certificates/-/commit/4a0203e5ce4ce1a064b97387f52ca6a00c97185c]
+
+Signed-off-by: Jonas Gorski <jonas.gorski@bisdn.de>
+---
+ mozilla/blacklist.txt | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/mozilla/blacklist.txt b/mozilla/blacklist.txt
+index 074d7feedc73..6db3a0f6a9d8 100644
+--- a/mozilla/blacklist.txt
++++ b/mozilla/blacklist.txt
+@@ -8,5 +8,10 @@
+ "TURKTRUST Mis-issued Intermediate CA 1"
+ "TURKTRUST Mis-issued Intermediate CA 2"
+ 
++# Blacklist "emSign ECC Root CA - G3" (cf. #1151413)
++"emSign ECC Root CA - G3"
++# Blacklist "Comodo AAA Services root" (cf. #1151413)
++"Comodo AAA Services root"
++
+ # Expired CA (#995432)
+ "DST Root CA X3"
+-- 
+2.56.0
+
