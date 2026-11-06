@@ -6,7 +6,6 @@ require minimal.bb
 IMAGE_FEATURES += " bash-completion-pkgs doc-pkgs package-management"
 
 BISDN_SWITCH_IMAGE_EXTRA_INSTALL += "\
-    baseboxd \
     baseboxd-tools \
     bash-completion \
     bash-completion-extra \
@@ -36,16 +35,11 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL += "\
     man-db \
     man-pages \
     mstpd \
-    ofagent \
-    ofdpa \
-    ofdpa-grpc \
-    ofdpa-tools \
     procps \
+    packagegroup-ofdpa \
     python3 \
     python3-docker \
-    python3-ofdpa \
     python3-pip \
-    python3-ryu \
     radvd \
     rsync \
     run-preinsts \
