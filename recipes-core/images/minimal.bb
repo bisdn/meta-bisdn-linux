@@ -16,7 +16,7 @@ BISDN_SWITCH_IMAGE_EXTRA_INSTALL = "\
     iproute2 \
     kernel-modules \
     less \
-    onie-tools \
+    ${@bb.utils.contains('MACHINE_FEATURES', 'onie', 'onie-tools', '', d)} \
     openssh-sftp \
     openssh-sftp-server \
     parted \
@@ -35,7 +35,7 @@ LICENSE = "MIT"
 
 COPY_LIC_MANIFEST = "1"
 
-include onie-nos-installer.inc
+include ${@bb.utils.contains('MACHINE_FEATURES', 'onie', 'onie-nos-installer.inc', '', d)}
 
 inherit core-image
 
