@@ -35,8 +35,6 @@ LICENSE = "MIT"
 
 COPY_LIC_MANIFEST = "1"
 
-IMAGE_FSTYPES = "tar.xz"
-
 include onie-nos-installer.inc
 
 inherit core-image
